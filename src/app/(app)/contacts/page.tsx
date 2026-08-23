@@ -6,17 +6,24 @@ const LANGUAGE_LABEL: Record<string, string> = {
   hi: "Hindi", mr: "Marathi", ta: "Tamil", te: "Telugu", kn: "Kannada", en: "English",
 };
 
-export default async function ContactsPage() {
+export default async function ContactsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q = "" } = await searchParams;
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
 
-  const { data: contacts } = await supabase
+  let query = supabase
     .from("contacts")
     .select("id, phone, name, language, source, tags, opted_out, created_at")
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
     .limit(200);
+  // Strip PostgREST filter-syntax metacharacters (`,` `.` `(` `)` `%`) — this
+  // interpolates directly into an .or() filter string, so raw punctuation
+  // from the search box could otherwise inject extra filter clauses.
+  const safeQuery = q.trim().replace(/[,.()%]/g, "");
+  if (safeQuery) query = query.or(`phone.ilike.%${safeQuery}%,name.ilike.%${safeQuery}%`);
+  const { data: contacts } = await query;
 
   const { count: totalCount } = await supabase
     .from("contacts")
@@ -27,8 +34,16 @@ export default async function ContactsPage() {
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Contacts</h1>
-        <div className="sk-pill">{totalCount ?? 0} total</div>
+        <div className="flex items-center gap-3">
+          <div className="sk-pill">{totalCount ?? 0} total</div>
+          <a href="/api/contacts/export" className="sk-btn sk-btn-ghost">Export CSV</a>
+        </div>
       </div>
+
+      <form className="mb-4 flex gap-3">
+        <input type="text" name="q" defaultValue={q} placeholder="Search by phone or name…" className="sk-input flex-1" />
+        <button type="submit" className="sk-btn sk-btn-ghost">Search</button>
+      </form>
 
       <ImportForm />
 
