@@ -47,6 +47,7 @@ export default async function TemplatesPage() {
             <div className="mb-3 flex gap-2">
               <span className="sk-pill">{LANGUAGE_LABEL[t.language] ?? t.language}</span>
               <span className="sk-pill">{t.category}</span>
+              {t.template_group && <span className="sk-pill border-accent text-accent">group: {t.template_group}</span>}
             </div>
             <div className="font-mono text-[12.5px] text-faint">{t.meta_template_name}</div>
             {t.body_preview && <p className="mt-2 text-[13px] text-muted line-clamp-3">{t.body_preview}</p>}

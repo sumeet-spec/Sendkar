@@ -26,6 +26,16 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     .maybeSingle();
   if (!campaign) notFound();
 
+  let groupLanguages: string[] = [];
+  if (campaign.template_group) {
+    const { data: groupTemplates } = await supabase
+      .from("templates")
+      .select("language")
+      .eq("workspace_id", workspace.id)
+      .eq("template_group", campaign.template_group);
+    groupLanguages = [...new Set((groupTemplates ?? []).map((t) => t.language))];
+  }
+
   const { data: recipients } = await supabase
     .from("campaign_recipients")
     .select("id, status, error, sent_at, contacts(phone, name)")
@@ -47,6 +57,11 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           <div className="mt-1 text-[13px] text-faint">
             {template?.name} · {template?.language} · <span className="font-mono">{template?.meta_template_name}</span>
           </div>
+          {groupLanguages.length > 1 && (
+            <div className="mt-1.5 text-[12px] text-accent">
+              Multi-language — auto-sends the right version to each contact ({groupLanguages.join(", ")})
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           {campaign.status === "draft" && <TestSendForm campaignId={campaign.id} />}

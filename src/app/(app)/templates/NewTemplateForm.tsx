@@ -61,6 +61,15 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
       </div>
 
       <div>
+        <label className="sk-label">Message group (optional — same value on every language&apos;s version of this message)</label>
+        <input name="templateGroup" className="sk-input font-mono text-sm" placeholder="launch_announcement" />
+        <p className="mt-1 text-[11.5px] text-faint">
+          Set the same group on the Hindi, Tamil, Telugu... versions of one message, then a single campaign
+          auto-sends each contact their own language instead of you launching one campaign per language.
+        </p>
+      </div>
+
+      <div>
         <label className="sk-label">Header</label>
         <div className="flex gap-2">
           <select name="headerType" className="sk-input w-40" value={headerType} onChange={(e) => setHeaderType(e.target.value)}>

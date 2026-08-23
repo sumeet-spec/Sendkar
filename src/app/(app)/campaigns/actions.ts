@@ -16,9 +16,21 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
   if (!name || !templateId) return { error: "Name and template are required." };
 
   const supabase = await createClient();
+  // A grouped template makes the whole campaign multi-language: every contact
+  // gets whichever group member matches their own language at send time,
+  // instead of everyone getting this one template's language regardless.
+  const { data: chosenTemplate } = await supabase.from("templates").select("template_group").eq("id", templateId).single();
+
   const { data, error } = await supabase
     .from("campaigns")
-    .insert({ workspace_id: workspace.id, name, template_id: templateId, segment_tag: segmentTag, status: "draft" })
+    .insert({
+      workspace_id: workspace.id,
+      name,
+      template_id: templateId,
+      template_group: chosenTemplate?.template_group ?? null,
+      segment_tag: segmentTag,
+      status: "draft",
+    })
     .select("id")
     .single();
 
@@ -37,18 +49,28 @@ export async function startCampaign(campaignId: string) {
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("id, workspace_id, template_id, status, segment_tag, templates(language)")
+    .select("id, workspace_id, template_id, status, segment_tag, template_group, templates(language)")
     .eq("id", campaignId)
     .single();
   if (!campaign || campaign.status !== "draft") return;
 
-  const language = (campaign.templates as { language?: string } | null)?.language;
-  let query = supabase
-    .from("contacts")
-    .select("id")
-    .eq("workspace_id", campaign.workspace_id)
-    .eq("language", language)
-    .eq("opted_out", false); // marketing sends must respect opt-out, unlike replies/automations
+  let query = supabase.from("contacts").select("id").eq("workspace_id", campaign.workspace_id).eq("opted_out", false); // marketing sends must respect opt-out, unlike replies/automations
+
+  if (campaign.template_group) {
+    // Multi-language: audience is every language this group actually has an
+    // approved-or-pending template for, resolved per-contact at send time —
+    // not narrowed to the one language of the template picked at creation.
+    const { data: groupTemplates } = await supabase
+      .from("templates")
+      .select("language")
+      .eq("workspace_id", campaign.workspace_id)
+      .eq("template_group", campaign.template_group);
+    const coveredLanguages = [...new Set((groupTemplates ?? []).map((t) => t.language))];
+    query = query.in("language", coveredLanguages);
+  } else {
+    const language = (campaign.templates as { language?: string } | null)?.language;
+    query = query.eq("language", language);
+  }
   if (campaign.segment_tag) query = query.contains("tags", [campaign.segment_tag]);
   const { data: contacts } = await query;
 

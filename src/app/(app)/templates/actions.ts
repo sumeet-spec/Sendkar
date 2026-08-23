@@ -11,6 +11,7 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim();
   const language = String(formData.get("language") ?? "").trim();
+  const templateGroup = String(formData.get("templateGroup") ?? "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_") || null;
   const metaTemplateName = String(formData.get("metaTemplateName") ?? "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
   const category = String(formData.get("category") ?? "MARKETING") as "MARKETING" | "UTILITY" | "AUTHENTICATION";
   const headerType = String(formData.get("headerType") ?? "none") as "none" | "text" | "image";
@@ -68,6 +69,7 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
     buttons: buttons ?? null,
     meta_response: metaResponse,
     rejection_reason: submitError,
+    template_group: templateGroup,
     status,
   });
 

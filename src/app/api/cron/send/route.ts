@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     const { data: recipients } = await admin
       .from("campaign_recipients")
-      .select("id, contact_id, contacts(phone, name, opted_out)")
+      .select("id, contact_id, contacts(phone, name, opted_out, language)")
       .eq("campaign_id", campaign.id)
       .eq("status", "queued")
       .limit(Math.min(MAX_PER_RUN, remainingToday));
@@ -79,17 +79,30 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    const { data: template } = await admin
+    const { data: primaryTemplate } = await admin
       .from("templates")
       .select("meta_template_name, language, body_text")
       .eq("id", campaign.template_id)
       .single();
-    const needsNameParam = Boolean(template?.body_text?.includes("{{1}}"));
+
+    // Multi-language campaign: every group member is a candidate, resolved
+    // per recipient by their own language — not one fixed template for
+    // everyone regardless of what language they actually read.
+    let templatesByLanguage = new Map<string, { meta_template_name: string; language: string; body_text: string | null }>();
+    if (campaign.template_group) {
+      const { data: groupTemplates } = await admin
+        .from("templates")
+        .select("meta_template_name, language, body_text")
+        .eq("workspace_id", workspace.id)
+        .eq("template_group", campaign.template_group);
+      templatesByLanguage = new Map((groupTemplates ?? []).map((t) => [t.language, t]));
+    }
 
     let sentCount = 0;
     for (const recipient of recipients) {
-      const contactRow = recipient.contacts as { phone?: string; name?: string | null; opted_out?: boolean } | null;
+      const contactRow = recipient.contacts as { phone?: string; name?: string | null; opted_out?: boolean; language?: string } | null;
       const phone = contactRow?.phone;
+      const template = (contactRow?.language && templatesByLanguage.get(contactRow.language)) || primaryTemplate;
       if (!phone || !template) continue;
 
       // Opted out after being queued (e.g. they replied STOP mid-campaign) — skip, don't fail it.
@@ -106,7 +119,7 @@ export async function GET(request: NextRequest) {
           to: phone,
           templateName: template.meta_template_name,
           language: template.language,
-          bodyParams: needsNameParam ? [contactRow?.name || "there"] : undefined,
+          bodyParams: template.body_text?.includes("{{1}}") ? [contactRow?.name || "there"] : undefined,
         });
 
         await admin

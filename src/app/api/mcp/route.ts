@@ -204,9 +204,17 @@ export async function POST(request: NextRequest) {
         const name = String(args.name ?? "").trim();
         const templateId = String(args.templateId ?? "");
         if (!name || !templateId) return textResult(id, "name and templateId are required.", true);
+        const { data: chosenTemplate } = await admin.from("templates").select("template_group").eq("id", templateId).single();
         const { data, error } = await admin
           .from("campaigns")
-          .insert({ workspace_id: workspaceId, name, template_id: templateId, segment_tag: args.segmentTag || null, status: "draft" })
+          .insert({
+            workspace_id: workspaceId,
+            name,
+            template_id: templateId,
+            template_group: chosenTemplate?.template_group ?? null,
+            segment_tag: args.segmentTag || null,
+            status: "draft",
+          })
           .select("id")
           .single();
         if (error) return textResult(id, error.message, true);
@@ -217,14 +225,25 @@ export async function POST(request: NextRequest) {
         const campaignId = String(args.campaignId ?? "");
         const { data: campaign } = await admin
           .from("campaigns")
-          .select("id, workspace_id, segment_tag, status, templates(language)")
+          .select("id, workspace_id, segment_tag, template_group, status, templates(language)")
           .eq("id", campaignId)
           .eq("workspace_id", workspaceId)
           .maybeSingle();
         if (!campaign || campaign.status !== "draft") return textResult(id, "Campaign not found or not in draft state.", true);
 
-        const language = (campaign.templates as { language?: string } | null)?.language;
-        let recipientQuery = admin.from("contacts").select("id").eq("workspace_id", workspaceId).eq("language", language).eq("opted_out", false);
+        let recipientQuery = admin.from("contacts").select("id").eq("workspace_id", workspaceId).eq("opted_out", false);
+        if (campaign.template_group) {
+          const { data: groupTemplates } = await admin
+            .from("templates")
+            .select("language")
+            .eq("workspace_id", workspaceId)
+            .eq("template_group", campaign.template_group);
+          const coveredLanguages = [...new Set((groupTemplates ?? []).map((t) => t.language))];
+          recipientQuery = recipientQuery.in("language", coveredLanguages);
+        } else {
+          const language = (campaign.templates as { language?: string } | null)?.language;
+          recipientQuery = recipientQuery.eq("language", language);
+        }
         if (campaign.segment_tag) recipientQuery = recipientQuery.contains("tags", [campaign.segment_tag]);
         const { data: contacts } = await recipientQuery;
 
