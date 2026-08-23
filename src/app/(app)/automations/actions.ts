@@ -3,7 +3,48 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
+import { suggestAutomationsFromHistory, type AutomationSuggestion } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
+
+export async function getAutomationSuggestions(): Promise<{ suggestions?: AutomationSuggestion[]; error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const supabase = await createClient();
+  const { data: messages } = await supabase
+    .from("messages")
+    .select("body")
+    .eq("workspace_id", workspace.id)
+    .eq("direction", "inbound")
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  const bodies = (messages ?? []).map((m) => m.body).filter((b): b is string => Boolean(b));
+  try {
+    const suggestions = await suggestAutomationsFromHistory(bodies);
+    return { suggestions };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Couldn't generate suggestions." };
+  }
+}
+
+export async function createAutomationFromSuggestion(suggestion: AutomationSuggestion) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("automations").insert({
+    workspace_id: workspace.id,
+    name: suggestion.triggerKeyword,
+    trigger_keyword: suggestion.triggerKeyword.toLowerCase(),
+    match_type: suggestion.matchType,
+    reply_body: suggestion.replyBody,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/automations");
+  return { success: true };
+}
 
 export async function createAutomation(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();

@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
 import { NewAutomationForm } from "./NewAutomationForm";
 import { AutomationRow } from "./AutomationRow";
+import { SuggestAutomations } from "./SuggestAutomations";
 
 export default async function AutomationsPage() {
   const workspace = await getCurrentWorkspace();
@@ -28,6 +29,8 @@ export default async function AutomationsPage() {
           <p className="text-sm">Automations need the Starter plan or above — <a href="/settings/billing" className="text-accent hover:text-accent-hover">upgrade</a>.</p>
         </div>
       )}
+
+      <SuggestAutomations />
 
       <div className="flex flex-col gap-3">
         {(automations ?? []).map((a) => <AutomationRow key={a.id} automation={a} />)}

@@ -144,6 +144,37 @@ Respond with ONLY strict JSON, no markdown fences, no prose:
   };
 }
 
+/**
+ * Mines recent inbound messages for repeated questions/requests and
+ * proposes ready-to-create keyword automations — turns "40 people asked
+ * about X this week" into an actual suggestion instead of the business
+ * owner having to notice the pattern themselves. Neither competitor
+ * surfaces this; their automation builders start from a blank keyword box.
+ */
+export interface AutomationSuggestion {
+  triggerKeyword: string;
+  matchType: "exact" | "contains";
+  replyBody: string;
+  rationale: string;
+}
+
+export async function suggestAutomationsFromHistory(inboundBodies: string[]): Promise<AutomationSuggestion[]> {
+  if (inboundBodies.length < 5) throw new Error("Not enough inbound message history yet — need at least a handful of real conversations.");
+
+  const sample = inboundBodies.slice(0, 300).map((b, i) => `${i + 1}. ${b}`).join("\n");
+  const prompt = `Here are recent inbound WhatsApp messages a business received:\n\n${sample}\n\nFind up to 4 REPEATED questions or requests (the same kind of thing asked more than once) worth auto-replying to. For each, suggest a short trigger keyword, whether it should match exactly or just be contained in the message, and a good reply. Skip anything too varied to have one good reply, and skip anything that only appears once.\n\nRespond with ONLY strict JSON, no markdown fences, no prose:\n[{"triggerKeyword": "string", "matchType": "exact" | "contains", "replyBody": "string", "rationale": "one short sentence on why, e.g. 'asked 6 times this week'"}]\n\nIf nothing repeats enough to be worth automating, respond with exactly: []`;
+
+  const raw = await callClaude(prompt, 900);
+  let parsed: AutomationSuggestion[];
+  try {
+    parsed = JSON.parse(raw.trim().replace(/^```(json)?/i, "").replace(/```$/, "").trim());
+  } catch {
+    throw new Error("Suggestion response wasn't valid JSON.");
+  }
+  if (!Array.isArray(parsed)) throw new Error("Unexpected suggestion format.");
+  return parsed.slice(0, 4);
+}
+
 /** A quick "catch me up" summary of a thread — for an agent picking up a conversation cold, or a handoff between team members. */
 export async function summarizeThread(thread: ThreadMessage[], contactName: string | null): Promise<string> {
   const transcript = thread
