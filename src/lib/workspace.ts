@@ -12,6 +12,8 @@ export interface Workspace {
   catalog_id: string | null;
   instagram_page_id: string | null;
   instagram_access_token: string | null;
+  messenger_page_id: string | null;
+  messenger_access_token: string | null;
   messaging_tier: number;
   daily_send_count: number;
   daily_reset_at: string;

@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
+import { sendInstagramMessage } from "@/lib/instagram";
+import { sendMessengerMessage } from "@/lib/messenger";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { draftReply } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
@@ -16,7 +18,7 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
   if (!workspace) return { error: "No workspace found." };
 
   const supabase = await createClient();
-  const { data: contact } = await supabase.from("contacts").select("phone, session_expires_at, whatsapp_number_id").eq("id", contactId).single();
+  const { data: contact } = await supabase.from("contacts").select("phone, channel, session_expires_at, whatsapp_number_id").eq("id", contactId).single();
   if (!contact) return { error: "Contact not found." };
 
   // Meta only allows free-text replies within 24h of the customer's last inbound message —
@@ -26,12 +28,18 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
     return { error: "The 24h reply window has closed for this contact — send a template message instead." };
   }
 
-  // A reply must go out from whichever number this contact has been talking to, not
-  // silently default to the workspace's primary number if they're a secondary-number contact.
-  const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
-
   try {
-    const { metaMessageId } = await sendSessionMessage({ workspace: creds, to: contact.phone, body });
+    let metaMessageId: string;
+    if (contact.channel === "instagram") {
+      ({ metaMessageId } = await sendInstagramMessage({ workspace, recipientId: contact.phone, body }));
+    } else if (contact.channel === "messenger") {
+      ({ metaMessageId } = await sendMessengerMessage({ workspace, recipientId: contact.phone, body }));
+    } else {
+      // A reply must go out from whichever number this contact has been talking to, not
+      // silently default to the workspace's primary number if they're a secondary-number contact.
+      const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
+      ({ metaMessageId } = await sendSessionMessage({ workspace: creds, to: contact.phone, body }));
+    }
     await supabase.from("messages").insert({
       workspace_id: workspace.id,
       contact_id: contactId,
@@ -39,6 +47,7 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
       body,
       meta_message_id: metaMessageId,
       status: "sent",
+      channel: contact.channel,
     });
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Send failed." };

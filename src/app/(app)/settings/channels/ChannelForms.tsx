@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveInstagramCreds, saveWhatsAppCredsFromChannels } from "./actions";
+import { saveInstagramCreds, saveMessengerCreds, saveWhatsAppCredsFromChannels } from "./actions";
 import type { Workspace } from "@/lib/workspace";
 
 export function WhatsAppForm({ workspace }: { workspace: Workspace }) {
@@ -55,6 +55,32 @@ export function InstagramForm({ workspace, locked }: { workspace: Workspace; loc
       <div>
         <label className="sk-label">Page access token</label>
         <input name="accessToken" type="password" defaultValue={workspace.instagram_access_token ?? ""} disabled={locked} className="sk-input font-mono text-sm disabled:opacity-50" />
+      </div>
+      {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+      {state?.success && <p className="text-sm text-accent">Saved.</p>}
+      <button type="submit" disabled={pending || locked} className="sk-btn sk-btn-primary disabled:opacity-50">
+        {pending ? "Saving…" : "Save"}
+      </button>
+    </form>
+  );
+}
+
+export function MessengerForm({ workspace, locked }: { workspace: Workspace; locked: boolean }) {
+  const [state, formAction, pending] = useActionState(saveMessengerCreds, null);
+
+  return (
+    <form action={formAction} className="sk-card flex flex-col gap-3 p-5">
+      <div className="mb-1 flex items-center gap-2">
+        <span className="font-medium">Facebook Messenger</span>
+        {locked && <span className="sk-pill">Growth plan+</span>}
+      </div>
+      <div>
+        <label className="sk-label">Connected Page ID</label>
+        <input name="pageId" defaultValue={workspace.messenger_page_id ?? ""} disabled={locked} className="sk-input font-mono text-sm disabled:opacity-50" />
+      </div>
+      <div>
+        <label className="sk-label">Page access token</label>
+        <input name="accessToken" type="password" defaultValue={workspace.messenger_access_token ?? ""} disabled={locked} className="sk-input font-mono text-sm disabled:opacity-50" />
       </div>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       {state?.success && <p className="text-sm text-accent">Saved.</p>}

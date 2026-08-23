@@ -246,6 +246,22 @@ alter table contacts add column whatsapp_number_id uuid references whatsapp_numb
 -- same backward-compatible convention.
 alter table campaigns add column whatsapp_number_id uuid references whatsapp_numbers(id) on delete set null;
 
+-- ── Facebook Messenger + a real Instagram inbound path ────────────────────
+-- Instagram previously had a send function but NO webhook receiver at all —
+-- it couldn't track the 24h window or even create a contact from an inbound
+-- DM. This adds Messenger as its own channel and gives both a real inbound
+-- path via one shared webhook (Meta's Messenger Platform payload shape is
+-- identical for both, differing only in the top-level `object` field).
+
+alter table workspaces
+  add column messenger_page_id text,
+  add column messenger_access_token text;
+
+alter table contacts drop constraint contacts_channel_check;
+alter table contacts add constraint contacts_channel_check check (channel in ('whatsapp', 'instagram', 'messenger'));
+alter table messages drop constraint messages_channel_check;
+alter table messages add constraint messages_channel_check check (channel in ('whatsapp', 'instagram', 'messenger'));
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
-import { WhatsAppForm, InstagramForm } from "./ChannelForms";
+import { WhatsAppForm, InstagramForm, MessengerForm } from "./ChannelForms";
 import { AdditionalNumbers } from "./AdditionalNumbers";
 
 export default async function ChannelsPage() {
@@ -23,6 +23,7 @@ export default async function ChannelsPage() {
         <WhatsAppForm workspace={workspace} />
         <AdditionalNumbers numbers={numbers ?? []} />
         <InstagramForm workspace={workspace} locked={!limits.instagramEnabled} />
+        <MessengerForm workspace={workspace} locked={!limits.instagramEnabled} />
       </div>
     </div>
   );

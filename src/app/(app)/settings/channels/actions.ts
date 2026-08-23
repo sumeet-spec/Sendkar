@@ -26,6 +26,27 @@ export async function saveInstagramCreds(_prevState: unknown, formData: FormData
   return { success: true };
 }
 
+export async function saveMessengerCreds(_prevState: unknown, formData: FormData) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const limits = getPlanLimits(workspace.plan);
+  if (!limits.instagramEnabled) return { error: "Messenger is on the Growth plan and above — upgrade in Billing first." };
+
+  const pageId = String(formData.get("pageId") ?? "").trim();
+  const accessToken = String(formData.get("accessToken") ?? "").trim();
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("workspaces")
+    .update({ messenger_page_id: pageId || null, messenger_access_token: accessToken || null })
+    .eq("id", workspace.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/settings/channels");
+  return { success: true };
+}
+
 export async function addWhatsAppNumber(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };

@@ -21,14 +21,14 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   // Most recent message per contact, newest conversation first.
   const { data: messages } = await supabase
     .from("messages")
-    .select("contact_id, body, direction, created_at, contacts(id, phone, name, assignee_id, opted_out)")
+    .select("contact_id, body, direction, channel, created_at, contacts(id, phone, name, assignee_id, opted_out)")
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
     .limit(500);
 
   const threads = new Map<
     string,
-    { phone: string; name: string | null; lastBody: string | null; lastAt: string; lastDirection: string; assigneeId: string | null; optedOut: boolean }
+    { phone: string; name: string | null; lastBody: string | null; lastAt: string; lastDirection: string; channel: string; assigneeId: string | null; optedOut: boolean }
   >();
   for (const m of messages ?? []) {
     const contact = m.contacts as { id?: string; phone?: string; name?: string | null; assignee_id?: string | null; opted_out?: boolean } | null;
@@ -39,6 +39,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
       lastBody: m.body,
       lastAt: m.created_at,
       lastDirection: m.direction,
+      channel: m.channel,
       assigneeId: contact.assignee_id ?? null,
       optedOut: Boolean(contact.opted_out),
     });
@@ -55,7 +56,10 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   return (
     <div className="max-w-3xl">
       <InboxListRefresher workspaceId={workspace.id} />
-      <h1 className="mb-4 text-xl font-semibold tracking-tight">Inbox</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-semibold tracking-tight">Inbox</h1>
+        <a href="/api/messages/export" className="sk-btn sk-btn-ghost">Export chat backup</a>
+      </div>
 
       <form className="mb-4 flex gap-3">
         <input
@@ -91,6 +95,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
             <div>
               <div className="flex items-center gap-2 font-mono text-[13px]">
                 {t.phone}
+                {t.channel !== "whatsapp" && <span className="sk-pill">{t.channel}</span>}
                 {t.optedOut && <span className="sk-pill border-danger text-danger">opted out</span>}
               </div>
               <div className="mt-0.5 max-w-md truncate text-[13px] text-muted">
