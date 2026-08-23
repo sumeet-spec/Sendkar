@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { sendSessionMessage } from "@/lib/whatsapp";
+import { draftReply } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
 
 export async function replyToContact(_prevState: unknown, formData: FormData) {
@@ -33,4 +34,22 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
 
   revalidatePath(`/inbox/${contactId}`);
   return { success: true };
+}
+
+export async function draftReplySuggestion(contactId: string): Promise<{ text?: string; error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const supabase = await createClient();
+  const [{ data: contact }, { data: messages }] = await Promise.all([
+    supabase.from("contacts").select("name").eq("id", contactId).single(),
+    supabase.from("messages").select("direction, body").eq("contact_id", contactId).order("created_at", { ascending: true }),
+  ]);
+
+  try {
+    const text = await draftReply(messages ?? [], contact?.name ?? null);
+    return { text };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "AI draft failed." };
+  }
 }

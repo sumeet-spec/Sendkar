@@ -7,9 +7,13 @@ export interface Workspace {
   whatsapp_phone_number_id: string | null;
   whatsapp_waba_id: string | null;
   whatsapp_access_token: string | null;
+  instagram_page_id: string | null;
+  instagram_access_token: string | null;
   messaging_tier: number;
   daily_send_count: number;
   daily_reset_at: string;
+  plan: string;
+  dodo_customer_id: string | null;
   created_at: string;
 }
 

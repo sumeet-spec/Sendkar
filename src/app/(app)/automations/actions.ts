@@ -1,0 +1,42 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentWorkspace } from "@/lib/workspace";
+import { getPlanLimits } from "@/lib/plans";
+import { revalidatePath } from "next/cache";
+
+export async function createAutomation(_prevState: unknown, formData: FormData) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const limits = getPlanLimits(workspace.plan);
+  if (!limits.automationsEnabled) return { error: "Automations need the Starter plan or above." };
+
+  const name = String(formData.get("name") ?? "").trim();
+  const triggerKeyword = String(formData.get("triggerKeyword") ?? "").trim().toLowerCase();
+  const matchType = String(formData.get("matchType") ?? "contains");
+  const replyBody = String(formData.get("replyBody") ?? "").trim();
+
+  if (!name || !triggerKeyword || !replyBody) return { error: "All fields are required." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("automations").insert({
+    workspace_id: workspace.id, name, trigger_keyword: triggerKeyword, match_type: matchType, reply_body: replyBody,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/automations");
+  return { success: true };
+}
+
+export async function toggleAutomation(id: string, isActive: boolean) {
+  const supabase = await createClient();
+  await supabase.from("automations").update({ is_active: isActive }).eq("id", id);
+  revalidatePath("/automations");
+}
+
+export async function deleteAutomation(id: string) {
+  const supabase = await createClient();
+  await supabase.from("automations").delete().eq("id", id);
+  revalidatePath("/automations");
+}

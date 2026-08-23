@@ -10,6 +10,14 @@ const NAV = [
   { href: "/templates", label: "Templates", icon: "doc" },
   { href: "/campaigns", label: "Campaigns", icon: "send" },
   { href: "/inbox", label: "Inbox", icon: "chat" },
+  { href: "/automations", label: "Automations", icon: "bolt" },
+  { href: "/webhooks", label: "Webhooks", icon: "webhook" },
+] as const;
+
+const SETTINGS_NAV = [
+  { href: "/settings/billing", label: "Billing" },
+  { href: "/settings/team", label: "Team" },
+  { href: "/settings/channels", label: "Channels" },
 ] as const;
 
 function Icon({ name }: { name: string }) {
@@ -25,6 +33,10 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><path d="M2 10l16-7-6 16-3-6-7-3z" /></svg>;
     case "chat":
       return <svg {...common}><path d="M3 4h14a1 1 0 011 1v9a1 1 0 01-1 1H8l-4 3v-3H3a1 1 0 01-1-1V5a1 1 0 011-1z" /></svg>;
+    case "bolt":
+      return <svg {...common}><path d="M11 2.5L4.5 11h4.2l-.7 6.5L15.5 9h-4.2l-.3-6.5z" /></svg>;
+    case "webhook":
+      return <svg {...common}><circle cx="5.5" cy="14.5" r="2.3" /><circle cx="14.5" cy="14.5" r="2.3" /><circle cx="13" cy="5.5" r="2.3" /><path d="M7.6 13.5L11.3 7M12.2 14.5H7.8" /></svg>;
     default:
       return null;
   }
@@ -62,6 +74,27 @@ export function Sidebar({ workspaceName }: { workspaceName: string }) {
           );
         })}
       </nav>
+
+      <div className="mt-5 border-t border-border pt-3">
+        <div className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-faint">Settings</div>
+        <nav className="flex flex-col gap-0.5">
+          {SETTINGS_NAV.map((item) => {
+            const active = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
+                  active ? "text-foreground" : "text-muted hover:text-foreground"
+                }`}
+                style={active ? { background: "rgba(34,197,94,0.10)" } : undefined}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       <div className="mt-auto border-t border-border pt-3">
         <div className="flex items-center justify-between px-2.5 py-1.5">

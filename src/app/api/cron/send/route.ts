@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage } from "@/lib/whatsapp";
+import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 
 /**
  * Vercel Cron hits this on a schedule (see vercel.json). No BullMQ/Redis —
  * at this scale (a few thousand contacts, and Meta's own 250/24h tier cap
  * on a fresh number regardless), a cron-triggered batch is enough and a
- * queue worker would be over-engineering. BATCH_SIZE also doubles as
- * natural pacing: a small batch every run reads as organic sending
- * behavior, not a burst, which is exactly what protects the number's
- * quality rating.
+ * queue worker would be over-engineering.
+ *
+ * Runs ONCE A DAY, not every few minutes: the Hobby plan Vercel account
+ * this deploys to rejects any cron expression that fires more than once
+ * per 24h (a real deploy-time error, not a guess) — Pro lifts that, but
+ * isn't worth paying for yet. One run/day still clears the FULL daily tier
+ * allowance in that single invocation (not a small slice of it), it just
+ * means all of a given day's sends land in one window each morning rather
+ * than trickling through the day. MAX_PER_RUN exists only to keep that one
+ * invocation inside Vercel's function-duration limit, not as pacing.
  */
-const BATCH_SIZE = 20;
+const MAX_PER_RUN = 100; // ~100 sequential Graph API calls comfortably fits maxDuration below
+const DELAY_BETWEEN_SENDS_MS = 250; // avoids bursting Meta's per-second send-rate limit
+
+export const maxDuration = 60; // seconds — Hobby plan's ceiling for a Serverless Function
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -56,7 +66,7 @@ export async function GET(request: NextRequest) {
       .select("id, contact_id, contacts(phone)")
       .eq("campaign_id", campaign.id)
       .eq("status", "queued")
-      .limit(Math.min(BATCH_SIZE, remainingToday));
+      .limit(Math.min(MAX_PER_RUN, remainingToday));
 
     if (!recipients || recipients.length === 0) {
       // Nothing left queued — the campaign is done.
@@ -64,6 +74,7 @@ export async function GET(request: NextRequest) {
         .from("campaigns")
         .update({ status: "completed", completed_at: now.toISOString() })
         .eq("id", campaign.id);
+      void dispatchOutboundWebhooks(workspace.id, "campaign.completed", { campaignId: campaign.id });
       results[campaign.id] = "completed";
       continue;
     }
@@ -78,6 +89,8 @@ export async function GET(request: NextRequest) {
     for (const recipient of recipients) {
       const phone = (recipient.contacts as { phone?: string } | null)?.phone;
       if (!phone || !template) continue;
+
+      if (sentCount > 0) await new Promise((r) => setTimeout(r, DELAY_BETWEEN_SENDS_MS));
 
       try {
         const { metaMessageId } = await sendTemplateMessage({
