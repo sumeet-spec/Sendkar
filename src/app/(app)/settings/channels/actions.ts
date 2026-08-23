@@ -33,6 +33,7 @@ export async function saveWhatsAppCredsFromChannels(_prevState: unknown, formDat
   const phoneNumberId = String(formData.get("phoneNumberId") ?? "").trim();
   const wabaId = String(formData.get("wabaId") ?? "").trim();
   const displayNumber = String(formData.get("displayNumber") ?? "").replace(/[^\d]/g, "");
+  const catalogId = String(formData.get("catalogId") ?? "").trim();
   const accessToken = String(formData.get("accessToken") ?? "").trim();
 
   const supabase = await createClient();
@@ -42,6 +43,7 @@ export async function saveWhatsAppCredsFromChannels(_prevState: unknown, formDat
       whatsapp_phone_number_id: phoneNumberId || null,
       whatsapp_waba_id: wabaId || null,
       whatsapp_display_number: displayNumber || null,
+      catalog_id: catalogId || null,
       whatsapp_access_token: accessToken || null,
     })
     .eq("id", workspace.id);

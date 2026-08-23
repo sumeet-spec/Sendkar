@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveApiKey } from "@/lib/apiKeys";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendTemplateMessage, sendSessionMessage } from "@/lib/whatsapp";
+import { sendTemplateMessage, sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
 
 /**
  * Sendkar's MCP server — lets Claude (or any MCP client) send WhatsApp
@@ -102,6 +102,20 @@ const TOOLS = [
       type: "object",
       properties: { to: { type: "string" }, body: { type: "string" } },
       required: ["to", "body"],
+    },
+  },
+  {
+    name: "list_products",
+    description: "List products in the catalog (must also exist in the connected Meta Commerce catalog to actually be sendable).",
+    inputSchema: { type: "object", properties: { limit: { type: "number" } } },
+  },
+  {
+    name: "send_product_message",
+    description: "Send a single product card from the catalog to a contact. Only works within the 24h window and requires a catalog ID configured in Settings.",
+    inputSchema: {
+      type: "object",
+      properties: { to: { type: "string" }, productRetailerId: { type: "string", description: "From list_products" } },
+      required: ["to", "productRetailerId"],
     },
   },
 ];
@@ -321,6 +335,47 @@ export async function POST(request: NextRequest) {
           status: "sent",
         });
 
+        return textResult(id, JSON.stringify({ sent: true, metaMessageId }));
+      }
+
+      case "list_products": {
+        const { data } = await admin
+          .from("products")
+          .select("id, retailer_id, name, price_label, is_active")
+          .eq("workspace_id", workspaceId)
+          .order("created_at", { ascending: false })
+          .limit(Math.min(Number(args.limit) || 50, 200));
+        return textResult(id, JSON.stringify(data ?? []));
+      }
+
+      case "send_product_message": {
+        const to = String(args.to ?? "").replace(/[^\d]/g, "");
+        const productRetailerId = String(args.productRetailerId ?? "");
+        if (!to || !productRetailerId) return textResult(id, "to and productRetailerId are required.", true);
+
+        const { data: workspace } = await admin
+          .from("workspaces")
+          .select("whatsapp_phone_number_id, whatsapp_access_token, catalog_id")
+          .eq("id", workspaceId)
+          .single();
+        if (!workspace) return textResult(id, "Workspace not found.", true);
+        if (!workspace.catalog_id) return textResult(id, "No catalog ID configured — add one in Settings -> Channels.", true);
+
+        const { data: contact } = await admin.from("contacts").select("id, session_expires_at").eq("workspace_id", workspaceId).eq("phone", to).maybeSingle();
+        if (!contact) return textResult(id, "No contact with that phone number has messaged this workspace yet.", true);
+        if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
+          return textResult(id, "The 24h reply window has closed for this contact.", true);
+        }
+
+        const { metaMessageId } = await sendProductMessage({ workspace, to, catalogId: workspace.catalog_id, productRetailerId });
+        await admin.from("messages").insert({
+          workspace_id: workspaceId,
+          contact_id: contact.id,
+          direction: "outbound",
+          body: `[Product: ${productRetailerId}]`,
+          meta_message_id: metaMessageId,
+          status: "sent",
+        });
         return textResult(id, JSON.stringify({ sent: true, metaMessageId }));
       }
 

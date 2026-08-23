@@ -23,6 +23,10 @@ export function WhatsAppForm({ workspace }: { workspace: Workspace }) {
         <input name="displayNumber" defaultValue={workspace.whatsapp_display_number ?? ""} className="sk-input font-mono text-sm" />
       </div>
       <div>
+        <label className="sk-label">Commerce catalog ID (optional — from Meta Commerce Manager, for the product catalog)</label>
+        <input name="catalogId" defaultValue={workspace.catalog_id ?? ""} className="sk-input font-mono text-sm" />
+      </div>
+      <div>
         <label className="sk-label">System user access token</label>
         <input name="accessToken" type="password" defaultValue={workspace.whatsapp_access_token ?? ""} className="sk-input font-mono text-sm" />
       </div>

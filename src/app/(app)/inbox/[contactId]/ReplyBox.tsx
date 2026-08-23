@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState, useTransition } from "react";
-import { replyToContact, draftReplySuggestion } from "../actions";
+import { replyToContact, draftReplySuggestion, sendProductToContact } from "../actions";
 
 interface CannedResponse {
   id: string;
@@ -9,18 +9,28 @@ interface CannedResponse {
   body: string;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  price_label: string | null;
+}
+
 export function ReplyBox({
   contactId,
   sessionOpen,
   cannedResponses,
+  products,
 }: {
   contactId: string;
   sessionOpen: boolean;
   cannedResponses: CannedResponse[];
+  products: Product[];
 }) {
   const [state, formAction, pending] = useActionState(replyToContact, null);
   const [aiPending, startAiTransition] = useTransition();
   const [aiError, setAiError] = useState<string | null>(null);
+  const [productPending, startProductTransition] = useTransition();
+  const [productError, setProductError] = useState<string | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   function draftWithAi() {
@@ -38,6 +48,14 @@ export function ReplyBox({
   function insertCanned(id: string) {
     const canned = cannedResponses.find((c) => c.id === id);
     if (canned && textRef.current) textRef.current.value = canned.body;
+  }
+
+  function sendProduct(productId: string) {
+    setProductError(null);
+    startProductTransition(async () => {
+      const result = await sendProductToContact(contactId, productId);
+      if (result.error) setProductError(result.error);
+    });
   }
 
   return (
@@ -59,6 +77,7 @@ export function ReplyBox({
       />
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       {aiError && <p className="text-sm text-danger">{aiError}</p>}
+      {productError && <p className="text-sm text-danger">{productError}</p>}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button type="button" onClick={draftWithAi} disabled={aiPending} className="sk-btn sk-btn-ghost disabled:opacity-60">
@@ -76,6 +95,22 @@ export function ReplyBox({
               <option value="" disabled>Insert canned reply…</option>
               {cannedResponses.map((c) => (
                 <option key={c.id} value={c.id}>/{c.shortcut}</option>
+              ))}
+            </select>
+          )}
+          {products.length > 0 && (
+            <select
+              defaultValue=""
+              disabled={productPending || !sessionOpen}
+              onChange={(e) => {
+                if (e.target.value) sendProduct(e.target.value);
+                e.target.value = "";
+              }}
+              className="sk-input w-auto text-[12.5px] disabled:opacity-60"
+            >
+              <option value="" disabled>{productPending ? "Sending…" : "Send product…"}</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}{p.price_label ? ` (${p.price_label})` : ""}</option>
               ))}
             </select>
           )}

@@ -165,6 +165,31 @@ create policy "member can view flow state" on contact_flow_state
     select id from flows where workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
   ));
 
+-- ── Product catalog — WhatsApp's native "browse products in-chat" message
+-- types, referencing a Meta Commerce Manager catalog. The catalog itself is
+-- still set up once in Meta Commerce Manager (same "submitted elsewhere,
+-- referenced here" pattern as templates) — this table is Sendkar's own
+-- mirror for display and for picking which product_retailer_id to send. ──
+
+alter table workspaces add column catalog_id text;
+
+create table products (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  retailer_id  text not null, -- must match the product's retailer id in the Meta catalog
+  name         text not null,
+  price_label  text, -- free text ("₹499"), not parsed — Meta's catalog is the price source of truth
+  image_url    text,
+  description  text,
+  is_active    bool not null default true,
+  created_at   timestamptz not null default now(),
+  unique (workspace_id, retailer_id)
+);
+create index products_workspace_idx on products (workspace_id);
+alter table products enable row level security;
+create policy "member can manage products" on products
+  for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (

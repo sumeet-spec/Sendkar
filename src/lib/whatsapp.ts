@@ -116,6 +116,59 @@ export function isWhatsAppConfigured(ws: WorkspaceCreds): boolean {
   return Boolean(ws.whatsapp_phone_number_id && ws.whatsapp_access_token);
 }
 
+// ── Product catalog messages ────────────────────────────────────────────────
+// References a catalog already set up in Meta Commerce Manager — same
+// "configured once elsewhere, sent from here" posture as templates. Only
+// deliverable within the 24h session window, same as any free-form message.
+
+export interface SendProductInput {
+  workspace: WorkspaceCreds;
+  to: string;
+  catalogId: string;
+  productRetailerId: string;
+  bodyText?: string;
+}
+
+/** A single product card the recipient can view and add to cart in-chat. */
+export async function sendProductMessage(input: SendProductInput) {
+  const { phoneNumberId, token } = requireCreds(input.workspace);
+  return graphPost(phoneNumberId, token, {
+    messaging_product: "whatsapp",
+    to: input.to,
+    type: "interactive",
+    interactive: {
+      type: "product",
+      ...(input.bodyText ? { body: { text: input.bodyText } } : {}),
+      action: { catalog_id: input.catalogId, product_retailer_id: input.productRetailerId },
+    },
+  });
+}
+
+export interface SendCatalogInput {
+  workspace: WorkspaceCreds;
+  to: string;
+  bodyText: string;
+  thumbnailProductRetailerId?: string;
+}
+
+/** A "browse our catalog" message linking the whole connected catalog, not one product. */
+export async function sendCatalogMessage(input: SendCatalogInput) {
+  const { phoneNumberId, token } = requireCreds(input.workspace);
+  return graphPost(phoneNumberId, token, {
+    messaging_product: "whatsapp",
+    to: input.to,
+    type: "interactive",
+    interactive: {
+      type: "catalog_message",
+      body: { text: input.bodyText },
+      action: {
+        name: "catalog_message",
+        ...(input.thumbnailProductRetailerId ? { parameters: { thumbnail_product_retailer_id: input.thumbnailProductRetailerId } } : {}),
+      },
+    },
+  });
+}
+
 // ── Real template submission ──────────────────────────────────────────────
 // Actually calls Meta's template API instead of just recording a name you
 // typed in — this is the difference between a tracker and an integration.

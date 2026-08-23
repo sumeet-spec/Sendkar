@@ -9,6 +9,7 @@ export interface Workspace {
   whatsapp_waba_id: string | null;
   whatsapp_access_token: string | null;
   whatsapp_display_number: string | null;
+  catalog_id: string | null;
   instagram_page_id: string | null;
   instagram_access_token: string | null;
   messaging_tier: number;

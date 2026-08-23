@@ -11,6 +11,8 @@ const TOOLS = [
   ["start_campaign", "Snapshot the audience and start sending"],
   ["send_template_message", "Send one approved template to a single number, right now"],
   ["send_session_message", "Send a free-text reply within the 24h window"],
+  ["list_products", "List catalog products"],
+  ["send_product_message", "Send a product card from the catalog to a contact"],
 ];
 
 export default async function McpPage() {

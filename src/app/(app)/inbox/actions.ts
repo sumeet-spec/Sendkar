@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { sendSessionMessage } from "@/lib/whatsapp";
+import { sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
 import { draftReply } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
 
@@ -59,6 +59,45 @@ export async function draftReplySuggestion(contactId: string): Promise<{ text?: 
   } catch (err) {
     return { error: err instanceof Error ? err.message : "AI draft failed." };
   }
+}
+
+export async function sendProductToContact(contactId: string, productId: string): Promise<{ success?: boolean; error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+  if (!workspace.catalog_id) return { error: "Add a catalog ID in Settings → Channels first." };
+
+  const supabase = await createClient();
+  const [{ data: contact }, { data: product }] = await Promise.all([
+    supabase.from("contacts").select("phone, session_expires_at").eq("id", contactId).single(),
+    supabase.from("products").select("retailer_id, name").eq("id", productId).single(),
+  ]);
+  if (!contact) return { error: "Contact not found." };
+  if (!product) return { error: "Product not found." };
+  if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
+    return { error: "The 24h reply window has closed for this contact." };
+  }
+
+  try {
+    const { metaMessageId } = await sendProductMessage({
+      workspace,
+      to: contact.phone,
+      catalogId: workspace.catalog_id,
+      productRetailerId: product.retailer_id,
+    });
+    await supabase.from("messages").insert({
+      workspace_id: workspace.id,
+      contact_id: contactId,
+      direction: "outbound",
+      body: `[Product: ${product.name}]`,
+      meta_message_id: metaMessageId,
+      status: "sent",
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Send failed." };
+  }
+
+  revalidatePath(`/inbox/${contactId}`);
+  return { success: true };
 }
 
 export async function assignContact(contactId: string, userId: string | null) {

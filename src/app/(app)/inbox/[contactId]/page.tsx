@@ -20,10 +20,11 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
     .maybeSingle();
   if (!contact) notFound();
 
-  const [{ data: messages }, { data: cannedResponses }, { data: notes }, members] = await Promise.all([
+  const [{ data: messages }, { data: cannedResponses }, { data: notes }, { data: products }, members] = await Promise.all([
     supabase.from("messages").select("*").eq("contact_id", contactId).order("created_at", { ascending: true }),
     supabase.from("canned_responses").select("id, shortcut, body").eq("workspace_id", workspace.id).order("shortcut", { ascending: true }),
     supabase.from("contact_notes").select("id, body, created_at, author_id").eq("contact_id", contactId).order("created_at", { ascending: false }),
+    supabase.from("products").select("id, name, price_label").eq("workspace_id", workspace.id).eq("is_active", true).order("name", { ascending: true }),
     listWorkspaceMembers(workspace.id),
   ]);
 
@@ -63,7 +64,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
             ))}
             {(!messages || messages.length === 0) && <p className="text-center text-muted">No messages yet.</p>}
           </div>
-          <ReplyBox contactId={contactId} sessionOpen={sessionOpen} cannedResponses={cannedResponses ?? []} />
+          <ReplyBox contactId={contactId} sessionOpen={sessionOpen} cannedResponses={cannedResponses ?? []} products={products ?? []} />
         </div>
       </div>
 
