@@ -190,6 +190,28 @@ alter table products enable row level security;
 create policy "member can manage products" on products
   for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
 
+-- ── Shopify — one real native e-commerce integration instead of ten shallow
+-- ones. OAuth-connected per workspace; order webhooks trigger an automatic
+-- WhatsApp order-confirmation send using a template the workspace picks. ──
+
+alter table workspaces
+  add column shopify_shop_domain text,
+  add column shopify_access_token text,
+  add column order_confirmation_template_id uuid references templates(id);
+
+-- ── WooCommerce — same order-confirmation idea, but the merchant generates
+-- their own webhook secret in WP admin (no OAuth app to register on our
+-- side at all) and pastes the delivery URL Sendkar shows them. ────────────
+
+alter table workspaces
+  add column woocommerce_store_url text,
+  add column woocommerce_webhook_secret text;
+
+-- ── Klaviyo — private API key, no OAuth review process, so a new WhatsApp
+-- contact syncs there as a profile the moment they message in. ───────────
+
+alter table workspaces add column klaviyo_api_key text;
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (

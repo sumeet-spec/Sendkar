@@ -1,7 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/invite", "/api/whatsapp/webhook", "/api/instagram/webhook", "/api/billing/webhook", "/api/cron", "/api/mcp", "/mcp"];
+const PUBLIC_PATHS = [
+  "/login", "/signup", "/invite",
+  "/api/whatsapp/webhook", "/api/instagram/webhook", "/api/billing/webhook", "/api/cron",
+  "/api/mcp", "/mcp",
+  "/api/shopify/callback", "/api/shopify/webhook",
+  "/api/woocommerce/webhook",
+  "/api/v1/send",
+];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

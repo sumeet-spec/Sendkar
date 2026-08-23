@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature, sendSessionMessage, isOptOutMessage, isOptInMessage, OPT_OUT_CONFIRMATION } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
+import { syncKlaviyoProfile } from "@/lib/klaviyo";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -210,11 +211,12 @@ export async function POST(request: NextRequest) {
 
         let contactId = contact?.id as string | undefined;
         let isNewContact = false;
+        let profileNameForNewContact: string | null = null;
         if (!contactId) {
-          const profileName = value.contacts?.find((c) => c.wa_id === msg.from)?.profile?.name ?? null;
+          profileNameForNewContact = value.contacts?.find((c) => c.wa_id === msg.from)?.profile?.name ?? null;
           const { data: created } = await admin
             .from("contacts")
-            .insert({ workspace_id: workspaceId, phone: msg.from, name: profileName, source: "inbound_reply" })
+            .insert({ workspace_id: workspaceId, phone: msg.from, name: profileNameForNewContact, source: "inbound_reply" })
             .select("id")
             .single();
           contactId = created?.id;
@@ -243,6 +245,10 @@ export async function POST(request: NextRequest) {
         const wsId = workspaceId;
         if (isNewContact) {
           after(() => dispatchOutboundWebhooks(wsId, "contact.created", { contactId, phone: msg.from }));
+          after(async () => {
+            const { data: ws } = await admin.from("workspaces").select("klaviyo_api_key").eq("id", wsId).single();
+            if (ws?.klaviyo_api_key) await syncKlaviyoProfile(ws.klaviyo_api_key, msg.from!, profileNameForNewContact);
+          });
         }
         after(() => dispatchOutboundWebhooks(wsId, "message.received", { contactId, phone: msg.from, body: inboundBody }));
 

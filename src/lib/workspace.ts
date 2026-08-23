@@ -17,6 +17,12 @@ export interface Workspace {
   daily_reset_at: string;
   plan: string;
   dodo_customer_id: string | null;
+  shopify_shop_domain: string | null;
+  shopify_access_token: string | null;
+  order_confirmation_template_id: string | null;
+  woocommerce_store_url: string | null;
+  woocommerce_webhook_secret: string | null;
+  klaviyo_api_key: string | null;
   created_at: string;
 }
 
