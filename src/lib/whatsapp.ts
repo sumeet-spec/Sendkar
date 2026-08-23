@@ -30,29 +30,45 @@ function requireCreds(ws: WorkspaceCreds): { phoneNumberId: string; token: strin
   return { phoneNumberId: ws.whatsapp_phone_number_id, token: ws.whatsapp_access_token };
 }
 
+// Only network failures and Meta's own 5xx/rate-limit responses are worth
+// retrying — a 4xx (bad template params, invalid recipient, permanently
+// disallowed re-engagement) will fail identically every time, so retrying
+// it would just waste the cron run's time budget on every recipient behind it.
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+const GRAPH_RETRY_DELAYS_MS = [0, 600]; // one quick retry, not the full outbound-webhook backoff ladder
+
 async function graphPost(phoneNumberId: string, token: string, body: unknown) {
-  const res = await fetch(
-    `https://graph.facebook.com/${GRAPH_API_VERSION}/${phoneNumberId}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
-    },
-  );
-  const json = (await res.json()) as {
-    messages?: [{ id: string }];
-    error?: { message?: string; code?: number };
-  };
-  if (!res.ok || json.error) {
-    throw new Error(json.error?.message ?? `WhatsApp API error (HTTP ${res.status})`);
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < GRAPH_RETRY_DELAYS_MS.length; attempt++) {
+    if (GRAPH_RETRY_DELAYS_MS[attempt] > 0) await new Promise((r) => setTimeout(r, GRAPH_RETRY_DELAYS_MS[attempt]));
+
+    let res: Response;
+    try {
+      res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15_000),
+      });
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error("Network request failed");
+      continue; // network failure — worth a retry
+    }
+
+    const json = (await res.json()) as { messages?: [{ id: string }]; error?: { message?: string; code?: number } };
+
+    if (res.ok && !json.error) {
+      const messageId = json.messages?.[0]?.id;
+      if (!messageId) throw new Error("WhatsApp API accepted the request but returned no message id.");
+      return { metaMessageId: messageId };
+    }
+
+    lastError = new Error(json.error?.message ?? `WhatsApp API error (HTTP ${res.status})`);
+    if (!RETRYABLE_STATUS.has(res.status)) throw lastError; // permanent failure — don't waste a retry on it
   }
-  const messageId = json.messages?.[0]?.id;
-  if (!messageId) throw new Error("WhatsApp API accepted the request but returned no message id.");
-  return { metaMessageId: messageId };
+
+  throw lastError ?? new Error("WhatsApp API request failed after retries.");
 }
 
 export interface SendTemplateInput {

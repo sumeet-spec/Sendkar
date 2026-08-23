@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { CampaignControls } from "./StartButton";
+import { TestSendForm } from "./TestSendForm";
 import { notFound } from "next/navigation";
 
 const RECIPIENT_STATUS_STYLE: Record<string, string> = {
@@ -47,7 +48,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             {template?.name} · {template?.language} · <span className="font-mono">{template?.meta_template_name}</span>
           </div>
         </div>
-        <CampaignControls campaignId={campaign.id} status={campaign.status} />
+        <div className="flex gap-2">
+          {campaign.status === "draft" && <TestSendForm campaignId={campaign.id} />}
+          <CampaignControls campaignId={campaign.id} status={campaign.status} />
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-5 gap-3">

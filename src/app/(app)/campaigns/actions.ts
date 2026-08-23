@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { sendTemplateMessage } from "@/lib/whatsapp";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -63,6 +64,39 @@ export async function startCampaign(campaignId: string) {
     .eq("id", campaign.id);
 
   revalidatePath(`/campaigns/${campaignId}`);
+}
+
+export async function sendTestMessage(_prevState: unknown, formData: FormData) {
+  const campaignId = String(formData.get("campaignId") ?? "");
+  const phone = String(formData.get("phone") ?? "").replace(/[^\d]/g, "");
+  if (!campaignId || phone.length < 10) return { error: "Enter a valid phone number, digits only with country code." };
+
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const supabase = await createClient();
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("id, templates(meta_template_name, language, body_text)")
+    .eq("id", campaignId)
+    .eq("workspace_id", workspace.id)
+    .single();
+  const template = campaign?.templates as { meta_template_name?: string; language?: string; body_text?: string } | null;
+  if (!template?.meta_template_name) return { error: "Template not found." };
+
+  try {
+    await sendTemplateMessage({
+      workspace,
+      to: phone,
+      templateName: template.meta_template_name,
+      language: template.language ?? "en",
+      bodyParams: template.body_text?.includes("{{1}}") ? ["there"] : undefined,
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Test send failed." };
+  }
+
+  return { success: true };
 }
 
 export async function pauseCampaign(campaignId: string) {
