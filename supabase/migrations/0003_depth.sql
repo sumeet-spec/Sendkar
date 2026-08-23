@@ -21,6 +21,11 @@ create index contacts_opted_out_idx on contacts (workspace_id, opted_out);
 -- Hindi contact.
 alter table campaigns add column segment_tag text;
 
+-- wa.me click-to-chat links need the actual E.164 number, not the opaque
+-- phone_number_id the Cloud API uses for sending — that ID alone can't
+-- build a link.
+alter table workspaces add column whatsapp_display_number text;
+
 -- ── Real template submission to Meta — structured components instead of a
 -- name you typed in by hand. ──────────────────────────────────────────────
 

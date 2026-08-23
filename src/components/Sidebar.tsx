@@ -13,6 +13,7 @@ const NAV = [
   { href: "/analytics", label: "Analytics", icon: "chart" },
   { href: "/automations", label: "Automations", icon: "bolt" },
   { href: "/webhooks", label: "Webhooks", icon: "webhook" },
+  { href: "/links", label: "Links & widget", icon: "link" },
 ] as const;
 
 const SETTINGS_NAV = [
@@ -41,6 +42,8 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><circle cx="5.5" cy="14.5" r="2.3" /><circle cx="14.5" cy="14.5" r="2.3" /><circle cx="13" cy="5.5" r="2.3" /><path d="M7.6 13.5L11.3 7M12.2 14.5H7.8" /></svg>;
     case "chart":
       return <svg {...common}><path d="M3 17V3M3 17h14" /><path d="M6.5 14V9.5M10 14V6M13.5 14v-3" /></svg>;
+    case "link":
+      return <svg {...common}><path d="M8.5 11.5a3 3 0 004.2 0l2-2a3 3 0 00-4.2-4.2l-1 1" /><path d="M11.5 8.5a3 3 0 00-4.2 0l-2 2a3 3 0 004.2 4.2l1-1" /></svg>;
     default:
       return null;
   }

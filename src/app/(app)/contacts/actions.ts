@@ -52,6 +52,17 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
   if (contacts.length === 0) return { error: "No valid phone numbers found in that file." };
 
   const supabase = await createClient();
+
+  // Know which of these already exist BEFORE upserting, so the result can
+  // report new vs. updated instead of silently overwriting duplicates with
+  // no visibility into what happened.
+  const { data: existing } = await supabase
+    .from("contacts")
+    .select("phone")
+    .eq("workspace_id", workspace.id)
+    .in("phone", contacts.map((c) => c.phone));
+  const existingPhones = new Set((existing ?? []).map((c) => c.phone));
+
   const { error } = await supabase
     // "channel" defaults to 'whatsapp' in the schema — matches the unique
     // constraint added when Instagram contacts became a second row shape.
@@ -60,8 +71,11 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
 
   if (error) return { error: error.message };
 
+  const updated = contacts.filter((c) => existingPhones.has(c.phone)).length;
+  const imported = contacts.length - updated;
+
   revalidatePath("/contacts");
-  return { success: true, imported: contacts.length };
+  return { success: true, imported, updated };
 }
 
 export async function deleteContact(contactId: string) {

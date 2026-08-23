@@ -19,6 +19,10 @@ export function WhatsAppForm({ workspace }: { workspace: Workspace }) {
         <input name="wabaId" defaultValue={workspace.whatsapp_waba_id ?? ""} className="sk-input font-mono text-sm" />
       </div>
       <div>
+        <label className="sk-label">Display number (E.164, e.g. 919876543210 — for click-to-chat links)</label>
+        <input name="displayNumber" defaultValue={workspace.whatsapp_display_number ?? ""} className="sk-input font-mono text-sm" />
+      </div>
+      <div>
         <label className="sk-label">System user access token</label>
         <input name="accessToken" type="password" defaultValue={workspace.whatsapp_access_token ?? ""} className="sk-input font-mono text-sm" />
       </div>

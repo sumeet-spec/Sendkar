@@ -36,7 +36,12 @@ export function ImportForm() {
         {pending ? "Importing…" : "Import"}
       </button>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
-      {state?.success && <p className="text-sm text-accent">Imported {state.imported} contacts.</p>}
+      {state?.success && (
+        <p className="text-sm text-accent">
+          {state.imported} new contact{state.imported === 1 ? "" : "s"}
+          {state.updated > 0 ? `, ${state.updated} updated` : ""}.
+        </p>
+      )}
     </form>
   );
 }
