@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ReplyBox } from "./ReplyBox";
 import { AssigneeSelect } from "./AssigneeSelect";
 import { NotesPanel } from "./NotesPanel";
+import { SummaryPanel } from "./SummaryPanel";
 import { RealtimeRefresher } from "./RealtimeRefresher";
 
 export default async function ThreadPage({ params }: { params: Promise<{ contactId: string }> }) {
@@ -40,9 +41,17 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
           <div>
             <div className="font-mono text-sm">{contact.phone}</div>
             {contact.name && <div className="text-[13px] text-faint">{contact.name}</div>}
+            {contact.tags?.length > 0 && (
+              <div className="mt-1 flex gap-1">
+                {contact.tags.map((t: string) => <span key={t} className="sk-pill">{t}</span>)}
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             {contact.opted_out && <span className="sk-pill border-danger text-danger">opted out</span>}
+            {(contact.last_sentiment === "negative" || contact.last_sentiment === "urgent") && (
+              <span className="sk-pill border-warn text-warn">{contact.last_sentiment}</span>
+            )}
             <span className={`sk-pill ${sessionOpen ? "border-accent text-accent" : "text-faint"}`}>
               {sessionOpen ? "24h window open" : "24h window closed"}
             </span>
@@ -73,6 +82,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
           <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">Assigned to</div>
           <AssigneeSelect contactId={contactId} members={members} assigneeId={contact.assignee_id} />
         </div>
+        <SummaryPanel contactId={contactId} />
         <NotesPanel contactId={contactId} notes={notesWithAuthor} />
       </div>
     </div>

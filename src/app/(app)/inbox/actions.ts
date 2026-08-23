@@ -6,7 +6,7 @@ import { sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
 import { sendInstagramMessage } from "@/lib/instagram";
 import { sendMessengerMessage } from "@/lib/messenger";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
-import { draftReply } from "@/lib/ai";
+import { draftReply, summarizeThread } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
 
 export async function replyToContact(_prevState: unknown, formData: FormData) {
@@ -72,6 +72,21 @@ export async function draftReplySuggestion(contactId: string): Promise<{ text?: 
     return { text };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "AI draft failed." };
+  }
+}
+
+export async function summarizeConversation(contactId: string): Promise<{ summary?: string; error?: string }> {
+  const supabase = await createClient();
+  const [{ data: contact }, { data: messages }] = await Promise.all([
+    supabase.from("contacts").select("name").eq("id", contactId).single(),
+    supabase.from("messages").select("direction, body").eq("contact_id", contactId).order("created_at", { ascending: true }),
+  ]);
+
+  try {
+    const summary = await summarizeThread(messages ?? [], contact?.name ?? null);
+    return { summary };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Summary failed." };
   }
 }
 

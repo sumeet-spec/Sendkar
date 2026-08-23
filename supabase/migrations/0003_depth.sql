@@ -262,6 +262,13 @@ alter table contacts add constraint contacts_channel_check check (channel in ('w
 alter table messages drop constraint messages_channel_check;
 alter table messages add constraint messages_channel_check check (channel in ('whatsapp', 'instagram', 'messenger'));
 
+-- ── AI-native features WATI/Interakt don't have: template drafting from a
+-- description, and automatic per-message tagging/sentiment so contacts
+-- self-segment by intent without anyone tagging them by hand. ────────────
+
+alter table contacts add column last_sentiment text check (last_sentiment in ('positive', 'neutral', 'negative', 'urgent'));
+create index contacts_last_sentiment_idx on contacts (workspace_id, last_sentiment) where last_sentiment in ('negative', 'urgent');
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (

@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { createTemplate } from "./actions";
+import { useActionState, useState, useTransition } from "react";
+import { createTemplate, generateTemplateWithAi } from "./actions";
 
 const LANGUAGES = [
   { value: "hi", label: "Hindi" },
@@ -15,7 +15,38 @@ const LANGUAGES = [
 export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean }) {
   const [state, formAction, pending] = useActionState(createTemplate, null);
   const [open, setOpen] = useState(false);
+  const [language, setLanguage] = useState("");
   const [headerType, setHeaderType] = useState("none");
+  const [headerText, setHeaderText] = useState("");
+  const [bodyText, setBodyText] = useState("");
+  const [footerText, setFooterText] = useState("");
+  const [quickReplies, setQuickReplies] = useState("");
+
+  const [aiDescription, setAiDescription] = useState("");
+  const [aiPending, startAiTransition] = useTransition();
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  function generateWithAi() {
+    if (!language) {
+      setAiError("Pick a language first, so the draft is written in it.");
+      return;
+    }
+    setAiError(null);
+    startAiTransition(async () => {
+      const result = await generateTemplateWithAi(aiDescription, language);
+      if (result.error) {
+        setAiError(result.error);
+        return;
+      }
+      if (result.draft) {
+        setHeaderType(result.draft.headerType);
+        setHeaderText(result.draft.headerText ?? "");
+        setBodyText(result.draft.bodyText);
+        setFooterText(result.draft.footerText ?? "");
+        setQuickReplies(result.draft.quickReplies.join(", "));
+      }
+    });
+  }
 
   if (!open) {
     return (
@@ -39,12 +70,29 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
         </div>
         <div>
           <label className="sk-label">Language</label>
-          <select name="language" className="sk-input" required defaultValue="">
+          <select name="language" className="sk-input" required value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="" disabled>Select…</option>
             {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
         </div>
       </div>
+
+      <div className="rounded-md border border-border p-3">
+        <label className="sk-label">✳ Describe the message, let AI draft it</label>
+        <div className="flex gap-2">
+          <input
+            value={aiDescription}
+            onChange={(e) => setAiDescription(e.target.value)}
+            className="sk-input flex-1 text-sm"
+            placeholder="Announce we've launched on WhatsApp, ask if they want to hear about new drops"
+          />
+          <button type="button" onClick={generateWithAi} disabled={aiPending} className="sk-btn sk-btn-ghost text-[12.5px] disabled:opacity-60">
+            {aiPending ? "Drafting…" : "Generate"}
+          </button>
+        </div>
+        {aiError && <p className="mt-1 text-[12px] text-danger">{aiError}</p>}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="sk-label">Meta template name (lowercase, underscores)</label>
@@ -78,24 +126,32 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
             <option value="image">Image</option>
           </select>
           {headerType === "text" && (
-            <input name="headerText" className="sk-input flex-1" placeholder="Header text" />
+            <input name="headerText" value={headerText} onChange={(e) => setHeaderText(e.target.value)} className="sk-input flex-1" placeholder="Header text" />
           )}
         </div>
       </div>
 
       <div>
         <label className="sk-label">Body — use {"{{1}}"} for the recipient&apos;s name</label>
-        <textarea name="bodyText" className="sk-input" rows={4} placeholder={"Hi {{1}}, we've launched on WhatsApp..."} required />
+        <textarea
+          name="bodyText"
+          value={bodyText}
+          onChange={(e) => setBodyText(e.target.value)}
+          className="sk-input"
+          rows={4}
+          placeholder={"Hi {{1}}, we've launched on WhatsApp..."}
+          required
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="sk-label">Footer (optional)</label>
-          <input name="footerText" className="sk-input" placeholder="Reply STOP to unsubscribe" />
+          <input name="footerText" value={footerText} onChange={(e) => setFooterText(e.target.value)} className="sk-input" placeholder="Reply STOP to unsubscribe" />
         </div>
         <div>
           <label className="sk-label">Quick-reply buttons (comma-separated, up to 3)</label>
-          <input name="quickReplies" className="sk-input" placeholder="Yes, No" />
+          <input name="quickReplies" value={quickReplies} onChange={(e) => setQuickReplies(e.target.value)} className="sk-input" placeholder="Yes, No" />
         </div>
       </div>
 

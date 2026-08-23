@@ -4,6 +4,7 @@ import { verifyWebhookSignature, sendSessionMessage, isOptOutMessage, isOptInMes
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { syncKlaviyoProfile } from "@/lib/klaviyo";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
+import { classifyInboundMessage } from "@/lib/ai";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -274,6 +275,24 @@ export async function POST(request: NextRequest) {
           });
         }
         after(() => dispatchOutboundWebhooks(wsId, "message.received", { contactId, phone: msg.from, body: inboundBody }));
+
+        // Auto-tag + sentiment on every real inbound text — contacts self-segment
+        // by intent without anyone tagging them by hand. Best-effort: a
+        // misconfigured/unavailable AI key just means no tags get added, never a
+        // reason to fail webhook processing.
+        if (msg.text?.body && process.env.ANTHROPIC_API_KEY) {
+          const cId = contactId;
+          after(async () => {
+            try {
+              const { tags: newTags, sentiment } = await classifyInboundMessage(msg.text!.body!);
+              const { data: existingContact } = await admin.from("contacts").select("tags").eq("id", cId).single();
+              const mergedTags = [...new Set([...(existingContact?.tags ?? []), ...newTags])];
+              await admin.from("contacts").update({ tags: mergedTags, last_sentiment: sentiment }).eq("id", cId);
+            } catch {
+              // Classification is a nice-to-have, never load-bearing.
+            }
+          });
+        }
 
         // ── Opt-out / opt-in — a documented, code-enforced unsubscribe path ────
         let handledAsComplianceKeyword = false;

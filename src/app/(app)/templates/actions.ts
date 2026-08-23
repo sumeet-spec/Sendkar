@@ -3,7 +3,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { submitTemplateToMeta } from "@/lib/whatsapp";
+import { generateTemplateDraft, type GeneratedTemplateDraft } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
+
+export async function generateTemplateWithAi(description: string, language: string): Promise<{ draft?: GeneratedTemplateDraft; error?: string }> {
+  if (!description.trim()) return { error: "Describe what the message should say." };
+  try {
+    const draft = await generateTemplateDraft(description, language);
+    return { draft };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "AI draft failed." };
+  }
+}
 
 export async function createTemplate(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
