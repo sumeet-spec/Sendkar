@@ -114,6 +114,7 @@ export default async function AnalyticsPage() {
         <div className="border-b border-border p-4 text-[11px] font-medium uppercase tracking-wide text-faint">
           Template performance
         </div>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
@@ -137,6 +138,7 @@ export default async function AnalyticsPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

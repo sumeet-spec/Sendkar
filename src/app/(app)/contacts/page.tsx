@@ -48,6 +48,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       <ImportForm />
 
       <div className="sk-card mt-6 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
@@ -89,6 +90,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
             )}
           </tbody>
         </table>
+        </div>
       </div>
       {(totalCount ?? 0) > 200 && (
         <p className="mt-3 text-xs text-faint">Showing the most recent 200 of {totalCount} contacts.</p>

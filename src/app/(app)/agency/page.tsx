@@ -35,34 +35,36 @@ export default async function AgencyPage() {
       <p className="mb-6 text-sm text-muted">Every workspace this login has access to. Switch into one from the sidebar, or add a new client here.</p>
 
       <div className="sk-card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left">
-              {["Workspace", "Plan", "Contacts", "Campaigns", "Messages", ""].map((h) => (
-                <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {workspaces.map((w) => (
-              <tr key={w.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-2.5 font-medium">{w.name}</td>
-                <td className="px-4 py-2.5"><span className="sk-pill">{planById.get(w.id) ?? "free"}</span></td>
-                <td className="px-4 py-2.5 text-muted">{countBy(contacts, w.id)}</td>
-                <td className="px-4 py-2.5 text-muted">{countBy(campaigns, w.id)}</td>
-                <td className="px-4 py-2.5 text-muted">{countBy(messages, w.id)}</td>
-                <td className="px-4 py-2.5 text-right">
-                  <form action={switchWorkspace.bind(null, w.id)}>
-                    <button type="submit" className="text-[12.5px] text-accent hover:text-accent-hover">Switch in →</button>
-                  </form>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left">
+                {["Workspace", "Plan", "Contacts", "Campaigns", "Messages", ""].map((h) => (
+                  <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
+                ))}
               </tr>
-            ))}
-            {workspaces.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No workspaces yet.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {workspaces.map((w) => (
+                <tr key={w.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-2.5 font-medium">{w.name}</td>
+                  <td className="px-4 py-2.5"><span className="sk-pill">{planById.get(w.id) ?? "free"}</span></td>
+                  <td className="px-4 py-2.5 text-muted">{countBy(contacts, w.id)}</td>
+                  <td className="px-4 py-2.5 text-muted">{countBy(campaigns, w.id)}</td>
+                  <td className="px-4 py-2.5 text-muted">{countBy(messages, w.id)}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    <form action={switchWorkspace.bind(null, w.id)}>
+                      <button type="submit" className="whitespace-nowrap text-[12.5px] text-accent hover:text-accent-hover">Switch in →</button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+              {workspaces.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No workspaces yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
