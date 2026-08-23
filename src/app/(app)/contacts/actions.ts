@@ -34,12 +34,17 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
   const dataRows = hasHeader ? rows.slice(1) : rows;
 
   const contacts = dataRows
-    .map(([phone, email]) => ({ phone: (phone ?? "").replace(/[^\d]/g, ""), email: email || null }))
+    .map(([phone, email, tagField]) => ({
+      phone: (phone ?? "").replace(/[^\d]/g, ""),
+      email: email || null,
+      tags: (tagField ?? "").split(";").map((t) => t.trim()).filter(Boolean),
+    }))
     .filter((c) => c.phone.length >= 10)
     .map((c) => ({
       workspace_id: workspace.id,
       phone: c.phone,
       email: c.email,
+      tags: c.tags,
       language,
       source: "apify_scrape",
     }));
@@ -48,8 +53,10 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase
+    // "channel" defaults to 'whatsapp' in the schema — matches the unique
+    // constraint added when Instagram contacts became a second row shape.
     .from("contacts")
-    .upsert(contacts, { onConflict: "workspace_id,phone", ignoreDuplicates: false });
+    .upsert(contacts, { onConflict: "workspace_id,channel,phone", ignoreDuplicates: false });
 
   if (error) return { error: error.message };
 

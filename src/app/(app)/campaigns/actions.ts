@@ -11,12 +11,13 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim();
   const templateId = String(formData.get("templateId") ?? "");
+  const segmentTag = String(formData.get("segmentTag") ?? "").trim() || null;
   if (!name || !templateId) return { error: "Name and template are required." };
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("campaigns")
-    .insert({ workspace_id: workspace.id, name, template_id: templateId, status: "draft" })
+    .insert({ workspace_id: workspace.id, name, template_id: templateId, segment_tag: segmentTag, status: "draft" })
     .select("id")
     .single();
 
@@ -35,17 +36,20 @@ export async function startCampaign(campaignId: string) {
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("id, workspace_id, template_id, status, templates(language)")
+    .select("id, workspace_id, template_id, status, segment_tag, templates(language)")
     .eq("id", campaignId)
     .single();
   if (!campaign || campaign.status !== "draft") return;
 
   const language = (campaign.templates as { language?: string } | null)?.language;
-  const { data: contacts } = await supabase
+  let query = supabase
     .from("contacts")
     .select("id")
     .eq("workspace_id", campaign.workspace_id)
-    .eq("language", language);
+    .eq("language", language)
+    .eq("opted_out", false); // marketing sends must respect opt-out, unlike replies/automations
+  if (campaign.segment_tag) query = query.contains("tags", [campaign.segment_tag]);
+  const { data: contacts } = await query;
 
   if (contacts && contacts.length > 0) {
     await supabase.from("campaign_recipients").insert(

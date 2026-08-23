@@ -16,6 +16,7 @@ export default async function TemplatesPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
+  const canSubmitToMeta = Boolean(workspace.whatsapp_waba_id && workspace.whatsapp_access_token);
 
   const { data: templates } = await supabase
     .from("templates")
@@ -27,12 +28,13 @@ export default async function TemplatesPage() {
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Templates</h1>
-        <NewTemplateForm />
+        <NewTemplateForm canSubmitToMeta={canSubmitToMeta} />
       </div>
 
       <p className="mb-5 text-sm text-muted">
-        Submitting a template to Meta for approval still happens once, manually, in Business Manager — this page
-        just tracks what you&apos;ve submitted and whether it&apos;s cleared review yet.
+        {canSubmitToMeta
+          ? "New templates submit directly to Meta's review API. Approval status here updates automatically via webhook once Meta decides."
+          : "Connect a WhatsApp Business Account in Settings → Channels to submit templates for real Meta review instead of tracking them manually."}
       </p>
 
       <div className="grid grid-cols-2 gap-4">
@@ -48,6 +50,9 @@ export default async function TemplatesPage() {
             </div>
             <div className="font-mono text-[12.5px] text-faint">{t.meta_template_name}</div>
             {t.body_preview && <p className="mt-2 text-[13px] text-muted line-clamp-3">{t.body_preview}</p>}
+            {t.status === "rejected" && t.rejection_reason && (
+              <p className="mt-2 text-[12px] text-danger">{t.rejection_reason}</p>
+            )}
           </div>
         ))}
         {(!templates || templates.length === 0) && (

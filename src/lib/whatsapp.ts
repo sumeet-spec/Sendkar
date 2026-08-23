@@ -100,6 +100,84 @@ export function isWhatsAppConfigured(ws: WorkspaceCreds): boolean {
   return Boolean(ws.whatsapp_phone_number_id && ws.whatsapp_access_token);
 }
 
+// ── Real template submission ──────────────────────────────────────────────
+// Actually calls Meta's template API instead of just recording a name you
+// typed in — this is the difference between a tracker and an integration.
+// Submission is scoped to the WhatsApp Business Account (WABA), not the
+// phone number, so it needs its own credential.
+
+export interface TemplateComponents {
+  headerType?: "none" | "text" | "image";
+  headerText?: string;
+  bodyText: string;
+  footerText?: string;
+  buttons?: Array<{ type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER"; text: string; url?: string; phone_number?: string }>;
+}
+
+export interface SubmitTemplateInput {
+  wabaId: string;
+  token: string;
+  name: string; // lowercase, underscores only — Meta's naming rule
+  language: string;
+  category: "MARKETING" | "UTILITY" | "AUTHENTICATION";
+  components: TemplateComponents;
+}
+
+export async function submitTemplateToMeta(input: SubmitTemplateInput) {
+  const components: Array<Record<string, unknown>> = [];
+
+  if (input.components.headerType === "text" && input.components.headerText) {
+    components.push({ type: "HEADER", format: "TEXT", text: input.components.headerText });
+  } else if (input.components.headerType === "image") {
+    components.push({ type: "HEADER", format: "IMAGE" });
+  }
+
+  components.push({ type: "BODY", text: input.components.bodyText });
+
+  if (input.components.footerText) {
+    components.push({ type: "FOOTER", text: input.components.footerText });
+  }
+  if (input.components.buttons?.length) {
+    components.push({ type: "BUTTONS", buttons: input.components.buttons });
+  }
+
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${input.wabaId}/message_templates`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${input.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: input.name,
+      language: input.language,
+      category: input.category,
+      components,
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  const json = (await res.json()) as { id?: string; status?: string; category?: string; error?: { message?: string } };
+  if (!res.ok || json.error) {
+    throw new Error(json.error?.message ?? `Meta rejected the template submission (HTTP ${res.status})`);
+  }
+  return json; // { id, status: "PENDING" | ..., category }
+}
+
+// ── Opt-out ────────────────────────────────────────────────────────────────
+// A documented, code-enforced unsubscribe path — required for compliant
+// marketing use of the API, not optional polish.
+const OPT_OUT_KEYWORDS = new Set(["stop", "unsubscribe", "cancel", "optout", "opt out"]);
+
+export function isOptOutMessage(body: string): boolean {
+  return OPT_OUT_KEYWORDS.has(body.trim().toLowerCase());
+}
+
+export const OPT_OUT_CONFIRMATION =
+  "You won't receive any more marketing messages from us. Reply START to opt back in at any time.";
+
+const OPT_IN_KEYWORDS = new Set(["start", "unstop", "subscribe", "optin", "opt in"]);
+
+export function isOptInMessage(body: string): boolean {
+  return OPT_IN_KEYWORDS.has(body.trim().toLowerCase());
+}
+
 // ── Webhook signature verification ────────────────────────────────────────────
 // Meta signs the raw webhook body with the app secret via HMAC-SHA256, sent
 // as `X-Hub-Signature-256: sha256=<hex>`. This is a single shared app secret

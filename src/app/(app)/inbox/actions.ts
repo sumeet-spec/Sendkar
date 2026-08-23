@@ -15,8 +15,15 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
   if (!workspace) return { error: "No workspace found." };
 
   const supabase = await createClient();
-  const { data: contact } = await supabase.from("contacts").select("phone").eq("id", contactId).single();
+  const { data: contact } = await supabase.from("contacts").select("phone, session_expires_at").eq("id", contactId).single();
   if (!contact) return { error: "Contact not found." };
+
+  // Meta only allows free-text replies within 24h of the customer's last inbound message —
+  // outside that window a template message is required instead. Check it here, not just
+  // let Meta's API reject it, so the error is clear instead of a raw API failure.
+  if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
+    return { error: "The 24h reply window has closed for this contact — send a template message instead." };
+  }
 
   try {
     const { metaMessageId } = await sendSessionMessage({ workspace, to: contact.phone, body });

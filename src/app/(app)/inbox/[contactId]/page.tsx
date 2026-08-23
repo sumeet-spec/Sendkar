@@ -17,17 +17,26 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
     .maybeSingle();
   if (!contact) notFound();
 
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("contact_id", contactId)
-    .order("created_at", { ascending: true });
+  const [{ data: messages }, { data: cannedResponses }] = await Promise.all([
+    supabase.from("messages").select("*").eq("contact_id", contactId).order("created_at", { ascending: true }),
+    supabase.from("canned_responses").select("id, shortcut, body").eq("workspace_id", workspace.id).order("shortcut", { ascending: true }),
+  ]);
+
+  const sessionOpen = Boolean(contact.session_expires_at && new Date(contact.session_expires_at) > new Date());
 
   return (
     <div className="flex h-[calc(100vh-4rem)] max-w-2xl flex-col">
-      <div className="mb-4">
-        <div className="font-mono text-sm">{contact.phone}</div>
-        {contact.name && <div className="text-[13px] text-faint">{contact.name}</div>}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <div className="font-mono text-sm">{contact.phone}</div>
+          {contact.name && <div className="text-[13px] text-faint">{contact.name}</div>}
+        </div>
+        <div className="flex gap-2">
+          {contact.opted_out && <span className="sk-pill border-danger text-danger">opted out</span>}
+          <span className={`sk-pill ${sessionOpen ? "border-accent text-accent" : "text-faint"}`}>
+            {sessionOpen ? "24h window open" : "24h window closed"}
+          </span>
+        </div>
       </div>
 
       <div className="sk-card flex flex-1 flex-col overflow-hidden">
@@ -45,7 +54,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
           ))}
           {(!messages || messages.length === 0) && <p className="text-center text-muted">No messages yet.</p>}
         </div>
-        <ReplyBox contactId={contactId} />
+        <ReplyBox contactId={contactId} sessionOpen={sessionOpen} cannedResponses={cannedResponses ?? []} />
       </div>
     </div>
   );

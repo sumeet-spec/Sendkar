@@ -13,7 +13,7 @@ export default async function ContactsPage() {
 
   const { data: contacts } = await supabase
     .from("contacts")
-    .select("id, phone, name, language, source, created_at")
+    .select("id, phone, name, language, source, tags, opted_out, created_at")
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
     .limit(200);
@@ -36,7 +36,7 @@ export default async function ContactsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              {["Phone", "Name", "Language", "Source", "Added"].map((h) => (
+              {["Phone", "Name", "Language", "Tags", "Source", "Added"].map((h) => (
                 <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
               ))}
             </tr>
@@ -44,10 +44,19 @@ export default async function ContactsPage() {
           <tbody>
             {(contacts ?? []).map((c) => (
               <tr key={c.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-2.5 font-mono text-[13px]">{c.phone}</td>
+                <td className="px-4 py-2.5 font-mono text-[13px]">
+                  {c.phone}
+                  {c.opted_out && <span className="sk-pill ml-2 border-danger text-danger">opted out</span>}
+                </td>
                 <td className="px-4 py-2.5 text-muted">{c.name ?? "—"}</td>
                 <td className="px-4 py-2.5">
                   <span className="sk-pill">{LANGUAGE_LABEL[c.language ?? ""] ?? c.language ?? "—"}</span>
+                </td>
+                <td className="px-4 py-2.5">
+                  <div className="flex flex-wrap gap-1">
+                    {(c.tags ?? []).map((t: string) => <span key={t} className="sk-pill">{t}</span>)}
+                    {(!c.tags || c.tags.length === 0) && <span className="text-faint">—</span>}
+                  </div>
                 </td>
                 <td className="px-4 py-2.5 text-faint">{c.source}</td>
                 <td className="px-4 py-2.5 text-faint">{new Date(c.created_at).toLocaleDateString()}</td>
@@ -55,7 +64,7 @@ export default async function ContactsPage() {
             ))}
             {(!contacts || contacts.length === 0) && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted">
+                <td colSpan={6} className="px-4 py-8 text-center text-muted">
                   No contacts yet — import a CSV above.
                 </td>
               </tr>

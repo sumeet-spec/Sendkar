@@ -16,6 +16,23 @@ export default async function WebhooksPage() {
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false });
 
+  const webhookIds = (webhooks ?? []).map((w) => w.id);
+  const { data: deliveries } = webhookIds.length
+    ? await supabase
+        .from("webhook_deliveries")
+        .select("webhook_id, event, status, attempts, response_status, created_at")
+        .in("webhook_id", webhookIds)
+        .order("created_at", { ascending: false })
+        .limit(50)
+    : { data: [] };
+
+  const deliveriesByWebhook = new Map<string, typeof deliveries>();
+  for (const d of deliveries ?? []) {
+    const list = deliveriesByWebhook.get(d.webhook_id) ?? [];
+    list.push(d);
+    deliveriesByWebhook.set(d.webhook_id, list);
+  }
+
   return (
     <div className="max-w-3xl">
       <div className="mb-6 flex items-center justify-between">
@@ -34,7 +51,9 @@ export default async function WebhooksPage() {
       )}
 
       <div className="flex flex-col gap-3">
-        {(webhooks ?? []).map((w) => <WebhookRow key={w.id} webhook={w} />)}
+        {(webhooks ?? []).map((w) => (
+          <WebhookRow key={w.id} webhook={w} recentDeliveries={deliveriesByWebhook.get(w.id) ?? []} />
+        ))}
         {(!webhooks || webhooks.length === 0) && <p className="py-8 text-center text-muted">No webhooks yet.</p>}
       </div>
     </div>

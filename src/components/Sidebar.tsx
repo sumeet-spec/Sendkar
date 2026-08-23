@@ -10,6 +10,7 @@ const NAV = [
   { href: "/templates", label: "Templates", icon: "doc" },
   { href: "/campaigns", label: "Campaigns", icon: "send" },
   { href: "/inbox", label: "Inbox", icon: "chat" },
+  { href: "/analytics", label: "Analytics", icon: "chart" },
   { href: "/automations", label: "Automations", icon: "bolt" },
   { href: "/webhooks", label: "Webhooks", icon: "webhook" },
 ] as const;
@@ -18,6 +19,7 @@ const SETTINGS_NAV = [
   { href: "/settings/billing", label: "Billing" },
   { href: "/settings/team", label: "Team" },
   { href: "/settings/channels", label: "Channels" },
+  { href: "/settings/canned-responses", label: "Canned responses" },
 ] as const;
 
 function Icon({ name }: { name: string }) {
@@ -37,6 +39,8 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><path d="M11 2.5L4.5 11h4.2l-.7 6.5L15.5 9h-4.2l-.3-6.5z" /></svg>;
     case "webhook":
       return <svg {...common}><circle cx="5.5" cy="14.5" r="2.3" /><circle cx="14.5" cy="14.5" r="2.3" /><circle cx="13" cy="5.5" r="2.3" /><path d="M7.6 13.5L11.3 7M12.2 14.5H7.8" /></svg>;
+    case "chart":
+      return <svg {...common}><path d="M3 17V3M3 17h14" /><path d="M6.5 14V9.5M10 14V6M13.5 14v-3" /></svg>;
     default:
       return null;
   }

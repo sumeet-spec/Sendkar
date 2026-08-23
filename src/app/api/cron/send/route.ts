@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     const { data: recipients } = await admin
       .from("campaign_recipients")
-      .select("id, contact_id, contacts(phone)")
+      .select("id, contact_id, contacts(phone, name, opted_out)")
       .eq("campaign_id", campaign.id)
       .eq("status", "queued")
       .limit(Math.min(MAX_PER_RUN, remainingToday));
@@ -74,21 +74,29 @@ export async function GET(request: NextRequest) {
         .from("campaigns")
         .update({ status: "completed", completed_at: now.toISOString() })
         .eq("id", campaign.id);
-      void dispatchOutboundWebhooks(workspace.id, "campaign.completed", { campaignId: campaign.id });
+      after(() => dispatchOutboundWebhooks(workspace.id, "campaign.completed", { campaignId: campaign.id }));
       results[campaign.id] = "completed";
       continue;
     }
 
     const { data: template } = await admin
       .from("templates")
-      .select("meta_template_name, language")
+      .select("meta_template_name, language, body_text")
       .eq("id", campaign.template_id)
       .single();
+    const needsNameParam = Boolean(template?.body_text?.includes("{{1}}"));
 
     let sentCount = 0;
     for (const recipient of recipients) {
-      const phone = (recipient.contacts as { phone?: string } | null)?.phone;
+      const contactRow = recipient.contacts as { phone?: string; name?: string | null; opted_out?: boolean } | null;
+      const phone = contactRow?.phone;
       if (!phone || !template) continue;
+
+      // Opted out after being queued (e.g. they replied STOP mid-campaign) — skip, don't fail it.
+      if (contactRow?.opted_out) {
+        await admin.from("campaign_recipients").update({ status: "failed", error: "Contact opted out" }).eq("id", recipient.id);
+        continue;
+      }
 
       if (sentCount > 0) await new Promise((r) => setTimeout(r, DELAY_BETWEEN_SENDS_MS));
 
@@ -98,6 +106,7 @@ export async function GET(request: NextRequest) {
           to: phone,
           templateName: template.meta_template_name,
           language: template.language,
+          bodyParams: needsNameParam ? [contactRow?.name || "there"] : undefined,
         });
 
         await admin

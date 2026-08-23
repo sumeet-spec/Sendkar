@@ -18,7 +18,7 @@ export function ImportForm() {
   return (
     <form action={formAction} className="sk-card flex items-end gap-3 p-4">
       <div className="flex-1">
-        <label className="sk-label">CSV file (phone,email)</label>
+        <label className="sk-label">CSV file (phone,email,tags — tags is optional, semicolon-separated)</label>
         <input type="file" name="file" accept=".csv" required className="sk-input text-sm" />
       </div>
       <div>

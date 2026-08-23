@@ -39,6 +39,10 @@ export function NewCampaignForm({ templates }: { templates: Template[] }) {
           ))}
         </select>
       </div>
+      <div>
+        <label className="sk-label">Segment tag (optional)</label>
+        <input name="segmentTag" className="sk-input" placeholder="e.g. vip — leave blank for everyone in that language" />
+      </div>
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
