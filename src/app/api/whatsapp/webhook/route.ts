@@ -75,6 +75,50 @@ const TEMPLATE_STATUS_MAP: Record<string, "approved" | "rejected" | "pending"> =
   PAUSED: "rejected",
 };
 
+interface FlowBranch {
+  keyword: string;
+  matchType: "exact" | "contains";
+  nextStepOrder: number;
+}
+
+interface FlowStepRow {
+  step_order: number;
+  message_body: string;
+  branches: FlowBranch[];
+  default_next_step_order: number | null;
+}
+
+/** Sends a free-text reply and logs it, sharing the same try/catch shape across opt-out confirmations, flow steps, and automations. */
+async function sendAndLog(
+  admin: ReturnType<typeof createAdminClient>,
+  workspaceId: string,
+  contactId: string,
+  to: string,
+  body: string,
+): Promise<boolean> {
+  const { data: ws } = await admin
+    .from("workspaces")
+    .select("whatsapp_phone_number_id, whatsapp_access_token")
+    .eq("id", workspaceId)
+    .single();
+  if (!ws) return false;
+  try {
+    const { metaMessageId } = await sendSessionMessage({ workspace: ws, to, body });
+    await admin.from("messages").insert({
+      workspace_id: workspaceId,
+      contact_id: contactId,
+      direction: "outbound",
+      body,
+      meta_message_id: metaMessageId,
+      status: "sent",
+    });
+    return true;
+  } catch {
+    // Send failing (e.g. outside the 24h session window) shouldn't break webhook processing.
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
   const signature = request.headers.get("x-hub-signature-256");
@@ -206,67 +250,112 @@ export async function POST(request: NextRequest) {
         let handledAsComplianceKeyword = false;
         if (msg.text?.body && isOptOutMessage(msg.text.body)) {
           await admin.from("contacts").update({ opted_out: true }).eq("id", contactId);
-          const { data: ws } = await admin
-            .from("workspaces")
-            .select("whatsapp_phone_number_id, whatsapp_access_token")
-            .eq("id", workspaceId)
-            .single();
-          if (ws) {
-            try {
-              const { metaMessageId } = await sendSessionMessage({ workspace: ws, to: msg.from, body: OPT_OUT_CONFIRMATION });
-              await admin.from("messages").insert({
-                workspace_id: workspaceId,
-                contact_id: contactId,
-                direction: "outbound",
-                body: OPT_OUT_CONFIRMATION,
-                meta_message_id: metaMessageId,
-                status: "sent",
-              });
-            } catch {
-              // Confirmation failing shouldn't block the opt-out itself from taking effect.
-            }
-          }
+          await sendAndLog(admin, workspaceId, contactId, msg.from, OPT_OUT_CONFIRMATION);
           handledAsComplianceKeyword = true;
         } else if (msg.text?.body && isOptInMessage(msg.text.body)) {
           await admin.from("contacts").update({ opted_out: false }).eq("id", contactId);
           handledAsComplianceKeyword = true;
         }
 
-        // ── Keyword-triggered auto-reply ─────────────────────────────────────
+        // ── Chatbot flows — multi-step, branching; checked before the
+        // single-keyword automations fallback below ────────────────────────
         if (!handledAsComplianceKeyword && msg.text?.body) {
           const normalized = msg.text.body.trim().toLowerCase();
-          const { data: automations } = await admin
-            .from("automations")
-            .select("trigger_keyword, match_type, reply_body")
-            .eq("workspace_id", workspaceId)
-            .eq("is_active", true);
+          const { data: flowState } = await admin
+            .from("contact_flow_state")
+            .select("flow_id, current_step_order")
+            .eq("contact_id", contactId)
+            .maybeSingle();
 
-          const matched = (automations ?? []).find((a) =>
-            a.match_type === "exact" ? normalized === a.trigger_keyword : normalized.includes(a.trigger_keyword),
-          );
+          let stepToSend: FlowStepRow | null = null;
+          let flowIdForState: string | null = null;
+          let inActiveFlow = false;
 
-          if (matched) {
-            const { data: ws } = await admin
-              .from("workspaces")
-              .select("whatsapp_phone_number_id, whatsapp_access_token")
-              .eq("id", workspaceId)
-              .single();
+          if (flowState) {
+            inActiveFlow = true;
+            const { data: currentStep } = await admin
+              .from("flow_steps")
+              .select("branches, default_next_step_order")
+              .eq("flow_id", flowState.flow_id)
+              .eq("step_order", flowState.current_step_order)
+              .maybeSingle();
 
-            if (ws) {
-              try {
-                const { metaMessageId } = await sendSessionMessage({ workspace: ws, to: msg.from, body: matched.reply_body });
-                await admin.from("messages").insert({
-                  workspace_id: workspaceId,
-                  contact_id: contactId,
-                  direction: "outbound",
-                  body: matched.reply_body,
-                  meta_message_id: metaMessageId,
-                  status: "sent",
-                });
-              } catch {
-                // Automation misfires (e.g. outside the 24h session window) shouldn't break webhook processing.
+            const branches = (currentStep?.branches as FlowBranch[]) ?? [];
+            const matchedBranch = branches.find((b) =>
+              b.matchType === "exact" ? normalized === b.keyword : normalized.includes(b.keyword),
+            );
+            const nextOrder = matchedBranch?.nextStepOrder ?? currentStep?.default_next_step_order ?? null;
+
+            if (nextOrder != null) {
+              const { data: nextStep } = await admin
+                .from("flow_steps")
+                .select("step_order, message_body, branches, default_next_step_order")
+                .eq("flow_id", flowState.flow_id)
+                .eq("step_order", nextOrder)
+                .maybeSingle();
+              if (nextStep) {
+                stepToSend = nextStep as FlowStepRow;
+                flowIdForState = flowState.flow_id;
               }
             }
+            if (!stepToSend) {
+              // No matching branch and no default — the flow ends here, silently.
+              await admin.from("contact_flow_state").delete().eq("contact_id", contactId);
+            }
+          } else {
+            const { data: flows } = await admin
+              .from("flows")
+              .select("id, trigger_keyword, match_type")
+              .eq("workspace_id", workspaceId)
+              .eq("is_active", true);
+            const matchedFlow = (flows ?? []).find((f) =>
+              f.match_type === "exact" ? normalized === f.trigger_keyword : normalized.includes(f.trigger_keyword),
+            );
+            if (matchedFlow) {
+              const { data: firstStep } = await admin
+                .from("flow_steps")
+                .select("step_order, message_body, branches, default_next_step_order")
+                .eq("flow_id", matchedFlow.id)
+                .eq("step_order", 1)
+                .maybeSingle();
+              if (firstStep) {
+                stepToSend = firstStep as FlowStepRow;
+                flowIdForState = matchedFlow.id;
+              }
+            }
+          }
+
+          if (stepToSend && flowIdForState) {
+            const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, stepToSend.message_body);
+            if (sent) {
+              const stepContinues = stepToSend.branches.length > 0 || stepToSend.default_next_step_order != null;
+              if (stepContinues) {
+                await admin.from("contact_flow_state").upsert({
+                  contact_id: contactId,
+                  flow_id: flowIdForState,
+                  current_step_order: stepToSend.step_order,
+                  updated_at: new Date().toISOString(),
+                });
+              } else {
+                await admin.from("contact_flow_state").delete().eq("contact_id", contactId);
+              }
+            }
+          }
+
+          // Only fall back to a single-keyword automation when the contact
+          // wasn't already mid-conversation with a flow — an unrelated global
+          // auto-reply injected into a live flow would be confusing.
+          if (!stepToSend && !inActiveFlow) {
+            const { data: automations } = await admin
+              .from("automations")
+              .select("trigger_keyword, match_type, reply_body")
+              .eq("workspace_id", workspaceId)
+              .eq("is_active", true);
+
+            const matched = (automations ?? []).find((a) =>
+              a.match_type === "exact" ? normalized === a.trigger_keyword : normalized.includes(a.trigger_keyword),
+            );
+            if (matched) await sendAndLog(admin, workspaceId, contactId, msg.from, matched.reply_body);
           }
         }
       }

@@ -11,6 +11,7 @@ const NAV = [
   { href: "/campaigns", label: "Campaigns", icon: "send" },
   { href: "/inbox", label: "Inbox", icon: "chat" },
   { href: "/analytics", label: "Analytics", icon: "chart" },
+  { href: "/flows", label: "Chatbot flows", icon: "flow" },
   { href: "/automations", label: "Automations", icon: "bolt" },
   { href: "/webhooks", label: "Webhooks", icon: "webhook" },
   { href: "/links", label: "Links & widget", icon: "link" },
@@ -45,6 +46,8 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><path d="M3 17V3M3 17h14" /><path d="M6.5 14V9.5M10 14V6M13.5 14v-3" /></svg>;
     case "link":
       return <svg {...common}><path d="M8.5 11.5a3 3 0 004.2 0l2-2a3 3 0 00-4.2-4.2l-1 1" /><path d="M11.5 8.5a3 3 0 00-4.2 0l-2 2a3 3 0 004.2 4.2l1-1" /></svg>;
+    case "flow":
+      return <svg {...common}><circle cx="4" cy="4" r="1.8" /><circle cx="4" cy="16" r="1.8" /><circle cx="16" cy="10" r="1.8" /><path d="M5.6 4.8L14.4 9.2M5.6 15.2L14.4 10.8" /></svg>;
     default:
       return null;
   }

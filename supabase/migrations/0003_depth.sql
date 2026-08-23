@@ -114,6 +114,57 @@ create policy "member can manage api keys" on api_keys
 alter table templates add column template_group text;
 alter table campaigns add column template_group text;
 
+-- ── Chatbot flows — multi-step, branching conversations, not just a single
+-- keyword-to-reply automation. Each step sends a message and waits for the
+-- next inbound reply; branches route to a specific next step by keyword,
+-- with an optional default when nothing matches. ──────────────────────────
+
+create table flows (
+  id             uuid primary key default gen_random_uuid(),
+  workspace_id   uuid not null references workspaces(id) on delete cascade,
+  name           text not null,
+  trigger_keyword text not null,
+  match_type     text not null default 'contains' check (match_type in ('exact', 'contains')),
+  is_active      bool not null default true,
+  created_at     timestamptz not null default now()
+);
+create index flows_workspace_idx on flows (workspace_id);
+alter table flows enable row level security;
+create policy "member can manage flows" on flows
+  for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
+
+create table flow_steps (
+  id                    uuid primary key default gen_random_uuid(),
+  flow_id               uuid not null references flows(id) on delete cascade,
+  step_order            int not null,
+  message_body          text not null,
+  branches              jsonb not null default '[]'::jsonb, -- [{keyword, matchType, nextStepOrder}]
+  default_next_step_order int, -- null = end the flow here if nothing else matches
+  created_at            timestamptz not null default now(),
+  unique (flow_id, step_order)
+);
+create index flow_steps_flow_idx on flow_steps (flow_id, step_order);
+alter table flow_steps enable row level security;
+create policy "member can manage flow steps" on flow_steps
+  for all using (flow_id in (
+    select id from flows where workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
+  ));
+
+-- Where each contact currently is inside an active flow — deleted when the
+-- flow ends (no matching branch and no default). Only the webhook route
+-- (service-role) writes this; members only need to read it.
+create table contact_flow_state (
+  contact_id        uuid primary key references contacts(id) on delete cascade,
+  flow_id           uuid not null references flows(id) on delete cascade,
+  current_step_order int not null,
+  updated_at        timestamptz not null default now()
+);
+alter table contact_flow_state enable row level security;
+create policy "member can view flow state" on contact_flow_state
+  for select using (flow_id in (
+    select id from flows where workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
+  ));
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (
