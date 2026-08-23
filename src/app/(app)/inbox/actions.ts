@@ -7,6 +7,7 @@ import { sendInstagramMessage } from "@/lib/instagram";
 import { sendMessengerMessage } from "@/lib/messenger";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { draftReply, summarizeThread } from "@/lib/ai";
+import { attributeOrder } from "@/lib/attribution";
 import { revalidatePath } from "next/cache";
 
 export async function replyToContact(_prevState: unknown, formData: FormData) {
@@ -137,6 +138,41 @@ export async function assignContact(contactId: string, userId: string | null) {
   const supabase = await createClient();
   await supabase.from("contacts").update({ assignee_id: userId }).eq("id", contactId).eq("workspace_id", workspace.id);
   revalidatePath(`/inbox/${contactId}`);
+}
+
+export async function logOrder(_prevState: unknown, formData: FormData) {
+  const contactId = String(formData.get("contactId") ?? "");
+  const amountRaw = String(formData.get("amount") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
+  const amount = Number.parseFloat(amountRaw);
+  if (!contactId || !amountRaw || !Number.isFinite(amount) || amount <= 0) {
+    return { error: "Enter a sale amount greater than 0." };
+  }
+
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const userId = await getCurrentUserId();
+  if (!userId) return { error: "Not logged in." };
+
+  const supabase = await createClient();
+  const attributedCampaignId = await attributeOrder(supabase, contactId, new Date());
+
+  const { error } = await supabase.from("orders").insert({
+    workspace_id: workspace.id,
+    contact_id: contactId,
+    source: "manual",
+    total_amount: amount,
+    note: note || null,
+    attributed_campaign_id: attributedCampaignId,
+    created_by: userId,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath(`/inbox/${contactId}`);
+  revalidatePath("/analytics");
+  revalidatePath("/dashboard");
+  return { success: true };
 }
 
 export async function addContactNote(_prevState: unknown, formData: FormData) {

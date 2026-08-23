@@ -8,19 +8,23 @@ export default async function DashboardPage() {
   if (!workspace) return null;
   const supabase = await createClient();
 
-  const [{ count: contactCount }, { count: campaignCount }, { data: recipientStats }] = await Promise.all([
+  const [{ count: contactCount }, { count: campaignCount }, { data: recipientStats }, { data: orders }] = await Promise.all([
     supabase.from("contacts").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
     supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
     supabase
       .from("campaign_recipients")
       .select("status, campaign_id, campaigns!inner(workspace_id)")
       .eq("campaigns.workspace_id", workspace.id),
+    supabase.from("orders").select("total_amount, attributed_campaign_id").eq("workspace_id", workspace.id),
   ]);
 
   const total = recipientStats?.length ?? 0;
   const delivered = recipientStats?.filter((r) => r.status === "delivered" || r.status === "read").length ?? 0;
   const failed = recipientStats?.filter((r) => r.status === "failed").length ?? 0;
   const deliveryRate = total > 0 ? Math.round((delivered / total) * 100) : null;
+
+  const totalRevenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
+  const attributedRevenue = (orders ?? []).filter((o) => o.attributed_campaign_id).reduce((sum, o) => sum + Number(o.total_amount), 0);
 
   const configured = isWhatsAppConfigured(workspace);
 
@@ -59,6 +63,19 @@ export default async function DashboardPage() {
           {failed > 0 && <div className="mt-1 text-[12px] text-danger">{failed} failed</div>}
         </div>
       </div>
+
+      {(orders?.length ?? 0) > 0 && (
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="sk-card p-5">
+            <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue tracked</div>
+            <div className="text-2xl font-semibold">₹{totalRevenue.toLocaleString("en-IN")}</div>
+          </div>
+          <div className="sk-card p-5">
+            <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">From a WhatsApp campaign</div>
+            <div className="text-2xl font-semibold text-accent">₹{attributedRevenue.toLocaleString("en-IN")}</div>
+          </div>
+        </div>
+      )}
 
       <div className="sk-card mt-6 p-5">
         <div className="mb-3 text-[11px] font-medium uppercase tracking-wide text-faint">Messaging tier</div>

@@ -9,7 +9,7 @@ const MOCK_LOG = [
   { status: "done" as const, title: "CAMPAIGN LAUNCHED", detail: "auto-routed by contact language" },
   { status: "active" as const, title: "SENDING", detail: "1,204 / 3,000 delivered" },
   { status: "todo" as const, title: "AI TAGGED REPLY", detail: "\"price-question\" · sentiment: neutral" },
-  { status: "todo" as const, title: "CLAUDE CONNECTED", detail: "11 tools ready via MCP" },
+  { status: "todo" as const, title: "CLAUDE CONNECTED", detail: "13 tools ready via MCP" },
 ] as const;
 
 const FEATURES = [
@@ -35,7 +35,7 @@ const FEATURES = [
   },
   {
     title: "Built for Claude and AI agents",
-    body: "11 MCP tools — send messages, manage campaigns, check delivery status — straight from Claude. No other WhatsApp platform ships an AI agent connector.",
+    body: "13 MCP tools — send messages, manage campaigns, log a sale, check delivery status — straight from Claude. No other WhatsApp platform ships an AI agent connector.",
   },
 ];
 
@@ -96,7 +96,7 @@ export default async function RootPage() {
               <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">Channels</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">11</div>
+              <div className="text-2xl font-bold">13</div>
               <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">MCP tools for Claude</div>
             </div>
             <div>

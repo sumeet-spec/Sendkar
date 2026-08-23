@@ -3,6 +3,7 @@ import { resolveApiKey } from "@/lib/apiKeys";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage, sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
+import { attributeOrder } from "@/lib/attribution";
 
 /**
  * Sendkar's MCP server — lets Claude (or any MCP client) send WhatsApp
@@ -116,6 +117,24 @@ const TOOLS = [
     name: "list_products",
     description: "List products in the catalog (must also exist in the connected Meta Commerce catalog to actually be sendable).",
     inputSchema: { type: "object", properties: { limit: { type: "number" } } },
+  },
+  {
+    name: "log_order",
+    description: "Record a real sale against a contact — no Shopify/WooCommerce connection required. Attributes it to whichever campaign this contact was most recently sent, if any, within the last 7 days.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        to: { type: "string", description: "The contact's phone number — must already exist as a contact." },
+        amount: { type: "number", description: "Sale amount in the workspace's currency (INR by default)." },
+        note: { type: "string", description: "Optional — what they bought." },
+      },
+      required: ["to", "amount"],
+    },
+  },
+  {
+    name: "get_revenue_summary",
+    description: "Total revenue tracked in Sendkar (manual + Shopify + WooCommerce), broken down by which campaign — if any — drove each sale.",
+    inputSchema: { type: "object", properties: {} },
   },
   {
     name: "send_product_message",
@@ -371,6 +390,57 @@ export async function POST(request: NextRequest) {
           .order("created_at", { ascending: false })
           .limit(Math.min(Number(args.limit) || 50, 200));
         return textResult(id, JSON.stringify(data ?? []));
+      }
+
+      case "log_order": {
+        const to = String(args.to ?? "").replace(/[^\d]/g, "");
+        const amount = Number(args.amount);
+        if (!to || !Number.isFinite(amount) || amount <= 0) return textResult(id, "to and a positive amount are required.", true);
+
+        const { data: contact } = await admin.from("contacts").select("id").eq("workspace_id", workspaceId).eq("phone", to).maybeSingle();
+        if (!contact) return textResult(id, "No contact with that phone number has messaged this workspace yet.", true);
+
+        const orderDate = new Date();
+        const attributedCampaignId = await attributeOrder(admin, contact.id, orderDate);
+        const { error } = await admin.from("orders").insert({
+          workspace_id: workspaceId,
+          contact_id: contact.id,
+          source: "manual",
+          total_amount: amount,
+          note: typeof args.note === "string" ? args.note : null,
+          attributed_campaign_id: attributedCampaignId,
+        });
+        if (error) return textResult(id, error.message, true);
+        return textResult(id, JSON.stringify({ logged: true, attributedCampaignId }));
+      }
+
+      case "get_revenue_summary": {
+        const { data: orders } = await admin
+          .from("orders")
+          .select("total_amount, attributed_campaign_id, campaigns(name)")
+          .eq("workspace_id", workspaceId);
+
+        let totalRevenue = 0;
+        let organicRevenue = 0;
+        const byCampaign = new Map<string, { name: string; revenue: number; orderCount: number }>();
+        for (const o of orders ?? []) {
+          const campaign = o.campaigns as { name?: string } | null;
+          totalRevenue += Number(o.total_amount);
+          if (!o.attributed_campaign_id || !campaign?.name) {
+            organicRevenue += Number(o.total_amount);
+            continue;
+          }
+          const bucket = byCampaign.get(o.attributed_campaign_id) ?? { name: campaign.name, revenue: 0, orderCount: 0 };
+          bucket.revenue += Number(o.total_amount);
+          bucket.orderCount += 1;
+          byCampaign.set(o.attributed_campaign_id, bucket);
+        }
+
+        return textResult(id, JSON.stringify({
+          totalRevenue,
+          organicRevenue,
+          byCampaign: Array.from(byCampaign.entries()).map(([campaignId, c]) => ({ campaignId, ...c })),
+        }));
       }
 
       case "send_product_message": {

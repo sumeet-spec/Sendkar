@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWooWebhookSignature, extractWooOrderPhone, type WooOrderPayload } from "@/lib/woocommerce";
 import { sendTemplateMessage } from "@/lib/whatsapp";
+import { attributeOrder } from "@/lib/attribution";
 
 /** The workspace id in the URL isn't secret by itself — the HMAC signature, keyed by a secret only that workspace's merchant set, is the actual auth. */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
@@ -28,9 +29,41 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!workspace.order_confirmation_template_id) return NextResponse.json({ received: true });
   const phone = extractWooOrderPhone(order);
   if (!phone) return NextResponse.json({ received: true });
+
+  // ignoreDuplicates: false (an update on conflict) is deliberate — see the
+  // Shopify webhook for why this is atomic and race-safe where a
+  // select-then-insert wouldn't be.
+  const { data: contact } = await admin
+    .from("contacts")
+    .upsert(
+      { workspace_id: workspace.id, phone, name: order.billing?.first_name ?? null, source: "woocommerce_order" },
+      { onConflict: "workspace_id,channel,phone", ignoreDuplicates: false },
+    )
+    .select("id")
+    .maybeSingle();
+
+  const orderDate = new Date();
+  const totalAmount = Number.parseFloat(order.total ?? "0") || 0;
+  if (contact?.id) {
+    const attributedCampaignId = await attributeOrder(admin, contact.id, orderDate);
+    await admin.from("orders").upsert(
+      {
+        workspace_id: workspace.id,
+        contact_id: contact.id,
+        source: "woocommerce",
+        external_order_id: order.id != null ? String(order.id) : null,
+        order_label: order.number ? `#${order.number}` : null,
+        total_amount: totalAmount,
+        currency: order.currency ?? "INR",
+        attributed_campaign_id: attributedCampaignId,
+      },
+      { onConflict: "workspace_id,source,external_order_id", ignoreDuplicates: true },
+    );
+  }
+
+  if (!workspace.order_confirmation_template_id) return NextResponse.json({ received: true });
 
   const { data: template } = await admin
     .from("templates")
@@ -38,15 +71,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .eq("id", workspace.order_confirmation_template_id)
     .single();
   if (!template) return NextResponse.json({ received: true });
-
-  const { data: contact } = await admin
-    .from("contacts")
-    .upsert(
-      { workspace_id: workspace.id, phone, name: order.billing?.first_name ?? null, language: template.language, source: "woocommerce_order" },
-      { onConflict: "workspace_id,channel,phone", ignoreDuplicates: false },
-    )
-    .select("id")
-    .maybeSingle();
 
   const placeholderCount = (template.body_text?.match(/\{\{\d+\}\}/g) ?? []).length;
   const bodyParams = placeholderCount > 0 ? [order.billing?.first_name || "there", order.number ?? ""].slice(0, placeholderCount) : undefined;

@@ -14,6 +14,8 @@ const TOOLS = [
   ["send_session_message", "Send a free-text reply within the 24h window"],
   ["list_products", "List catalog products"],
   ["send_product_message", "Send a product card from the catalog to a contact"],
+  ["log_order", "Record a real sale against a contact, no storefront required"],
+  ["get_revenue_summary", "Total revenue tracked, broken down by which campaign drove it"],
 ];
 
 export default async function McpPage() {

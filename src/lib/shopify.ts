@@ -120,9 +120,12 @@ export async function registerOrderWebhook(shop: string, accessToken: string, ca
 }
 
 export interface ShopifyOrderPayload {
+  id?: number;
   name?: string; // e.g. "#1001"
   order_number?: number;
   phone?: string | null;
+  total_price?: string;
+  currency?: string;
   customer?: { first_name?: string; phone?: string | null } | null;
   shipping_address?: { phone?: string | null } | null;
 }

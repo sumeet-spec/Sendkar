@@ -15,7 +15,7 @@ export default async function AnalyticsPage() {
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - DAYS);
 
-  const [{ data: recentMessages }, { data: recipientRows }, { data: adContacts }] = await Promise.all([
+  const [{ data: recentMessages }, { data: recipientRows }, { data: adContacts }, { data: orders }] = await Promise.all([
     supabase
       .from("messages")
       .select("direction, created_at")
@@ -26,7 +26,26 @@ export default async function AnalyticsPage() {
       .select("status, campaigns!inner(workspace_id, template_id, templates(name))")
       .eq("campaigns.workspace_id", workspace.id),
     supabase.from("contacts").select("ad_headline").eq("workspace_id", workspace.id).not("ad_headline", "is", null),
+    supabase
+      .from("orders")
+      .select("total_amount, attributed_campaign_id, campaigns(name)")
+      .eq("workspace_id", workspace.id),
   ]);
+
+  const totalRevenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
+  const byCampaignRevenue = new Map<string, { name: string; revenue: number; orderCount: number }>();
+  let organicRevenue = 0;
+  for (const o of orders ?? []) {
+    const campaign = o.campaigns as { name?: string } | null;
+    if (!o.attributed_campaign_id || !campaign?.name) {
+      organicRevenue += Number(o.total_amount);
+      continue;
+    }
+    const bucket = byCampaignRevenue.get(o.attributed_campaign_id) ?? { name: campaign.name, revenue: 0, orderCount: 0 };
+    bucket.revenue += Number(o.total_amount);
+    bucket.orderCount += 1;
+    byCampaignRevenue.set(o.attributed_campaign_id, bucket);
+  }
 
   const byAd = new Map<string, number>();
   for (const c of adContacts ?? []) {
@@ -93,6 +112,31 @@ export default async function AnalyticsPage() {
           <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: "var(--accent-dim)" }} /> Received</span>
         </div>
       </div>
+
+      {(orders?.length ?? 0) > 0 && (
+        <div className="sk-card mb-6 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border p-4">
+            <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Revenue by campaign</div>
+            <span className="sk-pill border-accent text-accent">₹{totalRevenue.toLocaleString("en-IN")} total</span>
+          </div>
+          <div className="flex flex-col">
+            {Array.from(byCampaignRevenue.entries())
+              .sort((a, b) => b[1].revenue - a[1].revenue)
+              .map(([id, c]) => (
+                <div key={id} className="flex items-center justify-between border-b border-border px-4 py-2.5 text-sm last:border-0">
+                  <span>{c.name}</span>
+                  <span className="text-muted">₹{c.revenue.toLocaleString("en-IN")} · {c.orderCount} sale{c.orderCount === 1 ? "" : "s"}</span>
+                </div>
+              ))}
+            {organicRevenue > 0 && (
+              <div className="flex items-center justify-between border-b border-border px-4 py-2.5 text-sm last:border-0">
+                <span className="text-faint">Organic (no recent campaign)</span>
+                <span className="text-muted">₹{organicRevenue.toLocaleString("en-IN")}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {byAd.size > 0 && (
         <div className="sk-card mb-6 overflow-hidden">

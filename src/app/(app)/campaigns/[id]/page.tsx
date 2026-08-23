@@ -36,12 +36,16 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     groupLanguages = [...new Set((groupTemplates ?? []).map((t) => t.language))];
   }
 
-  const { data: recipients } = await supabase
-    .from("campaign_recipients")
-    .select("id, status, error, sent_at, contacts(phone, name)")
-    .eq("campaign_id", id)
-    .order("sent_at", { ascending: false, nullsFirst: false })
-    .limit(200);
+  const [{ data: recipients }, { data: orders }] = await Promise.all([
+    supabase
+      .from("campaign_recipients")
+      .select("id, status, error, sent_at, contacts(phone, name)")
+      .eq("campaign_id", id)
+      .order("sent_at", { ascending: false, nullsFirst: false })
+      .limit(200),
+    supabase.from("orders").select("total_amount").eq("attributed_campaign_id", id),
+  ]);
+  const revenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
 
   const template = campaign.templates as { name?: string; language?: string; meta_template_name?: string } | null;
   const counts = (recipients ?? []).reduce<Record<string, number>>((acc, r) => {
@@ -77,6 +81,14 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           </div>
         ))}
       </div>
+
+      {revenue > 0 && (
+        <div className="sk-card mb-6 p-4">
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue attributed to this campaign</div>
+          <div className="text-xl font-semibold text-accent">₹{revenue.toLocaleString("en-IN")}</div>
+          <p className="mt-1 text-[12px] text-faint">Sales logged or synced within 7 days of a contact receiving this campaign.</p>
+        </div>
+      )}
 
       <div className="sk-card overflow-hidden">
         <div className="overflow-x-auto">

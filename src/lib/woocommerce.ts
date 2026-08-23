@@ -18,7 +18,10 @@ export function verifyWooWebhookSignature(rawBody: string, signatureHeader: stri
 }
 
 export interface WooOrderPayload {
+  id?: number;
   number?: string;
+  total?: string;
+  currency?: string;
   billing?: { phone?: string; first_name?: string };
   shipping?: { phone?: string };
 }
