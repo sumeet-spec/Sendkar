@@ -14,7 +14,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
 
   let query = supabase
     .from("contacts")
-    .select("id, phone, name, language, source, tags, opted_out, created_at")
+    .select("id, phone, name, language, source, tags, opted_out, ad_headline, created_at")
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
     .limit(200);
@@ -73,7 +73,10 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
                     {(!c.tags || c.tags.length === 0) && <span className="text-faint">—</span>}
                   </div>
                 </td>
-                <td className="px-4 py-2.5 text-faint">{c.source}</td>
+                <td className="px-4 py-2.5 text-faint">
+                  {c.source}
+                  {c.ad_headline && <div className="mt-0.5 text-[11px] text-accent">via ad: {c.ad_headline}</div>}
+                </td>
                 <td className="px-4 py-2.5 text-faint">{new Date(c.created_at).toLocaleDateString()}</td>
               </tr>
             ))}

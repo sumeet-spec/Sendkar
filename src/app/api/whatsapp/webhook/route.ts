@@ -46,7 +46,11 @@ interface WebhookPayload {
       value?: {
         metadata?: { phone_number_id?: string };
         contacts?: Array<{ wa_id?: string; profile?: { name?: string } }>;
-        messages?: Array<{ from?: string; id?: string; type?: string; text?: { body?: string } }>;
+        messages?: Array<{
+          from?: string; id?: string; type?: string; text?: { body?: string };
+          // Present only on the first message of a click-to-WhatsApp-ad conversation.
+          referral?: { source_id?: string; headline?: string; ctwa_clid?: string };
+        }>;
         statuses?: Array<{
           id?: string;
           status?: "sent" | "delivered" | "read" | "failed";
@@ -238,9 +242,20 @@ export async function POST(request: NextRequest) {
           profileNameForNewContact = value.contacts?.find((c) => c.wa_id === msg.from)?.profile?.name ?? null;
           const { data: created } = await admin
             .from("contacts")
-            // whatsapp_number_id is null when this is the workspace's default number —
-            // only set for a contact whose first message arrived on a registered secondary number.
-            .insert({ workspace_id: workspaceId, phone: msg.from, name: profileNameForNewContact, source: "inbound_reply", whatsapp_number_id: matchedNumberId })
+            .insert({
+              workspace_id: workspaceId,
+              phone: msg.from,
+              name: profileNameForNewContact,
+              // whatsapp_number_id is null when this is the workspace's default number —
+              // only set for a contact whose first message arrived on a registered secondary number.
+              whatsapp_number_id: matchedNumberId,
+              // Only present when this contact's first message came from clicking a
+              // click-to-WhatsApp ad — real ad attribution, captured once, at the source.
+              ctwa_clid: msg.referral?.ctwa_clid ?? null,
+              ad_source_id: msg.referral?.source_id ?? null,
+              ad_headline: msg.referral?.headline ?? null,
+              source: msg.referral ? "ctwa_ad" : "inbound_reply",
+            })
             .select("id")
             .single();
           contactId = created?.id;

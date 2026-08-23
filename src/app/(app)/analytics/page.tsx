@@ -15,7 +15,7 @@ export default async function AnalyticsPage() {
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - DAYS);
 
-  const [{ data: recentMessages }, { data: recipientRows }] = await Promise.all([
+  const [{ data: recentMessages }, { data: recipientRows }, { data: adContacts }] = await Promise.all([
     supabase
       .from("messages")
       .select("direction, created_at")
@@ -25,7 +25,14 @@ export default async function AnalyticsPage() {
       .from("campaign_recipients")
       .select("status, campaigns!inner(workspace_id, template_id, templates(name))")
       .eq("campaigns.workspace_id", workspace.id),
+    supabase.from("contacts").select("ad_headline").eq("workspace_id", workspace.id).not("ad_headline", "is", null),
   ]);
+
+  const byAd = new Map<string, number>();
+  for (const c of adContacts ?? []) {
+    const headline = c.ad_headline ?? "Unknown ad";
+    byAd.set(headline, (byAd.get(headline) ?? 0) + 1);
+  }
 
   // ── Message volume by day, inbound vs outbound ──────────────────────────
   const volumeByDay = new Map<string, { inbound: number; outbound: number }>();
@@ -86,6 +93,22 @@ export default async function AnalyticsPage() {
           <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: "var(--accent-dim)" }} /> Received</span>
         </div>
       </div>
+
+      {byAd.size > 0 && (
+        <div className="sk-card mb-6 overflow-hidden">
+          <div className="border-b border-border p-4 text-[11px] font-medium uppercase tracking-wide text-faint">
+            Contacts from click-to-WhatsApp ads
+          </div>
+          <div className="flex flex-col">
+            {Array.from(byAd.entries()).map(([headline, count]) => (
+              <div key={headline} className="flex items-center justify-between border-b border-border px-4 py-2.5 text-sm last:border-0">
+                <span>{headline}</span>
+                <span className="sk-pill border-accent text-accent">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="sk-card overflow-hidden">
         <div className="border-b border-border p-4 text-[11px] font-medium uppercase tracking-wide text-faint">
