@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { InboxListRefresher } from "./InboxListRefresher";
 import Link from "next/link";
 
 const FILTERS = [
@@ -53,6 +54,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="max-w-3xl">
+      <InboxListRefresher workspaceId={workspace.id} />
       <h1 className="mb-4 text-xl font-semibold tracking-tight">Inbox</h1>
 
       <form className="mb-4 flex gap-3">

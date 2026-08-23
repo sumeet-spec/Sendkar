@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ReplyBox } from "./ReplyBox";
 import { AssigneeSelect } from "./AssigneeSelect";
 import { NotesPanel } from "./NotesPanel";
+import { RealtimeRefresher } from "./RealtimeRefresher";
 
 export default async function ThreadPage({ params }: { params: Promise<{ contactId: string }> }) {
   const { contactId } = await params;
@@ -32,6 +33,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
 
   return (
     <div className="flex h-[calc(100vh-4rem)] max-w-5xl gap-5">
+      <RealtimeRefresher contactId={contactId} />
       <div className="flex flex-1 flex-col">
         <div className="mb-4 flex items-center justify-between">
           <div>
