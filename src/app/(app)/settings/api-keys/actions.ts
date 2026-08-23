@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
 import { generateApiKey } from "@/lib/apiKeys";
 import { revalidatePath } from "next/cache";
 
@@ -12,17 +12,17 @@ export async function createApiKey(_prevState: unknown, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Give this key a name so you know what's using it." };
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: "Not logged in." };
+  const userId = await getCurrentUserId();
+  if (!userId) return { error: "Not logged in." };
 
+  const supabase = await createClient();
   const { plaintext, prefix, hash } = generateApiKey();
   const { error } = await supabase.from("api_keys").insert({
     workspace_id: workspace.id,
     name,
     key_prefix: prefix,
     key_hash: hash,
-    created_by: userData.user.id,
+    created_by: userId,
   });
   if (error) return { error: error.message };
 

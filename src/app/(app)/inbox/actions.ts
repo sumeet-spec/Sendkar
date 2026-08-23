@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
 import { sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
 import { sendInstagramMessage } from "@/lib/instagram";
 import { sendMessengerMessage } from "@/lib/messenger";
@@ -147,14 +147,14 @@ export async function addContactNote(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: "Not logged in." };
+  const userId = await getCurrentUserId();
+  if (!userId) return { error: "Not logged in." };
 
+  const supabase = await createClient();
   const { error } = await supabase.from("contact_notes").insert({
     contact_id: contactId,
     workspace_id: workspace.id,
-    author_id: userData.user.id,
+    author_id: userId,
     body,
   });
   if (error) return { error: error.message };

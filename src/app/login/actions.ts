@@ -1,17 +1,18 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { normalizePhone, phoneToAuthEmail } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export async function login(_prevState: unknown, formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim();
+  const phone = normalizePhone(String(formData.get("phone") ?? ""));
   const password = String(formData.get("password") ?? "");
 
-  if (!email || !password) return { error: "Email and password are required." };
+  if (phone.length < 10 || !password) return { error: "Enter your WhatsApp number and password." };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message };
+  const { error } = await supabase.auth.signInWithPassword({ email: phoneToAuthEmail(phone), password });
+  if (error) return { error: "Incorrect WhatsApp number or password." };
 
   redirect("/dashboard");
 }

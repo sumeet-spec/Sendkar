@@ -28,17 +28,15 @@ export default function SignupPage() {
             <input className="sk-input" id="workspaceName" name="workspaceName" placeholder="Instastarz" required />
           </div>
           <div>
-            <label className="sk-label" htmlFor="email">Email</label>
-            <input className="sk-input" id="email" name="email" type="email" required />
+            <label className="sk-label" htmlFor="phone">WhatsApp number (with country code)</label>
+            <input className="sk-input font-mono" id="phone" name="phone" type="tel" placeholder="919876543210" required />
           </div>
           <div>
             <label className="sk-label" htmlFor="password">Password</label>
             <input className="sk-input" id="password" name="password" type="password" minLength={8} required />
           </div>
 
-          {state?.error && (
-            <p className={`text-sm ${state.success ? "text-accent" : "text-danger"}`}>{state.error}</p>
-          )}
+          {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
           <button type="submit" disabled={pending} className="sk-btn sk-btn-primary mt-1 w-full disabled:opacity-60">
             {pending ? "Creating…" : "Create workspace"}

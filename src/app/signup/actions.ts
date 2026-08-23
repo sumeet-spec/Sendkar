@@ -2,40 +2,45 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizePhone, phoneToAuthEmail } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export async function signup(_prevState: unknown, formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim();
+  const phone = normalizePhone(String(formData.get("phone") ?? ""));
   const password = String(formData.get("password") ?? "");
   const workspaceName = String(formData.get("workspaceName") ?? "").trim();
 
-  if (!email || !password || !workspaceName) {
-    return { error: "All fields are required." };
-  }
+  if (phone.length < 10) return { error: "Enter a valid WhatsApp number with country code." };
+  if (!password || !workspaceName) return { error: "All fields are required." };
 
-  const supabase = await createClient();
-
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-  if (signUpError) return { error: signUpError.message };
-  const user = signUpData.user;
-  if (!user) return { error: "Sign-up failed unexpectedly — no user returned." };
-
-  // Deliberately the admin (service-role) client here, not the session-bound
-  // one above: if this Supabase project requires email confirmation, signUp()
-  // returns a user with NO active session yet, so the RLS policy on
-  // workspaces (which checks auth.uid() = owner_id) would see an anonymous
-  // caller and reject the insert. The admin client bypasses that — safe here
-  // specifically because owner_id is set to the id signUp() just returned,
-  // never to anything the client submitted.
+  const email = phoneToAuthEmail(phone);
   const admin = createAdminClient();
-  const { error: wsError } = await admin
-    .from("workspaces")
-    .insert({ name: workspaceName, owner_id: user.id });
+
+  // Created via the admin API with email_confirm: true, not the session-bound
+  // signUp() — that sidesteps this project's email-confirmation setting
+  // entirely, which matters a lot here since the "email" is synthetic and
+  // never delivered: nobody could ever click a confirmation link sent to it.
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { whatsapp_number: phone },
+  });
+  if (createError) {
+    return { error: createError.message.includes("already been registered") ? "That WhatsApp number already has an account — log in instead." : createError.message };
+  }
+  const user = created.user;
+
+  // Deliberately the admin client here too, same reasoning as before: no RLS
+  // policy lets a user insert their own workspace_members row (only the
+  // on-workspace-created trigger can, via SECURITY DEFINER) — safe because
+  // owner_id is set to the id createUser() just returned, never client input.
+  const { error: wsError } = await admin.from("workspaces").insert({ name: workspaceName, owner_id: user.id });
   if (wsError) return { error: `Account created, but workspace setup failed: ${wsError.message}` };
 
-  if (!signUpData.session) {
-    return { error: "Account created — check your inbox to confirm your email, then log in.", success: true };
-  }
+  const supabase = await createClient();
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInError) return { error: "Account created — log in with your WhatsApp number to continue." };
 
   redirect("/onboarding");
 }

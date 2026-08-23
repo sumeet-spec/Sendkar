@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
 import { InboxListRefresher } from "./InboxListRefresher";
 import Link from "next/link";
 
@@ -16,8 +16,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   if (!workspace) return null;
   const supabase = await createClient();
 
-  const { data: userData } = await supabase.auth.getUser();
-  const currentUserId = userData.user?.id ?? null;
+  const currentUserId = await getCurrentUserId();
 
   // Most recent message per contact, newest conversation first.
   const { data: messages } = await supabase

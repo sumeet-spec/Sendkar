@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: "grid" },
@@ -16,6 +17,7 @@ const NAV = [
   { href: "/automations", label: "Automations", icon: "bolt" },
   { href: "/webhooks", label: "Webhooks", icon: "webhook" },
   { href: "/links", label: "Links & widget", icon: "link" },
+  { href: "/agency", label: "Agency", icon: "agency" },
 ] as const;
 
 const SETTINGS_NAV = [
@@ -52,12 +54,20 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><circle cx="4" cy="4" r="1.8" /><circle cx="4" cy="16" r="1.8" /><circle cx="16" cy="10" r="1.8" /><path d="M5.6 4.8L14.4 9.2M5.6 15.2L14.4 10.8" /></svg>;
     case "catalog":
       return <svg {...common}><rect x="2.5" y="3" width="6" height="6" rx="1" /><rect x="11.5" y="3" width="6" height="6" rx="1" /><rect x="2.5" y="11" width="6" height="6" rx="1" /><rect x="11.5" y="11" width="6" height="6" rx="1" /></svg>;
+    case "agency":
+      return <svg {...common}><rect x="3" y="8" width="4.5" height="9" rx="0.8" /><rect x="8.5" y="4" width="4.5" height="13" rx="0.8" /><rect x="14" y="11" width="3" height="6" rx="0.8" /></svg>;
     default:
       return null;
   }
 }
 
-export function Sidebar({ workspaceName }: { workspaceName: string }) {
+interface UserWorkspace {
+  id: string;
+  name: string;
+  role: string;
+}
+
+export function Sidebar({ workspaceId, workspaces }: { workspaceId: string; workspaces: UserWorkspace[] }) {
   const pathname = usePathname();
 
   return (
@@ -112,11 +122,13 @@ export function Sidebar({ workspaceName }: { workspaceName: string }) {
       </div>
 
       <div className="mt-auto border-t border-border pt-3">
-        <div className="flex items-center justify-between px-2.5 py-1.5">
-          <div className="truncate text-[12.5px] font-medium text-muted">{workspaceName}</div>
+        <div className="flex items-center gap-1">
+          <div className="flex-1">
+            <WorkspaceSwitcher workspaces={workspaces} currentId={workspaceId} />
+          </div>
           <button
             onClick={() => logout()}
-            className="text-[11.5px] font-medium text-faint hover:text-danger"
+            className="px-2 text-[11.5px] font-medium text-faint hover:text-danger"
           >
             Log out
           </button>

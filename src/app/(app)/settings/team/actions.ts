@@ -2,7 +2,7 @@
 
 import crypto from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -25,8 +25,8 @@ export async function inviteTeamMember(_prevState: unknown, formData: FormData) 
     return { error: `Your ${workspace.plan} plan is capped at ${limits.maxTeamMembers} team members — upgrade to invite more.` };
   }
 
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: "Not logged in." };
+  const userId = await getCurrentUserId();
+  if (!userId) return { error: "Not logged in." };
 
   const token = crypto.randomBytes(24).toString("base64url");
   const { error } = await supabase.from("workspace_invites").insert({
@@ -34,7 +34,7 @@ export async function inviteTeamMember(_prevState: unknown, formData: FormData) 
     email,
     role: "member",
     token,
-    invited_by: userData.user.id,
+    invited_by: userId,
   });
   if (error) return { error: error.message };
 

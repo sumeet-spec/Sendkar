@@ -24,8 +24,8 @@ export default function LoginPage() {
 
         <form action={formAction} className="flex flex-col gap-4">
           <div>
-            <label className="sk-label" htmlFor="email">Email</label>
-            <input className="sk-input" id="email" name="email" type="email" required />
+            <label className="sk-label" htmlFor="phone">WhatsApp number</label>
+            <input className="sk-input font-mono" id="phone" name="phone" type="tel" placeholder="919876543210" required />
           </div>
           <div>
             <label className="sk-label" htmlFor="password">Password</label>
