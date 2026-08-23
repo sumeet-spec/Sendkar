@@ -83,6 +83,37 @@ alter table contact_notes enable row level security;
 create policy "member can manage contact notes" on contact_notes
   for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
 
+-- ── API keys — service-to-service auth for the MCP server and any future
+-- external integration. Session cookies (what every other action in this
+-- app uses) don't exist for a non-browser client like Claude Desktop. ────
+
+create table api_keys (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  name         text not null,
+  key_prefix   text not null, -- shown in the UI so a key is recognizable without ever re-displaying it
+  key_hash     text not null, -- sha256 of the real key — the real value is shown once, at creation, only
+  created_by   uuid not null references auth.users(id),
+  last_used_at timestamptz,
+  revoked_at   timestamptz,
+  created_at   timestamptz not null default now()
+);
+
+create index api_keys_workspace_idx on api_keys (workspace_id);
+create index api_keys_hash_idx on api_keys (key_hash) where revoked_at is null;
+
+alter table api_keys enable row level security;
+create policy "member can manage api keys" on api_keys
+  for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
+
+-- ── Multi-language broadcasts — one campaign, per-recipient language ──────
+-- A shared group name links translated templates of the same message so a
+-- single campaign can auto-pick each contact's own-language version
+-- instead of the sender manually segmenting and launching N campaigns.
+
+alter table templates add column template_group text;
+alter table campaigns add column template_group text;
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (

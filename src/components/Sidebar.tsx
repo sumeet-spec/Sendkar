@@ -21,6 +21,7 @@ const SETTINGS_NAV = [
   { href: "/settings/team", label: "Team" },
   { href: "/settings/channels", label: "Channels" },
   { href: "/settings/canned-responses", label: "Canned responses" },
+  { href: "/settings/api-keys", label: "API keys" },
 ] as const;
 
 function Icon({ name }: { name: string }) {
