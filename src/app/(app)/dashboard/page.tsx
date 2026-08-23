@@ -15,7 +15,7 @@ export default async function DashboardPage() {
       .from("campaign_recipients")
       .select("status, campaign_id, campaigns!inner(workspace_id)")
       .eq("campaigns.workspace_id", workspace.id),
-    supabase.from("orders").select("total_amount, attributed_campaign_id").eq("workspace_id", workspace.id),
+    supabase.from("orders").select("contact_id, total_amount, attributed_campaign_id, contacts(phone, name)").eq("workspace_id", workspace.id),
   ]);
 
   const total = recipientStats?.length ?? 0;
@@ -25,6 +25,16 @@ export default async function DashboardPage() {
 
   const totalRevenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
   const attributedRevenue = (orders ?? []).filter((o) => o.attributed_campaign_id).reduce((sum, o) => sum + Number(o.total_amount), 0);
+
+  const spendByContact = new Map<string, { phone: string; name: string | null; spend: number }>();
+  for (const o of orders ?? []) {
+    if (!o.contact_id) continue;
+    const c = o.contacts as { phone?: string; name?: string } | null;
+    const bucket = spendByContact.get(o.contact_id) ?? { phone: c?.phone ?? "—", name: c?.name ?? null, spend: 0 };
+    bucket.spend += Number(o.total_amount);
+    spendByContact.set(o.contact_id, bucket);
+  }
+  const topCustomers = Array.from(spendByContact.entries()).sort((a, b) => b[1].spend - a[1].spend).slice(0, 5);
 
   const configured = isWhatsAppConfigured(workspace);
 
@@ -73,6 +83,20 @@ export default async function DashboardPage() {
           <div className="sk-card p-5">
             <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">From a WhatsApp campaign</div>
             <div className="text-2xl font-semibold text-accent">₹{attributedRevenue.toLocaleString("en-IN")}</div>
+          </div>
+        </div>
+      )}
+
+      {topCustomers.length > 0 && (
+        <div className="sk-card mt-4 overflow-hidden">
+          <div className="border-b border-border p-4 text-[11px] font-medium uppercase tracking-wide text-faint">Top customers</div>
+          <div className="flex flex-col">
+            {topCustomers.map(([contactId, c]) => (
+              <div key={contactId} className="flex items-center justify-between border-b border-border px-4 py-2.5 text-sm last:border-0">
+                <span className="font-mono text-[13px]">{c.phone}{c.name ? ` · ${c.name}` : ""}</span>
+                <span className="text-accent">₹{c.spend.toLocaleString("en-IN")}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -23,12 +23,17 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   // from the search box could otherwise inject extra filter clauses.
   const safeQuery = q.trim().replace(/[,.()%]/g, "");
   if (safeQuery) query = query.or(`phone.ilike.%${safeQuery}%,name.ilike.%${safeQuery}%`);
-  const { data: contacts } = await query;
+  const [{ data: contacts }, { count: totalCount }, { data: orders }] = await Promise.all([
+    query,
+    supabase.from("contacts").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
+    supabase.from("orders").select("contact_id, total_amount").eq("workspace_id", workspace.id),
+  ]);
 
-  const { count: totalCount } = await supabase
-    .from("contacts")
-    .select("id", { count: "exact", head: true })
-    .eq("workspace_id", workspace.id);
+  const spendByContact = new Map<string, number>();
+  for (const o of orders ?? []) {
+    if (!o.contact_id) continue;
+    spendByContact.set(o.contact_id, (spendByContact.get(o.contact_id) ?? 0) + Number(o.total_amount));
+  }
 
   return (
     <div className="max-w-4xl">
@@ -52,7 +57,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              {["Phone", "Name", "Language", "Tags", "Source", "Added"].map((h) => (
+              {["Phone", "Name", "Language", "Tags", "Source", "Spend", "Added"].map((h) => (
                 <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
               ))}
             </tr>
@@ -78,12 +83,19 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
                   {c.source}
                   {c.ad_headline && <div className="mt-0.5 text-[11px] text-accent">via ad: {c.ad_headline}</div>}
                 </td>
+                <td className="px-4 py-2.5">
+                  {spendByContact.has(c.id) ? (
+                    <span className="text-accent">₹{spendByContact.get(c.id)!.toLocaleString("en-IN")}</span>
+                  ) : (
+                    <span className="text-faint">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-2.5 text-faint">{new Date(c.created_at).toLocaleDateString()}</td>
               </tr>
             ))}
             {(!contacts || contacts.length === 0) && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted">
+                <td colSpan={7} className="px-4 py-8 text-center text-muted">
                   No contacts yet — import a CSV above.
                 </td>
               </tr>
