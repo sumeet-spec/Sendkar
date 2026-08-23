@@ -60,3 +60,35 @@ export async function draftReplySuggestion(contactId: string): Promise<{ text?: 
     return { error: err instanceof Error ? err.message : "AI draft failed." };
   }
 }
+
+export async function assignContact(contactId: string, userId: string | null) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return;
+  const supabase = await createClient();
+  await supabase.from("contacts").update({ assignee_id: userId }).eq("id", contactId).eq("workspace_id", workspace.id);
+  revalidatePath(`/inbox/${contactId}`);
+}
+
+export async function addContactNote(_prevState: unknown, formData: FormData) {
+  const contactId = String(formData.get("contactId") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!contactId || !body) return { error: "Nothing to save." };
+
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { error: "Not logged in." };
+
+  const { error } = await supabase.from("contact_notes").insert({
+    contact_id: contactId,
+    workspace_id: workspace.id,
+    author_id: userData.user.id,
+    body,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath(`/inbox/${contactId}`);
+  return { success: true };
+}

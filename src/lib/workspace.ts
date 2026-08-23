@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface Workspace {
   id: string;
@@ -43,4 +44,33 @@ export async function getCurrentWorkspace(): Promise<Workspace | null> {
     .maybeSingle();
 
   return workspace as Workspace | null;
+}
+
+export interface WorkspaceMember {
+  userId: string;
+  email: string | null;
+  role: string;
+}
+
+/**
+ * Team members with their emails for assignment UI. workspace_members only
+ * stores user_id, so emails come from auth.users via the admin client —
+ * team sizes are plan-capped small (max 10 on Growth), so one lookup per
+ * member is fine rather than needing a denormalized email column.
+ */
+export async function listWorkspaceMembers(workspaceId: string): Promise<WorkspaceMember[]> {
+  const supabase = await createClient();
+  const { data: members } = await supabase
+    .from("workspace_members")
+    .select("user_id, role")
+    .eq("workspace_id", workspaceId);
+  if (!members || members.length === 0) return [];
+
+  const admin = createAdminClient();
+  return Promise.all(
+    members.map(async (m) => {
+      const { data } = await admin.auth.admin.getUserById(m.user_id);
+      return { userId: m.user_id, role: m.role as string, email: data?.user?.email ?? null };
+    }),
+  );
 }

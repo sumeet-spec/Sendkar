@@ -59,6 +59,25 @@ create policy "member can view webhook deliveries" on webhook_deliveries
     )
   ));
 
+-- ── Team inbox: conversation assignment + private notes ───────────────────
+
+alter table contacts add column assignee_id uuid references auth.users(id);
+
+create table contact_notes (
+  id           uuid primary key default gen_random_uuid(),
+  contact_id   uuid not null references contacts(id) on delete cascade,
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  author_id    uuid not null references auth.users(id),
+  body         text not null,
+  created_at   timestamptz not null default now()
+);
+
+create index contact_notes_contact_idx on contact_notes (contact_id, created_at desc);
+
+alter table contact_notes enable row level security;
+create policy "member can manage contact notes" on contact_notes
+  for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (
