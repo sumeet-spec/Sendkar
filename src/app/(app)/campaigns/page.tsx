@@ -15,7 +15,7 @@ export default async function CampaignsPage() {
   if (!workspace) return null;
   const supabase = await createClient();
 
-  const [{ data: campaigns }, { data: templates }] = await Promise.all([
+  const [{ data: campaigns }, { data: templates }, { data: numbers }] = await Promise.all([
     supabase
       .from("campaigns")
       .select("id, name, status, created_at, templates(name, language)")
@@ -26,13 +26,18 @@ export default async function CampaignsPage() {
       .select("id, name, language, status")
       .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("whatsapp_numbers")
+      .select("id, label")
+      .eq("workspace_id", workspace.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Campaigns</h1>
-        <NewCampaignForm templates={templates ?? []} />
+        <NewCampaignForm templates={templates ?? []} numbers={numbers ?? []} />
       </div>
       {(templates?.length ?? 0) === 0 && (
         <p className="mb-4 text-sm text-muted">Add a template first before you can create a campaign.</p>

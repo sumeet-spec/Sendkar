@@ -10,7 +10,12 @@ interface Template {
   status: string;
 }
 
-export function NewCampaignForm({ templates }: { templates: Template[] }) {
+interface WhatsAppNumber {
+  id: string;
+  label: string;
+}
+
+export function NewCampaignForm({ templates, numbers }: { templates: Template[]; numbers: WhatsAppNumber[] }) {
   const [state, formAction, pending] = useActionState(createCampaign, null);
   const [open, setOpen] = useState(false);
 
@@ -43,6 +48,15 @@ export function NewCampaignForm({ templates }: { templates: Template[] }) {
         <label className="sk-label">Segment tag (optional)</label>
         <input name="segmentTag" className="sk-input" placeholder="e.g. vip — leave blank for everyone in that language" />
       </div>
+      {numbers.length > 0 && (
+        <div>
+          <label className="sk-label">Send from (optional — defaults to your primary number)</label>
+          <select name="whatsappNumberId" className="sk-input" defaultValue="">
+            <option value="">Primary number</option>
+            {numbers.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
+          </select>
+        </div>
+      )}
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 

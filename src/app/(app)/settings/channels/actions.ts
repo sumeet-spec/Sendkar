@@ -26,6 +26,38 @@ export async function saveInstagramCreds(_prevState: unknown, formData: FormData
   return { success: true };
 }
 
+export async function addWhatsAppNumber(_prevState: unknown, formData: FormData) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const label = String(formData.get("label") ?? "").trim();
+  const phoneNumberId = String(formData.get("phoneNumberId") ?? "").trim();
+  const wabaId = String(formData.get("wabaId") ?? "").trim() || null;
+  const displayNumber = String(formData.get("displayNumber") ?? "").replace(/[^\d]/g, "") || null;
+  const accessToken = String(formData.get("accessToken") ?? "").trim();
+  if (!label || !phoneNumberId || !accessToken) return { error: "Label, phone number ID, and access token are required." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("whatsapp_numbers").insert({
+    workspace_id: workspace.id,
+    label,
+    phone_number_id: phoneNumberId,
+    whatsapp_waba_id: wabaId,
+    display_number: displayNumber,
+    access_token: accessToken,
+  });
+  if (error) return { error: error.message.includes("unique") ? "That phone number ID is already registered." : error.message };
+
+  revalidatePath("/settings/channels");
+  return { success: true };
+}
+
+export async function deleteWhatsAppNumber(id: string) {
+  const supabase = await createClient();
+  await supabase.from("whatsapp_numbers").delete().eq("id", id);
+  revalidatePath("/settings/channels");
+}
+
 export async function saveWhatsAppCredsFromChannels(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };

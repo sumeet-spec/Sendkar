@@ -7,6 +7,7 @@ const TOOLS = [
   ["list_templates", "List message templates and their Meta approval status"],
   ["list_campaigns", "List recent broadcast campaigns and their status"],
   ["get_campaign_status", "Get sent/delivered/read/failed counts for one campaign"],
+  ["list_whatsapp_numbers", "List additional numbers registered on this workspace"],
   ["create_campaign", "Create a draft campaign from an approved template"],
   ["start_campaign", "Snapshot the audience and start sending"],
   ["send_template_message", "Send one approved template to a single number, right now"],

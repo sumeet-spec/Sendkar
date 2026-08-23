@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendTemplateMessage } from "@/lib/whatsapp";
+import { sendTemplateMessage, type WorkspaceCreds } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 
 /**
@@ -22,6 +22,42 @@ const MAX_PER_RUN = 100; // ~100 sequential Graph API calls comfortably fits max
 const DELAY_BETWEEN_SENDS_MS = 250; // avoids bursting Meta's per-second send-rate limit
 
 export const maxDuration = 60; // seconds — Hobby plan's ceiling for a Serverless Function
+
+/**
+ * Every workspace's default number tracks its own daily tier in the
+ * `workspaces` row; a secondary registered number tracks its own in
+ * `whatsapp_numbers` instead — this resolves which table/row a given
+ * campaign's sends should be metered and credentialed against, so adding
+ * a second number doesn't silently share (or corrupt) the default
+ * number's daily count.
+ */
+async function resolveSender(
+  admin: ReturnType<typeof createAdminClient>,
+  workspace: { id: string; whatsapp_phone_number_id: string | null; whatsapp_access_token: string | null; messaging_tier: number; daily_send_count: number; daily_reset_at: string },
+  numberId: string | null,
+) {
+  if (numberId) {
+    const { data: number } = await admin.from("whatsapp_numbers").select("*").eq("id", numberId).maybeSingle();
+    if (number) {
+      return {
+        table: "whatsapp_numbers" as const,
+        id: number.id,
+        creds: { whatsapp_phone_number_id: number.phone_number_id, whatsapp_access_token: number.access_token } as WorkspaceCreds,
+        messagingTier: number.messaging_tier,
+        dailySendCount: number.daily_send_count,
+        dailyResetAt: number.daily_reset_at,
+      };
+    }
+  }
+  return {
+    table: "workspaces" as const,
+    id: workspace.id,
+    creds: workspace as WorkspaceCreds,
+    messagingTier: workspace.messaging_tier,
+    dailySendCount: workspace.daily_send_count,
+    dailyResetAt: workspace.daily_reset_at,
+  };
+}
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -45,17 +81,19 @@ export async function GET(request: NextRequest) {
       messaging_tier: number; daily_send_count: number; daily_reset_at: string;
     };
 
+    const sender = await resolveSender(admin, workspace, campaign.whatsapp_number_id);
+
     // Roll the daily counter over if we've crossed into a new day.
-    let dailySendCount = workspace.daily_send_count;
-    if (now >= new Date(workspace.daily_reset_at)) {
+    let dailySendCount = sender.dailySendCount;
+    if (now >= new Date(sender.dailyResetAt)) {
       dailySendCount = 0;
       const nextReset = new Date(now);
       nextReset.setUTCHours(0, 0, 0, 0);
       nextReset.setUTCDate(nextReset.getUTCDate() + 1);
-      await admin.from("workspaces").update({ daily_send_count: 0, daily_reset_at: nextReset.toISOString() }).eq("id", workspace.id);
+      await admin.from(sender.table).update({ daily_send_count: 0, daily_reset_at: nextReset.toISOString() }).eq("id", sender.id);
     }
 
-    const remainingToday = workspace.messaging_tier - dailySendCount;
+    const remainingToday = sender.messagingTier - dailySendCount;
     if (remainingToday <= 0) {
       results[campaign.id] = "daily tier limit reached — resumes after reset";
       continue;
@@ -115,7 +153,7 @@ export async function GET(request: NextRequest) {
 
       try {
         const { metaMessageId } = await sendTemplateMessage({
-          workspace,
+          workspace: sender.creds,
           to: phone,
           templateName: template.meta_template_name,
           language: template.language,
@@ -145,10 +183,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (sentCount > 0) {
-      await admin
-        .from("workspaces")
-        .update({ daily_send_count: dailySendCount + sentCount })
-        .eq("id", workspace.id);
+      await admin.from(sender.table).update({ daily_send_count: dailySendCount + sentCount }).eq("id", sender.id);
     }
 
     results[campaign.id] = `sent ${sentCount}/${recipients.length}`;

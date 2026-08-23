@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { sendTemplateMessage } from "@/lib/whatsapp";
+import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -13,6 +14,7 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const templateId = String(formData.get("templateId") ?? "");
   const segmentTag = String(formData.get("segmentTag") ?? "").trim() || null;
+  const whatsappNumberId = String(formData.get("whatsappNumberId") ?? "") || null;
   if (!name || !templateId) return { error: "Name and template are required." };
 
   const supabase = await createClient();
@@ -29,6 +31,7 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
       template_id: templateId,
       template_group: chosenTemplate?.template_group ?? null,
       segment_tag: segmentTag,
+      whatsapp_number_id: whatsappNumberId,
       status: "draft",
     })
     .select("id")
@@ -99,16 +102,18 @@ export async function sendTestMessage(_prevState: unknown, formData: FormData) {
   const supabase = await createClient();
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("id, templates(meta_template_name, language, body_text)")
+    .select("id, whatsapp_number_id, templates(meta_template_name, language, body_text)")
     .eq("id", campaignId)
     .eq("workspace_id", workspace.id)
     .single();
   const template = campaign?.templates as { meta_template_name?: string; language?: string; body_text?: string } | null;
   if (!template?.meta_template_name) return { error: "Template not found." };
 
+  const creds = await resolveNumberCredentials(workspace, campaign?.whatsapp_number_id ?? null);
+
   try {
     await sendTemplateMessage({
-      workspace,
+      workspace: creds,
       to: phone,
       templateName: template.meta_template_name,
       language: template.language ?? "en",

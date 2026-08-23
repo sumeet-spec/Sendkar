@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature, sendSessionMessage, isOptOutMessage, isOptInMessage, OPT_OUT_CONFIRMATION } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { syncKlaviyoProfile } from "@/lib/klaviyo";
+import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -89,22 +90,30 @@ interface FlowStepRow {
   default_next_step_order: number | null;
 }
 
-/** Sends a free-text reply and logs it, sharing the same try/catch shape across opt-out confirmations, flow steps, and automations. */
+/**
+ * Sends a free-text reply and logs it, sharing the same try/catch shape
+ * across opt-out confirmations, flow steps, and automations. `numberId` is
+ * the registered secondary number the inbound message arrived on, if any —
+ * a reply must go out from the SAME number the contact is talking to, not
+ * silently fall back to the workspace's default.
+ */
 async function sendAndLog(
   admin: ReturnType<typeof createAdminClient>,
   workspaceId: string,
   contactId: string,
   to: string,
   body: string,
+  numberId: string | null = null,
 ): Promise<boolean> {
   const { data: ws } = await admin
     .from("workspaces")
-    .select("whatsapp_phone_number_id, whatsapp_access_token")
+    .select("id, whatsapp_phone_number_id, whatsapp_access_token")
     .eq("id", workspaceId)
     .single();
   if (!ws) return false;
+  const creds = await resolveNumberCredentials(ws, numberId);
   try {
-    const { metaMessageId } = await sendSessionMessage({ workspace: ws, to, body });
+    const { metaMessageId } = await sendSessionMessage({ workspace: creds, to, body });
     await admin.from("messages").insert({
       workspace_id: workspaceId,
       contact_id: contactId,
@@ -163,6 +172,7 @@ export async function POST(request: NextRequest) {
 
       const phoneNumberId = value.metadata?.phone_number_id ?? null;
       let workspaceId: string | null = null;
+      let matchedNumberId: string | null = null; // set only when the match was a secondary number, not the workspace's default
       if (phoneNumberId) {
         const { data: ws } = await admin
           .from("workspaces")
@@ -170,6 +180,17 @@ export async function POST(request: NextRequest) {
           .eq("whatsapp_phone_number_id", phoneNumberId)
           .maybeSingle();
         workspaceId = ws?.id ?? null;
+
+        if (!workspaceId) {
+          // Not the default number — check registered secondary numbers.
+          const { data: number } = await admin
+            .from("whatsapp_numbers")
+            .select("id, workspace_id")
+            .eq("phone_number_id", phoneNumberId)
+            .maybeSingle();
+          workspaceId = number?.workspace_id ?? null;
+          matchedNumberId = number?.id ?? null;
+        }
       }
 
       // Log the raw event regardless — untrusted-but-verified data, kept for
@@ -216,7 +237,9 @@ export async function POST(request: NextRequest) {
           profileNameForNewContact = value.contacts?.find((c) => c.wa_id === msg.from)?.profile?.name ?? null;
           const { data: created } = await admin
             .from("contacts")
-            .insert({ workspace_id: workspaceId, phone: msg.from, name: profileNameForNewContact, source: "inbound_reply" })
+            // whatsapp_number_id is null when this is the workspace's default number —
+            // only set for a contact whose first message arrived on a registered secondary number.
+            .insert({ workspace_id: workspaceId, phone: msg.from, name: profileNameForNewContact, source: "inbound_reply", whatsapp_number_id: matchedNumberId })
             .select("id")
             .single();
           contactId = created?.id;
@@ -256,7 +279,7 @@ export async function POST(request: NextRequest) {
         let handledAsComplianceKeyword = false;
         if (msg.text?.body && isOptOutMessage(msg.text.body)) {
           await admin.from("contacts").update({ opted_out: true }).eq("id", contactId);
-          await sendAndLog(admin, workspaceId, contactId, msg.from, OPT_OUT_CONFIRMATION);
+          await sendAndLog(admin, workspaceId, contactId, msg.from, OPT_OUT_CONFIRMATION, matchedNumberId);
           handledAsComplianceKeyword = true;
         } else if (msg.text?.body && isOptInMessage(msg.text.body)) {
           await admin.from("contacts").update({ opted_out: false }).eq("id", contactId);
@@ -332,7 +355,7 @@ export async function POST(request: NextRequest) {
           }
 
           if (stepToSend && flowIdForState) {
-            const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, stepToSend.message_body);
+            const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, stepToSend.message_body, matchedNumberId);
             if (sent) {
               const stepContinues = stepToSend.branches.length > 0 || stepToSend.default_next_step_order != null;
               if (stepContinues) {
@@ -361,7 +384,7 @@ export async function POST(request: NextRequest) {
             const matched = (automations ?? []).find((a) =>
               a.match_type === "exact" ? normalized === a.trigger_keyword : normalized.includes(a.trigger_keyword),
             );
-            if (matched) await sendAndLog(admin, workspaceId, contactId, msg.from, matched.reply_body);
+            if (matched) await sendAndLog(admin, workspaceId, contactId, msg.from, matched.reply_body, matchedNumberId);
           }
         }
       }

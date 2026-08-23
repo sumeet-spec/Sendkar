@@ -212,6 +212,40 @@ alter table workspaces
 
 alter table workspaces add column klaviyo_api_key text;
 
+-- ── Multiple WhatsApp numbers per workspace — additive, not a rewrite of
+-- the existing single-number fields on `workspaces` (which stay as the
+-- default/primary number so nothing that already works changes behavior).
+-- A workspace can register additional numbers (e.g. sales + support) here;
+-- contacts and campaigns can optionally pin to one. ───────────────────────
+
+create table whatsapp_numbers (
+  id                uuid primary key default gen_random_uuid(),
+  workspace_id      uuid not null references workspaces(id) on delete cascade,
+  label             text not null,
+  phone_number_id   text not null,
+  whatsapp_waba_id  text,
+  access_token      text not null,
+  display_number    text,
+  messaging_tier    int not null default 250,
+  daily_send_count  int not null default 0,
+  daily_reset_at    timestamptz not null default now(),
+  created_at        timestamptz not null default now(),
+  unique (workspace_id, phone_number_id)
+);
+create index whatsapp_numbers_workspace_idx on whatsapp_numbers (workspace_id);
+alter table whatsapp_numbers enable row level security;
+create policy "member can manage whatsapp numbers" on whatsapp_numbers
+  for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
+
+-- Which registered number a contact's conversation belongs to — null means
+-- "the workspace's default number", preserving today's single-number
+-- behavior for every contact that predates this feature.
+alter table contacts add column whatsapp_number_id uuid references whatsapp_numbers(id) on delete set null;
+
+-- Which number a campaign sends from — null means the default number,
+-- same backward-compatible convention.
+alter table campaigns add column whatsapp_number_id uuid references whatsapp_numbers(id) on delete set null;
+
 -- ── Canned responses — quick-insert replies for the team inbox ────────────
 
 create table canned_responses (

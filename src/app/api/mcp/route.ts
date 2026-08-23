@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveApiKey } from "@/lib/apiKeys";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage, sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
+import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 
 /**
  * Sendkar's MCP server — lets Claude (or any MCP client) send WhatsApp
@@ -64,6 +65,11 @@ const TOOLS = [
     inputSchema: { type: "object", properties: { campaignId: { type: "string" } }, required: ["campaignId"] },
   },
   {
+    name: "list_whatsapp_numbers",
+    description: "List additional WhatsApp numbers registered on this workspace beyond the default one.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
     name: "create_campaign",
     description: "Create a draft campaign from an existing approved template. Does not send anything until start_campaign is called.",
     inputSchema: {
@@ -72,6 +78,7 @@ const TOOLS = [
         name: { type: "string" },
         templateId: { type: "string", description: "From list_templates" },
         segmentTag: { type: "string", description: "Optional — only send to contacts with this tag" },
+        whatsappNumberId: { type: "string", description: "Optional — from list_whatsapp_numbers. Defaults to the primary number." },
       },
       required: ["name", "templateId"],
     },
@@ -91,6 +98,7 @@ const TOOLS = [
         templateName: { type: "string", description: "The Meta template name from list_templates" },
         language: { type: "string" },
         bodyParams: { type: "array", items: { type: "string" }, description: "Positional {{1}}, {{2}}... values, if the template has any" },
+        whatsappNumberId: { type: "string", description: "Optional — from list_whatsapp_numbers. Defaults to the primary number." },
       },
       required: ["to", "templateName", "language"],
     },
@@ -202,6 +210,11 @@ export async function POST(request: NextRequest) {
         return textResult(id, JSON.stringify(data ?? []));
       }
 
+      case "list_whatsapp_numbers": {
+        const { data } = await admin.from("whatsapp_numbers").select("id, label, display_number").eq("workspace_id", workspaceId).order("created_at", { ascending: false });
+        return textResult(id, JSON.stringify(data ?? []));
+      }
+
       case "get_campaign_status": {
         const campaignId = String(args.campaignId ?? "");
         const { data: campaign } = await admin.from("campaigns").select("id, name, status").eq("id", campaignId).eq("workspace_id", workspaceId).maybeSingle();
@@ -227,6 +240,7 @@ export async function POST(request: NextRequest) {
             template_id: templateId,
             template_group: chosenTemplate?.template_group ?? null,
             segment_tag: args.segmentTag || null,
+            whatsapp_number_id: args.whatsappNumberId || null,
             status: "draft",
           })
           .select("id")
@@ -276,13 +290,16 @@ export async function POST(request: NextRequest) {
 
         const { data: workspace } = await admin
           .from("workspaces")
-          .select("whatsapp_phone_number_id, whatsapp_access_token, daily_send_count, messaging_tier")
+          .select("id, whatsapp_phone_number_id, whatsapp_access_token, daily_send_count, messaging_tier")
           .eq("id", workspaceId)
           .single();
         if (!workspace) return textResult(id, "Workspace not found.", true);
 
+        const numberId = typeof args.whatsappNumberId === "string" ? args.whatsappNumberId : null;
+        const creds = await resolveNumberCredentials(workspace, numberId);
+
         const { metaMessageId } = await sendTemplateMessage({
-          workspace,
+          workspace: creds,
           to,
           templateName,
           language,
@@ -297,7 +314,15 @@ export async function POST(request: NextRequest) {
           meta_message_id: metaMessageId,
           status: "sent",
         });
-        await admin.from("workspaces").update({ daily_send_count: workspace.daily_send_count + 1 }).eq("id", workspaceId);
+
+        // Track the daily count against whichever number actually sent this — the
+        // pinned secondary number if one was given, otherwise the workspace default.
+        if (numberId) {
+          const { data: number } = await admin.from("whatsapp_numbers").select("daily_send_count").eq("id", numberId).maybeSingle();
+          if (number) await admin.from("whatsapp_numbers").update({ daily_send_count: number.daily_send_count + 1 }).eq("id", numberId);
+        } else {
+          await admin.from("workspaces").update({ daily_send_count: workspace.daily_send_count + 1 }).eq("id", workspaceId);
+        }
 
         return textResult(id, JSON.stringify({ sent: true, metaMessageId }));
       }

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
+import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { draftReply } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
 
@@ -15,7 +16,7 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
   if (!workspace) return { error: "No workspace found." };
 
   const supabase = await createClient();
-  const { data: contact } = await supabase.from("contacts").select("phone, session_expires_at").eq("id", contactId).single();
+  const { data: contact } = await supabase.from("contacts").select("phone, session_expires_at, whatsapp_number_id").eq("id", contactId).single();
   if (!contact) return { error: "Contact not found." };
 
   // Meta only allows free-text replies within 24h of the customer's last inbound message —
@@ -25,8 +26,12 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
     return { error: "The 24h reply window has closed for this contact — send a template message instead." };
   }
 
+  // A reply must go out from whichever number this contact has been talking to, not
+  // silently default to the workspace's primary number if they're a secondary-number contact.
+  const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
+
   try {
-    const { metaMessageId } = await sendSessionMessage({ workspace, to: contact.phone, body });
+    const { metaMessageId } = await sendSessionMessage({ workspace: creds, to: contact.phone, body });
     await supabase.from("messages").insert({
       workspace_id: workspace.id,
       contact_id: contactId,
@@ -68,7 +73,7 @@ export async function sendProductToContact(contactId: string, productId: string)
 
   const supabase = await createClient();
   const [{ data: contact }, { data: product }] = await Promise.all([
-    supabase.from("contacts").select("phone, session_expires_at").eq("id", contactId).single(),
+    supabase.from("contacts").select("phone, session_expires_at, whatsapp_number_id").eq("id", contactId).single(),
     supabase.from("products").select("retailer_id, name").eq("id", productId).single(),
   ]);
   if (!contact) return { error: "Contact not found." };
@@ -77,9 +82,11 @@ export async function sendProductToContact(contactId: string, productId: string)
     return { error: "The 24h reply window has closed for this contact." };
   }
 
+  const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
+
   try {
     const { metaMessageId } = await sendProductMessage({
-      workspace,
+      workspace: creds,
       to: contact.phone,
       catalogId: workspace.catalog_id,
       productRetailerId: product.retailer_id,
