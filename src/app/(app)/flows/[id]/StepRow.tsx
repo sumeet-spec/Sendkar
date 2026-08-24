@@ -15,6 +15,8 @@ interface Step {
   message_body: string;
   branches: Branch[];
   default_next_step_order: number | null;
+  message_type: string;
+  interactive_payload: { buttons?: Array<{ id: string; title: string }> } | null;
 }
 
 export function StepRow({ step, flowId }: { step: Step; flowId: string }) {
@@ -29,6 +31,13 @@ export function StepRow({ step, flowId }: { step: Step; flowId: string }) {
         </button>
       </div>
       <p className="mb-2 text-[13.5px]">{step.message_body}</p>
+      {step.message_type === "buttons" && step.interactive_payload?.buttons && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {step.interactive_payload.buttons.map((b) => (
+            <span key={b.id} className="sk-pill border-accent text-accent">▭ {b.title}</span>
+          ))}
+        </div>
+      )}
       {step.branches.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {step.branches.map((b, i) => (

@@ -61,7 +61,18 @@ export async function addFlowStep(_prevState: unknown, formData: FormData) {
   const messageBody = String(formData.get("messageBody") ?? "").trim();
   const branchesRaw = String(formData.get("branches") ?? "");
   const defaultNextStr = String(formData.get("defaultNextStepOrder") ?? "").trim();
+  const messageType = String(formData.get("messageType") ?? "text");
   if (!flowId || !messageBody) return { error: "A message body is required." };
+
+  let interactivePayload: { buttons: Array<{ id: string; title: string }> } | null = null;
+  if (messageType === "buttons") {
+    const buttons = [1, 2, 3]
+      .map((i) => String(formData.get(`buttonLabel${i}`) ?? "").trim())
+      .filter(Boolean)
+      .map((title, i) => ({ id: `btn_${i + 1}`, title }));
+    if (buttons.length === 0) return { error: "A buttons step needs at least one button label." };
+    interactivePayload = { buttons };
+  }
 
   const supabase = await createClient();
   const { data: existingSteps } = await supabase.from("flow_steps").select("step_order").eq("flow_id", flowId).order("step_order", { ascending: false }).limit(1);
@@ -73,6 +84,8 @@ export async function addFlowStep(_prevState: unknown, formData: FormData) {
     message_body: messageBody,
     branches: parseBranches(branchesRaw),
     default_next_step_order: defaultNextStr ? Number(defaultNextStr) : null,
+    message_type: messageType,
+    interactive_payload: interactivePayload,
   });
   if (error) return { error: error.message };
 
