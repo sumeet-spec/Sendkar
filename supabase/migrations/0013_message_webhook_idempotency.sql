@@ -1,0 +1,14 @@
+-- Meta's webhook delivery is "at least once," not "exactly once" — it
+-- retries if Sendkar's response is slow or fails, which is a routine,
+-- expected occurrence, not an edge case. messages.meta_message_id had no
+-- unique constraint, so a retried delivery for the SAME real-world inbound
+-- message would insert a second row for it — duplicating it in the inbox
+-- and, worse, re-running every downstream side effect (an automation or
+-- chatbot-flow reply firing twice, double AI classification, a doubled
+-- outbound webhook dispatch). A plain (non-partial) unique index is
+-- deliberate, same reasoning as the orders dedupe index: Postgres never
+-- treats two NULLs as conflicting, so outbound messages or any row
+-- genuinely missing a wamid never collide with each other, and a partial
+-- index would make the upsert's ON CONFLICT target impossible to infer
+-- through the Supabase JS client.
+create unique index messages_meta_message_id_idx on messages (meta_message_id);

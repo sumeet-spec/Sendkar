@@ -29,6 +29,13 @@ export async function acceptInvite(token: string) {
   if (Date.now() - new Date(invite.created_at).getTime() > INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000) {
     return { error: "This invite link has expired — ask for a new one." };
   }
+  // Without this, anyone who obtains the link — forwarded email, browser
+  // history, a shared screenshot — could log in with ANY account and join
+  // this workspace as a full member. The page only tells the user which
+  // email to log in with; nothing enforced it before this check.
+  if (userData.user.email?.toLowerCase() !== invite.email.toLowerCase()) {
+    return { error: `This invite is for ${invite.email} — log in with that account, then reopen this link.` };
+  }
 
   const { error: memberError } = await admin
     .from("workspace_members")

@@ -85,6 +85,24 @@ const STATUS_MAP: Record<string, "sent" | "delivered" | "read" | "failed"> = {
   failed: "failed",
 };
 
+// Meta's webhook delivery makes no ordering guarantee — retries and network
+// reordering mean a "sent" event can genuinely arrive after "delivered" or
+// "read" already did. Applying status updates unconditionally lets a late,
+// stale event regress what's shown (delivered → sent) for no reason. failed
+// is terminal in the other direction: once a message is confirmed delivered
+// or read, a later "failed" for the same wamid doesn't retroactively undo it.
+const STATUS_RANK: Record<"sent" | "delivered" | "read" | "failed", number> = {
+  sent: 1, delivered: 2, read: 3, failed: 1,
+};
+
+function isStatusRegression(current: string | null, incoming: string): boolean {
+  if (!current || !(current in STATUS_RANK)) return false;
+  if (incoming === "failed") return current === "delivered" || current === "read";
+  const currentRank = STATUS_RANK[current as keyof typeof STATUS_RANK];
+  const incomingRank = STATUS_RANK[incoming as keyof typeof STATUS_RANK];
+  return incomingRank < currentRank;
+}
+
 const TEMPLATE_STATUS_MAP: Record<string, "approved" | "rejected" | "pending"> = {
   APPROVED: "approved",
   REJECTED: "rejected",
@@ -260,15 +278,29 @@ export async function POST(request: NextRequest) {
         const mapped = status.status ? STATUS_MAP[status.status] : undefined;
         if (!status.id || !mapped) continue;
 
-        await admin
+        const { data: recipientRow } = await admin
           .from("campaign_recipients")
-          .update({ status: mapped, error: status.errors?.[0]?.message ?? null })
-          .eq("meta_message_id", status.id);
+          .select("status")
+          .eq("meta_message_id", status.id)
+          .maybeSingle();
+        if (recipientRow && !isStatusRegression(recipientRow.status, mapped)) {
+          await admin
+            .from("campaign_recipients")
+            .update({ status: mapped, error: status.errors?.[0]?.message ?? null })
+            .eq("meta_message_id", status.id);
+        }
 
-        await admin
+        const { data: messageRow } = await admin
           .from("messages")
-          .update({ status: mapped })
-          .eq("meta_message_id", status.id);
+          .select("status")
+          .eq("meta_message_id", status.id)
+          .maybeSingle();
+        if (messageRow && !isStatusRegression(messageRow.status, mapped)) {
+          await admin
+            .from("messages")
+            .update({ status: mapped })
+            .eq("meta_message_id", status.id);
+        }
       }
 
       // ── Inbound messages ───────────────────────────────────────────────────
@@ -332,18 +364,23 @@ export async function POST(request: NextRequest) {
           } catch {
             // Malformed response JSON — nothing to correlate, fall through to logging it as a plain message below.
           }
+          // Meta's webhook delivery retries on a slow/failed response — a
+          // retried delivery for this exact wamid must not re-mark the flow
+          // completed a second time or double-extend the session window.
+          const { data: insertedForm } = await admin
+            .from("messages")
+            .upsert(
+              { workspace_id: workspaceId, contact_id: contactId, direction: "inbound", body: `[Form completed: ${msg.interactive.nfm_reply.name ?? "flow"}]`, meta_message_id: msg.id ?? null, status: "delivered" },
+              { onConflict: "meta_message_id", ignoreDuplicates: true },
+            )
+            .select("id")
+            .maybeSingle();
+          if (!insertedForm && msg.id) { continue; } // a genuine retry of an already-processed delivery — skip entirely
+
           const flowToken = typeof parsed.flow_token === "string" ? parsed.flow_token : null;
           if (flowToken) {
             await admin.from("wa_flow_sends").update({ response: parsed, completed_at: new Date().toISOString() }).eq("flow_token", flowToken);
           }
-          await admin.from("messages").insert({
-            workspace_id: workspaceId,
-            contact_id: contactId,
-            direction: "inbound",
-            body: `[Form completed: ${msg.interactive.nfm_reply.name ?? "flow"}]`,
-            meta_message_id: msg.id ?? null,
-            status: "delivered",
-          });
           await admin.from("contacts").update({ session_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }).eq("id", contactId);
           continue;
         }
@@ -360,14 +397,19 @@ export async function POST(request: NextRequest) {
         const matchableBody = msg.text?.body ?? interactiveReplyTitle;
         const inboundBody = matchableBody ?? `[${msg.type ?? "unsupported"} message]`;
 
-        await admin.from("messages").insert({
-          workspace_id: workspaceId,
-          contact_id: contactId,
-          direction: "inbound",
-          body: inboundBody,
-          meta_message_id: msg.id ?? null,
-          status: "delivered",
-        });
+        // A genuine retry of this exact wamid (Meta's delivery is "at least
+        // once", not "exactly once") must not duplicate the message in the
+        // inbox or re-run everything below it — a second automation/flow
+        // reply, a second AI classification, a second outbound webhook.
+        const { data: insertedMessage } = await admin
+          .from("messages")
+          .upsert(
+            { workspace_id: workspaceId, contact_id: contactId, direction: "inbound", body: inboundBody, meta_message_id: msg.id ?? null, status: "delivered" },
+            { onConflict: "meta_message_id", ignoreDuplicates: true },
+          )
+          .select("id")
+          .maybeSingle();
+        if (!insertedMessage && msg.id) continue;
 
         // Every inbound message resets the 24h customer-service window —
         // this is what the reply UI and send-time guard both check against.

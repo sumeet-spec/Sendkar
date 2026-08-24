@@ -234,6 +234,7 @@ export default async function RootPage() {
         <div className="flex flex-col items-center gap-3 border-t border-border pt-6 text-[12.5px] text-faint sm:flex-row sm:justify-between">
           <span>© {new Date().getFullYear()} Signalpulse Technologies LLC — Sendkar is built on the WhatsApp Business Platform (Meta Cloud API), not a reseller.</span>
           <div className="flex gap-4">
+            <Link href="/changelog" className="hover:text-muted">Changelog</Link>
             <Link href="/privacy" className="hover:text-muted">Privacy</Link>
             <Link href="/terms" className="hover:text-muted">Terms</Link>
             <Link href="/support" className="hover:text-muted">Support</Link>
