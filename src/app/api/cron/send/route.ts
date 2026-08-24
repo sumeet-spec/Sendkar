@@ -151,13 +151,24 @@ export async function GET(request: NextRequest) {
 
       if (sentCount > 0) await new Promise((r) => setTimeout(r, DELAY_BETWEEN_SENDS_MS));
 
+      // Meta rejects a send whose param count doesn't exactly match what the
+      // template was approved with — a template with {{1}} and {{2}} sent
+      // only one param 400s for every recipient, not just a cosmetic gap.
+      const placeholderCount = (template.body_text?.match(/\{\{\d+\}\}/g) ?? []).length;
+      // Sendkar has no per-contact custom-field system yet, so only slot
+      // {{1}} (the contact's name) carries real data — any further slots
+      // repeat it rather than send an empty string, which Meta also rejects.
+      const bodyParams = placeholderCount > 0
+        ? Array.from({ length: placeholderCount }, () => contactRow?.name || "there")
+        : undefined;
+
       try {
         const { metaMessageId } = await sendTemplateMessage({
           workspace: sender.creds,
           to: phone,
           templateName: template.meta_template_name,
           language: template.language,
-          bodyParams: template.body_text?.includes("{{1}}") ? [contactRow?.name || "there"] : undefined,
+          bodyParams,
         });
 
         await admin

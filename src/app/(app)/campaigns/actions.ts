@@ -110,6 +110,7 @@ export async function sendTestMessage(_prevState: unknown, formData: FormData) {
   if (!template?.meta_template_name) return { error: "Template not found." };
 
   const creds = await resolveNumberCredentials(workspace, campaign?.whatsapp_number_id ?? null);
+  const placeholderCount = (template.body_text?.match(/\{\{\d+\}\}/g) ?? []).length;
 
   try {
     await sendTemplateMessage({
@@ -117,7 +118,7 @@ export async function sendTestMessage(_prevState: unknown, formData: FormData) {
       to: phone,
       templateName: template.meta_template_name,
       language: template.language ?? "en",
-      bodyParams: template.body_text?.includes("{{1}}") ? ["there"] : undefined,
+      bodyParams: placeholderCount > 0 ? Array.from({ length: placeholderCount }, () => "there") : undefined,
     });
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Test send failed." };
