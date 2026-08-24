@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { replyToContact, draftReplySuggestion, sendProductToContact, sendTypingIndicator, sendButtonsToContact } from "../actions";
+import { sendWaFlowToContact } from "../../forms/actions";
 
 interface CannedResponse {
   id: string;
@@ -15,22 +16,31 @@ interface Product {
   price_label: string | null;
 }
 
+interface WaForm {
+  id: string;
+  name: string;
+}
+
 export function ReplyBox({
   contactId,
   sessionOpen,
   cannedResponses,
   products,
+  forms,
 }: {
   contactId: string;
   sessionOpen: boolean;
   cannedResponses: CannedResponse[];
   products: Product[];
+  forms: WaForm[];
 }) {
   const [state, formAction, pending] = useActionState(replyToContact, null);
   const [aiPending, startAiTransition] = useTransition();
   const [aiError, setAiError] = useState<string | null>(null);
   const [productPending, startProductTransition] = useTransition();
   const [productError, setProductError] = useState<string | null>(null);
+  const [formPending, startFormTransition] = useTransition();
+  const [formError, setFormError] = useState<string | null>(null);
   const [buttonsOpen, setButtonsOpen] = useState(false);
   const [buttonLabels, setButtonLabels] = useState(["", "", ""]);
   const [buttonsBody, setButtonsBody] = useState("");
@@ -46,6 +56,14 @@ export function ReplyBox({
     typingFiredRef.current = true;
     sendTypingIndicator(contactId);
   }, [contactId, sessionOpen]);
+
+  function sendForm(waFlowId: string) {
+    setFormError(null);
+    startFormTransition(async () => {
+      const result = await sendWaFlowToContact(contactId, waFlowId, "");
+      if (result.error) setFormError(result.error);
+    });
+  }
 
   function sendButtons() {
     setButtonsError(null);
@@ -109,6 +127,7 @@ export function ReplyBox({
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       {aiError && <p className="text-sm text-danger">{aiError}</p>}
       {productError && <p className="text-sm text-danger">{productError}</p>}
+      {formError && <p className="text-sm text-danger">{formError}</p>}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button type="button" onClick={draftWithAi} disabled={aiPending} className="sk-btn sk-btn-ghost disabled:opacity-60">
@@ -148,6 +167,22 @@ export function ReplyBox({
           <button type="button" onClick={() => setButtonsOpen((v) => !v)} disabled={!sessionOpen} className="sk-btn sk-btn-ghost disabled:opacity-60">
             ▭ Buttons
           </button>
+          {forms.length > 0 && (
+            <select
+              defaultValue=""
+              disabled={formPending || !sessionOpen}
+              onChange={(e) => {
+                if (e.target.value) sendForm(e.target.value);
+                e.target.value = "";
+              }}
+              className="sk-input w-auto text-[12.5px] disabled:opacity-60"
+            >
+              <option value="" disabled>{formPending ? "Sending…" : "Send form…"}</option>
+              {forms.map((f) => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          )}
         </div>
         <button type="submit" disabled={pending || !sessionOpen} className="sk-btn sk-btn-primary disabled:opacity-60">
           {pending ? "Sending…" : "Send"}

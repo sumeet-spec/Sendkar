@@ -15,6 +15,7 @@ const NAV = [
   { href: "/inbox", label: "Inbox", icon: "chat" },
   { href: "/analytics", label: "Analytics", icon: "chart" },
   { href: "/flows", label: "Chatbot flows", icon: "flow" },
+  { href: "/forms", label: "Forms", icon: "form" },
   { href: "/automations", label: "Automations", icon: "bolt" },
   { href: "/webhooks", label: "Webhooks", icon: "webhook" },
   { href: "/links", label: "Links & widget", icon: "link" },
@@ -53,6 +54,8 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><path d="M8.5 11.5a3 3 0 004.2 0l2-2a3 3 0 00-4.2-4.2l-1 1" /><path d="M11.5 8.5a3 3 0 00-4.2 0l-2 2a3 3 0 004.2 4.2l1-1" /></svg>;
     case "flow":
       return <svg {...common}><circle cx="4" cy="4" r="1.8" /><circle cx="4" cy="16" r="1.8" /><circle cx="16" cy="10" r="1.8" /><path d="M5.6 4.8L14.4 9.2M5.6 15.2L14.4 10.8" /></svg>;
+    case "form":
+      return <svg {...common}><rect x="3" y="2.5" width="14" height="15" rx="1.2" /><rect x="6" y="6" width="2.5" height="2.5" rx="0.5" /><path d="M10.5 7.2h6M6 12h2.5M10.5 12.2h6" /></svg>;
     case "catalog":
       return <svg {...common}><rect x="2.5" y="3" width="6" height="6" rx="1" /><rect x="11.5" y="3" width="6" height="6" rx="1" /><rect x="2.5" y="11" width="6" height="6" rx="1" /><rect x="11.5" y="11" width="6" height="6" rx="1" /></svg>;
     case "agency":
