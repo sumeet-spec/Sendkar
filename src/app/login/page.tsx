@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { login } from "./actions";
+import { Logo } from "@/components/Logo";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, null);
@@ -11,11 +12,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="sk-card w-full max-w-sm p-8">
         <div className="mb-7 flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-            <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
-              <path d="M3 10l7-7 7 7M3 10l7 7 7-7" stroke="#05130a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+          <Logo size="md" />
           <span className="text-lg font-semibold tracking-tight">Sendkar</span>
         </div>
 

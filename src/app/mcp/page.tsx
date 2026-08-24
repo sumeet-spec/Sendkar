@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { Logo } from "@/components/Logo";
 
 export const metadata = { title: "Sendkar MCP Connector" };
 
@@ -26,11 +27,7 @@ export default async function McpPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
       <div className="mb-1 flex items-center gap-2.5">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M3 10l7-7 7 7M3 10l7 7 7-7" stroke="#05130a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        <Logo />
         <span className="text-[15px] font-semibold tracking-tight">Sendkar</span>
       </div>
       <h1 className="mb-2 mt-6 text-2xl font-semibold tracking-tight">MCP connector</h1>

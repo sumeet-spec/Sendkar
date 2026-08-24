@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { Logo } from "./Logo";
 
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: "grid" },
@@ -73,11 +74,7 @@ export function Sidebar({ workspaceId, workspaces }: { workspaceId: string; work
   return (
     <div className="flex h-screen w-60 flex-shrink-0 flex-col border-r border-border bg-surface p-3.5">
       <div className="mb-1 flex items-center gap-2.5 px-2 py-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M3 10l7-7 7 7M3 10l7 7 7-7" stroke="#05130a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        <Logo />
         <span className="text-[15px] font-semibold tracking-tight">Sendkar</span>
       </div>
 
