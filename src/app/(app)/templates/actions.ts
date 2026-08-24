@@ -2,25 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { submitTemplateToMeta, type CarouselCard } from "@/lib/whatsapp";
+import { submitTemplateToMeta } from "@/lib/whatsapp";
 import { generateTemplateDraft, type GeneratedTemplateDraft } from "@/lib/ai";
+import { parseCarouselCards } from "@/lib/carouselCards";
 import { revalidatePath } from "next/cache";
-
-/** One card per line: "media handle | body text | button1, button2" — buttons are optional. */
-function parseCarouselCards(raw: string): CarouselCard[] {
-  return raw
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [headerHandle, bodyText, buttonsRaw] = line.split("|").map((s) => s.trim());
-      if (!headerHandle || !bodyText) return null;
-      const buttons = buttonsRaw ? buttonsRaw.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 2).map((text) => ({ type: "QUICK_REPLY" as const, text })) : undefined;
-      const card: CarouselCard = { headerHandle, bodyText, buttons };
-      return card;
-    })
-    .filter((c): c is CarouselCard => c !== null);
-}
 
 export async function generateTemplateWithAi(description: string, language: string): Promise<{ draft?: GeneratedTemplateDraft; error?: string }> {
   if (!description.trim()) return { error: "Describe what the message should say." };

@@ -9,6 +9,7 @@ import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { syncKlaviyoProfile } from "@/lib/klaviyo";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { classifyInboundMessage } from "@/lib/ai";
+import { isStatusRegression } from "@/lib/messageStatus";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -85,23 +86,8 @@ const STATUS_MAP: Record<string, "sent" | "delivered" | "read" | "failed"> = {
   failed: "failed",
 };
 
-// Meta's webhook delivery makes no ordering guarantee — retries and network
-// reordering mean a "sent" event can genuinely arrive after "delivered" or
-// "read" already did. Applying status updates unconditionally lets a late,
-// stale event regress what's shown (delivered → sent) for no reason. failed
-// is terminal in the other direction: once a message is confirmed delivered
-// or read, a later "failed" for the same wamid doesn't retroactively undo it.
-const STATUS_RANK: Record<"sent" | "delivered" | "read" | "failed", number> = {
-  sent: 1, delivered: 2, read: 3, failed: 1,
-};
-
-function isStatusRegression(current: string | null, incoming: string): boolean {
-  if (!current || !(current in STATUS_RANK)) return false;
-  if (incoming === "failed") return current === "delivered" || current === "read";
-  const currentRank = STATUS_RANK[current as keyof typeof STATUS_RANK];
-  const incomingRank = STATUS_RANK[incoming as keyof typeof STATUS_RANK];
-  return incomingRank < currentRank;
-}
+// Extracted to src/lib/messageStatus.ts so the regression rule is unit-
+// testable without going through the webhook route's request handling.
 
 const TEMPLATE_STATUS_MAP: Record<string, "approved" | "rejected" | "pending"> = {
   APPROVED: "approved",

@@ -4,23 +4,11 @@ import { isWhatsAppConfigured } from "@/lib/whatsapp";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { ActivationChecklist } from "./ActivationChecklist";
+import {
+  DAY_MS, MESSAGING_TIERS, computeDeliveryStats, bucketMessagesByDay, sparklinePoints,
+  computeRevenueTrend, groupTopCustomers, initial, messagingTierFillPct, messagingTierIndex,
+} from "@/lib/dashboardMetrics";
 import Link from "next/link";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-const MESSAGING_TIERS = [250, 1000, 10000, 100000];
-
-/** A 7-value trend as an SVG polyline point string, oldest first. */
-function sparklinePoints(values: number[], width: number, height: number) {
-  const max = Math.max(...values, 1);
-  const min = Math.min(...values, 0);
-  const range = max - min || 1;
-  const stepX = values.length > 1 ? width / (values.length - 1) : 0;
-  return values.map((v, i) => `${(i * stepX).toFixed(1)},${(height - ((v - min) / range) * height).toFixed(1)}`).join(" ");
-}
-
-function initial(name: string | null) {
-  return (name?.trim()?.[0] ?? "").toUpperCase() || null;
-}
 
 export default async function DashboardPage() {
   const workspace = await getCurrentWorkspace();
@@ -46,60 +34,19 @@ export default async function DashboardPage() {
     supabase.from("messages").select("created_at").eq("workspace_id", workspace.id).gte("created_at", sevenDaysAgo),
   ]);
 
-  const total = recipientStats?.length ?? 0;
-  const delivered = recipientStats?.filter((r) => r.status === "delivered" || r.status === "read").length ?? 0;
-  const failed = recipientStats?.filter((r) => r.status === "failed").length ?? 0;
-  // Out of recipients actually sent to so far, not the whole audience —
-  // counting still-queued ones in the denominator understates the rate for
-  // any campaign the cron hasn't finished working through yet.
-  const concluded = recipientStats?.filter((r) => r.status !== "queued").length ?? 0;
-  const deliveryRate = concluded > 0 ? Math.round((delivered / concluded) * 100) : null;
+  const { total, failed, deliveryRate } = computeDeliveryStats(recipientStats ?? []);
 
-  // Last 7 days of overall messaging activity, bucketed by day — the trend
-  // shown next to "messages sent," independent of the campaign-only count.
-  const dayKeys = Array.from({ length: 7 }, (_, i) => new Date(now - (6 - i) * DAY_MS).toISOString().slice(0, 10));
-  const countsByDay = new Map(dayKeys.map((d) => [d, 0]));
-  for (const m of recentMessages ?? []) {
-    const key = new Date(m.created_at as string).toISOString().slice(0, 10);
-    if (countsByDay.has(key)) countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
-  }
-  const sparkValues = dayKeys.map((d) => countsByDay.get(d) ?? 0);
+  // Last 7 days of overall messaging activity — the trend shown next to
+  // "messages sent," independent of the campaign-only count above.
+  const sparkValues = bucketMessagesByDay((recentMessages ?? []).map((m) => m.created_at as string), now);
   const sparkHasActivity = sparkValues.some((v) => v > 0);
 
-  // Revenue, scoped to the trailing 30 days with a comparison to the 30
-  // days before that — the hero number needs a real trend, not a lifetime
-  // total with no baseline to read it against.
-  const currentWindowStart = now - 30 * DAY_MS;
-  const previousWindowStart = now - 60 * DAY_MS;
-  let revenue30d = 0;
-  let attributedRevenue30d = 0;
-  let revenuePrev30d = 0;
-  for (const o of orders ?? []) {
-    const t0 = new Date(o.created_at as string).getTime();
-    const amount = Number(o.total_amount);
-    if (t0 >= currentWindowStart) {
-      revenue30d += amount;
-      if (o.attributed_campaign_id) attributedRevenue30d += amount;
-    } else if (t0 >= previousWindowStart) {
-      revenuePrev30d += amount;
-    }
-  }
-  const revenueTrendPct = revenuePrev30d > 0 ? Math.round(((revenue30d - revenuePrev30d) / revenuePrev30d) * 100) : null;
-
-  // Top customers stay lifetime-value, not windowed — who has spent the
-  // most with this business overall, not just in the last 30 days.
-  const spendByContact = new Map<string, { phone: string; name: string | null; spend: number }>();
-  for (const o of orders ?? []) {
-    if (!o.contact_id) continue;
-    const c = o.contacts as { phone?: string; name?: string } | null;
-    const bucket = spendByContact.get(o.contact_id) ?? { phone: c?.phone ?? "—", name: c?.name ?? null, spend: 0 };
-    bucket.spend += Number(o.total_amount);
-    spendByContact.set(o.contact_id, bucket);
-  }
-  const topCustomers = Array.from(spendByContact.entries()).sort((a, b) => b[1].spend - a[1].spend).slice(0, 5);
+  const orderRows = orders ?? [];
+  const { revenue30d, attributedRevenue30d, revenueTrendPct } = computeRevenueTrend(orderRows, now);
+  const topCustomers = groupTopCustomers(orderRows.map((o) => ({ ...o, contacts: o.contacts as { phone?: string; name?: string } | null })));
 
   const configured = isWhatsAppConfigured(workspace);
-  const hasRevenue = (orders?.length ?? 0) > 0;
+  const hasRevenue = orderRows.length > 0;
 
   const checklistSteps = [
     { label: t.checklistConnect, done: configured, href: "/onboarding" },
@@ -109,8 +56,8 @@ export default async function DashboardPage() {
   ];
   const checklistDone = checklistSteps.every((s) => s.done);
 
-  const tierIndex = Math.max(0, MESSAGING_TIERS.indexOf(workspace.messaging_tier));
-  const tierFillPct = Math.min(100, Math.round((workspace.daily_send_count / Math.max(1, workspace.messaging_tier)) * 100));
+  const tierIndex = messagingTierIndex(workspace.messaging_tier);
+  const tierFillPct = messagingTierFillPct(workspace.daily_send_count, workspace.messaging_tier);
 
   return (
     <div className="max-w-5xl">
@@ -206,10 +153,10 @@ export default async function DashboardPage() {
         <div className="sk-card mb-4 overflow-hidden">
           <div className="border-b border-border px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-faint">{t.topCustomers}</div>
           <div className="flex flex-col">
-            {topCustomers.map(([contactId, c]) => {
+            {topCustomers.map((c) => {
               const badge = initial(c.name);
               return (
-                <div key={contactId} className="flex items-center gap-3 border-b border-border px-5 py-2.5 text-sm last:border-0">
+                <div key={c.contactId} className="flex items-center gap-3 border-b border-border px-5 py-2.5 text-sm last:border-0">
                   <div
                     className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full font-mono text-[12px] font-bold"
                     style={
