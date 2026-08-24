@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyWebhookSignature, sendSessionMessage, isOptOutMessage, isOptInMessage, OPT_OUT_CONFIRMATION } from "@/lib/whatsapp";
+import {
+  verifyWebhookSignature, sendSessionMessage, sendButtonsMessage, sendListMessage,
+  isOptOutMessage, isOptInMessage, OPT_OUT_CONFIRMATION,
+  type InteractiveButton, type InteractiveListSection,
+} from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { syncKlaviyoProfile } from "@/lib/klaviyo";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
@@ -50,6 +54,13 @@ interface WebhookPayload {
           from?: string; id?: string; type?: string; text?: { body?: string };
           // Present only on the first message of a click-to-WhatsApp-ad conversation.
           referral?: { source_id?: string; headline?: string; ctwa_clid?: string };
+          reaction?: { message_id?: string; emoji?: string };
+          interactive?: {
+            type?: "button_reply" | "list_reply" | "nfm_reply";
+            button_reply?: { id?: string; title?: string };
+            list_reply?: { id?: string; title?: string };
+            nfm_reply?: { response_json?: string; body?: string; name?: string };
+          };
         }>;
         statuses?: Array<{
           id?: string;
@@ -93,6 +104,8 @@ interface FlowStepRow {
   message_body: string;
   branches: FlowBranch[];
   default_next_step_order: number | null;
+  message_type: "text" | "buttons" | "list";
+  interactive_payload: { buttons?: InteractiveButton[]; buttonText?: string; sections?: InteractiveListSection[] } | null;
 }
 
 /**
@@ -130,6 +143,40 @@ async function sendAndLog(
     return true;
   } catch {
     // Send failing (e.g. outside the 24h session window) shouldn't break webhook processing.
+    return false;
+  }
+}
+
+/** Same shape as sendAndLog, but for a flow step that's a button or list message instead of plain text. */
+async function sendFlowStepAndLog(
+  admin: ReturnType<typeof createAdminClient>,
+  workspaceId: string,
+  contactId: string,
+  to: string,
+  step: FlowStepRow,
+  numberId: string | null = null,
+): Promise<boolean> {
+  const { data: ws } = await admin
+    .from("workspaces")
+    .select("id, whatsapp_phone_number_id, whatsapp_access_token")
+    .eq("id", workspaceId)
+    .single();
+  if (!ws) return false;
+  const creds = await resolveNumberCredentials(ws, numberId);
+  try {
+    const metaMessageId = step.message_type === "buttons"
+      ? (await sendButtonsMessage({ workspace: creds, to, bodyText: step.message_body, buttons: step.interactive_payload?.buttons ?? [] })).metaMessageId
+      : (await sendListMessage({ workspace: creds, to, bodyText: step.message_body, buttonText: step.interactive_payload?.buttonText ?? "Choose", sections: step.interactive_payload?.sections ?? [] })).metaMessageId;
+    await admin.from("messages").insert({
+      workspace_id: workspaceId,
+      contact_id: contactId,
+      direction: "outbound",
+      body: step.message_body,
+      meta_message_id: metaMessageId,
+      status: "sent",
+    });
+    return true;
+  } catch {
     return false;
   }
 }
@@ -228,6 +275,18 @@ export async function POST(request: NextRequest) {
       for (const msg of value.messages ?? []) {
         if (!msg.from) continue;
 
+        // A reaction targets an existing message by its wamid — it isn't a
+        // new message in its own right, so it updates that row and moves on
+        // without touching the contact/session/automation machinery below.
+        if (msg.type === "reaction" && msg.reaction?.message_id) {
+          await admin
+            .from("messages")
+            .update({ reaction: msg.reaction.emoji || null })
+            .eq("workspace_id", workspaceId)
+            .eq("meta_message_id", msg.reaction.message_id);
+          continue;
+        }
+
         const { data: contact } = await admin
           .from("contacts")
           .select("id")
@@ -263,7 +322,43 @@ export async function POST(request: NextRequest) {
         }
         if (!contactId) continue;
 
-        const inboundBody = msg.text?.body ?? `[${msg.type ?? "unsupported"} message]`;
+        // A completed WhatsApp Flow — matched back to its send by the
+        // flow_token Meta echoes inside the response JSON, not by contact
+        // (a contact could in principle complete more than one flow send).
+        if (msg.type === "interactive" && msg.interactive?.type === "nfm_reply" && msg.interactive.nfm_reply?.response_json) {
+          let parsed: Record<string, unknown> = {};
+          try {
+            parsed = JSON.parse(msg.interactive.nfm_reply.response_json);
+          } catch {
+            // Malformed response JSON — nothing to correlate, fall through to logging it as a plain message below.
+          }
+          const flowToken = typeof parsed.flow_token === "string" ? parsed.flow_token : null;
+          if (flowToken) {
+            await admin.from("wa_flow_sends").update({ response: parsed, completed_at: new Date().toISOString() }).eq("flow_token", flowToken);
+          }
+          await admin.from("messages").insert({
+            workspace_id: workspaceId,
+            contact_id: contactId,
+            direction: "inbound",
+            body: `[Form completed: ${msg.interactive.nfm_reply.name ?? "flow"}]`,
+            meta_message_id: msg.id ?? null,
+            status: "delivered",
+          });
+          await admin.from("contacts").update({ session_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }).eq("id", contactId);
+          continue;
+        }
+
+        // A button/list tap has no `text.body` of its own — the button or
+        // row's title stands in for it everywhere downstream (storage,
+        // automations, chatbot-flow branch matching) so those don't need to
+        // know interactive replies exist as a separate case.
+        const interactiveReplyTitle = msg.interactive?.button_reply?.title ?? msg.interactive?.list_reply?.title;
+        // Real textual content, from either a text message or a button/list
+        // tap — what opt-out/opt-in and chatbot-flow branch matching key off.
+        // Excludes the bracketed placeholder below on purpose: an image with
+        // no caption shouldn't be able to advance a flow or trigger "STOP".
+        const matchableBody = msg.text?.body ?? interactiveReplyTitle;
+        const inboundBody = matchableBody ?? `[${msg.type ?? "unsupported"} message]`;
 
         await admin.from("messages").insert({
           workspace_id: workspaceId,
@@ -311,19 +406,19 @@ export async function POST(request: NextRequest) {
 
         // ── Opt-out / opt-in — a documented, code-enforced unsubscribe path ────
         let handledAsComplianceKeyword = false;
-        if (msg.text?.body && isOptOutMessage(msg.text.body)) {
+        if (matchableBody && isOptOutMessage(matchableBody)) {
           await admin.from("contacts").update({ opted_out: true }).eq("id", contactId);
           await sendAndLog(admin, workspaceId, contactId, msg.from, OPT_OUT_CONFIRMATION, matchedNumberId);
           handledAsComplianceKeyword = true;
-        } else if (msg.text?.body && isOptInMessage(msg.text.body)) {
+        } else if (matchableBody && isOptInMessage(matchableBody)) {
           await admin.from("contacts").update({ opted_out: false }).eq("id", contactId);
           handledAsComplianceKeyword = true;
         }
 
         // ── Chatbot flows — multi-step, branching; checked before the
         // single-keyword automations fallback below ────────────────────────
-        if (!handledAsComplianceKeyword && msg.text?.body) {
-          const normalized = msg.text.body.trim().toLowerCase();
+        if (!handledAsComplianceKeyword && matchableBody) {
+          const normalized = matchableBody.trim().toLowerCase();
           const { data: flowState } = await admin
             .from("contact_flow_state")
             .select("flow_id, current_step_order")
@@ -352,7 +447,7 @@ export async function POST(request: NextRequest) {
             if (nextOrder != null) {
               const { data: nextStep } = await admin
                 .from("flow_steps")
-                .select("step_order, message_body, branches, default_next_step_order")
+                .select("step_order, message_body, branches, default_next_step_order, message_type, interactive_payload")
                 .eq("flow_id", flowState.flow_id)
                 .eq("step_order", nextOrder)
                 .maybeSingle();
@@ -377,7 +472,7 @@ export async function POST(request: NextRequest) {
             if (matchedFlow) {
               const { data: firstStep } = await admin
                 .from("flow_steps")
-                .select("step_order, message_body, branches, default_next_step_order")
+                .select("step_order, message_body, branches, default_next_step_order, message_type, interactive_payload")
                 .eq("flow_id", matchedFlow.id)
                 .eq("step_order", 1)
                 .maybeSingle();
@@ -389,7 +484,9 @@ export async function POST(request: NextRequest) {
           }
 
           if (stepToSend && flowIdForState) {
-            const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, stepToSend.message_body, matchedNumberId);
+            const sent = stepToSend.message_type === "text"
+              ? await sendAndLog(admin, workspaceId, contactId, msg.from, stepToSend.message_body, matchedNumberId)
+              : await sendFlowStepAndLog(admin, workspaceId, contactId, msg.from, stepToSend, matchedNumberId);
             if (sent) {
               const stepContinues = stepToSend.branches.length > 0 || stepToSend.default_next_step_order != null;
               if (stepContinues) {

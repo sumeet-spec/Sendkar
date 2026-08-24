@@ -116,6 +116,245 @@ export function isWhatsAppConfigured(ws: WorkspaceCreds): boolean {
   return Boolean(ws.whatsapp_phone_number_id && ws.whatsapp_access_token);
 }
 
+// ── Read receipts + typing indicator ────────────────────────────────────────
+// One call does both: marks the customer's message read (blue ticks) and
+// shows "typing…" in their WhatsApp for up to 25s or until the next message
+// arrives, whichever is first. Meta requires the two be combined in one
+// request — there's no separate "just show typing" call.
+
+export async function markReadWithTypingIndicator(workspace: WorkspaceCreds, messageId: string) {
+  const { phoneNumberId, token } = requireCreds(workspace);
+  return graphPost(phoneNumberId, token, {
+    messaging_product: "whatsapp",
+    status: "read",
+    message_id: messageId,
+    typing_indicator: { type: "text" },
+  });
+}
+
+// ── Reactions ────────────────────────────────────────────────────────────────
+// Either side of a conversation can carry exactly one reaction at a time;
+// sending a new one replaces the last, and an empty string removes it.
+
+export interface SendReactionInput {
+  workspace: WorkspaceCreds;
+  to: string;
+  messageId: string; // the message being reacted to, by its wamid
+  emoji: string; // "" removes the reaction
+}
+
+export async function sendReaction(input: SendReactionInput) {
+  const { phoneNumberId, token } = requireCreds(input.workspace);
+  return graphPost(phoneNumberId, token, {
+    messaging_product: "whatsapp",
+    to: input.to,
+    type: "reaction",
+    reaction: { message_id: input.messageId, emoji: input.emoji },
+  });
+}
+
+// ── Interactive messages: reply buttons and lists ───────────────────────────
+// Both only deliverable inside the 24h session window, same as any
+// free-form message — Meta treats these as session content, not templates.
+
+export interface InteractiveButton {
+  id: string;
+  title: string; // Meta's limit: 20 characters
+}
+
+export interface SendButtonsInput {
+  workspace: WorkspaceCreds;
+  to: string;
+  bodyText: string;
+  buttons: InteractiveButton[]; // max 3
+}
+
+export async function sendButtonsMessage(input: SendButtonsInput) {
+  const { phoneNumberId, token } = requireCreds(input.workspace);
+  return graphPost(phoneNumberId, token, {
+    messaging_product: "whatsapp",
+    to: input.to,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: input.bodyText },
+      action: {
+        buttons: input.buttons.slice(0, 3).map((b) => ({ type: "reply", reply: { id: b.id, title: b.title } })),
+      },
+    },
+  });
+}
+
+export interface InteractiveListRow {
+  id: string;
+  title: string; // Meta's limit: 24 characters
+  description?: string;
+}
+export interface InteractiveListSection {
+  title: string;
+  rows: InteractiveListRow[];
+}
+
+export interface SendListInput {
+  workspace: WorkspaceCreds;
+  to: string;
+  bodyText: string;
+  buttonText: string; // the label on the button that opens the list
+  sections: InteractiveListSection[];
+}
+
+export async function sendListMessage(input: SendListInput) {
+  const { phoneNumberId, token } = requireCreds(input.workspace);
+  return graphPost(phoneNumberId, token, {
+    messaging_product: "whatsapp",
+    to: input.to,
+    type: "interactive",
+    interactive: {
+      type: "list",
+      body: { text: input.bodyText },
+      action: { button: input.buttonText, sections: input.sections },
+    },
+  });
+}
+
+// ── WhatsApp Flows ───────────────────────────────────────────────────────────
+// Native, multi-screen in-chat forms. This is the static-only slice of the
+// Flows product: screens defined once, sent as-is, completion comes back
+// on the webhook. There's deliberately no per-screen dynamic data-exchange
+// endpoint here — that needs an RSA keypair registered with Meta and a
+// public encrypt/decrypt endpoint, a distinct, larger piece of work.
+
+export interface WaFlowScreenField {
+  type: "text_heading" | "text_body" | "text_input" | "text_area" | "radio_buttons" | "checkbox";
+  label: string; // heading/body text, or the question for an input/choice field
+  name?: string; // form field key — required for input/choice types
+  required?: boolean;
+  options?: string[]; // for radio_buttons / checkbox
+}
+
+export interface WaFlowScreen {
+  id: string; // Meta's screen id, e.g. "SCREEN_1" — must be unique per flow
+  title: string;
+  fields: WaFlowScreenField[];
+  terminal?: boolean; // true = this screen's footer completes the flow instead of navigating on
+}
+
+/** Compiles Sendkar's own screen/field schema into Meta's Flow JSON format. */
+export function compileFlowJson(screens: WaFlowScreen[]) {
+  return {
+    version: "7.1",
+    screens: screens.map((screen, i) => {
+      const children: Array<Record<string, unknown>> = [];
+      const formChildren: Array<Record<string, unknown>> = [];
+
+      for (const field of screen.fields) {
+        if (field.type === "text_heading" || field.type === "text_body") {
+          children.push({ type: field.type === "text_heading" ? "TextHeading" : "TextBody", text: field.label });
+          continue;
+        }
+        const base = { name: field.name, label: field.label, required: field.required ?? false };
+        if (field.type === "text_input") formChildren.push({ type: "TextInput", "input-type": "text", ...base });
+        else if (field.type === "text_area") formChildren.push({ type: "TextArea", ...base });
+        else if (field.type === "radio_buttons") formChildren.push({ type: "RadioButtonsGroup", "data-source": (field.options ?? []).map((o) => ({ id: o, title: o })), ...base });
+        else if (field.type === "checkbox") formChildren.push({ type: "CheckboxGroup", "data-source": (field.options ?? []).map((o) => ({ id: o, title: o })), ...base });
+      }
+
+      const isLastScreen = i === screens.length - 1;
+      formChildren.push({
+        type: "Footer",
+        label: screen.terminal || isLastScreen ? "Submit" : "Continue",
+        "on-click-action": screen.terminal || isLastScreen
+          ? { name: "complete", payload: {} }
+          : { name: "navigate", next: { type: "screen", name: screens[i + 1]?.id }, payload: {} },
+      });
+
+      children.push({ type: "Form", name: `form_${screen.id}`, children: formChildren });
+
+      return {
+        id: screen.id,
+        title: screen.title,
+        terminal: screen.terminal || isLastScreen,
+        layout: { type: "SingleColumnLayout", children },
+      };
+    }),
+  };
+}
+
+export async function createMetaFlow(wabaId: string, token: string, name: string, categories: string[]) {
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${wabaId}/flows`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name, categories }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const json = (await res.json()) as { id?: string; error?: { message?: string } };
+  if (!res.ok || json.error || !json.id) throw new Error(json.error?.message ?? `Meta rejected the flow creation (HTTP ${res.status})`);
+  return json.id;
+}
+
+export async function uploadFlowJson(flowId: string, token: string, flowJson: object) {
+  const form = new FormData();
+  form.append("asset_type", "FLOW_JSON");
+  form.append("name", "flow.json");
+  form.append("file", new Blob([JSON.stringify(flowJson)], { type: "application/json" }), "flow.json");
+
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${flowId}/assets`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+    signal: AbortSignal.timeout(15_000),
+  });
+  const json = (await res.json()) as { success?: boolean; validation_errors?: unknown[]; error?: { message?: string } };
+  if (!res.ok || json.error) throw new Error(json.error?.message ?? `Meta rejected the flow JSON (HTTP ${res.status})`);
+  if (json.validation_errors?.length) throw new Error(`Flow JSON validation failed: ${JSON.stringify(json.validation_errors)}`);
+  return json;
+}
+
+export async function publishMetaFlow(flowId: string, token: string) {
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${flowId}/publish`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const json = (await res.json()) as { success?: boolean; error?: { message?: string } };
+  if (!res.ok || json.error || !json.success) throw new Error(json.error?.message ?? `Meta rejected publishing the flow (HTTP ${res.status})`);
+  return json;
+}
+
+export interface SendFlowInput {
+  workspace: WorkspaceCreds;
+  to: string;
+  bodyText: string;
+  buttonText: string;
+  flowId: string;
+  flowToken: string;
+  firstScreenId: string;
+}
+
+export async function sendFlowMessage(input: SendFlowInput) {
+  const { phoneNumberId, token } = requireCreds(input.workspace);
+  return graphPost(phoneNumberId, token, {
+    messaging_product: "whatsapp",
+    to: input.to,
+    type: "interactive",
+    interactive: {
+      type: "flow",
+      body: { text: input.bodyText },
+      action: {
+        name: "flow",
+        parameters: {
+          flow_message_version: "3",
+          flow_id: input.flowId,
+          flow_token: input.flowToken,
+          flow_cta: input.buttonText,
+          flow_action: "navigate",
+          flow_action_payload: { screen: input.firstScreenId },
+        },
+      },
+    },
+  });
+}
+
 // ── Product catalog messages ────────────────────────────────────────────────
 // References a catalog already set up in Meta Commerce Manager — same
 // "configured once elsewhere, sent from here" posture as templates. Only
