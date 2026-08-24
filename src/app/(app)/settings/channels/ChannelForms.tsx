@@ -36,9 +36,10 @@ export function WhatsAppForm({ workspace }: { workspace: Workspace }) {
         />
       </div>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
-      {state?.success && <p className="text-sm text-accent">Saved.</p>}
+      {state?.warning && <p className="text-sm text-warn">{state.warning}</p>}
+      {state?.success && !state.warning && <p className="text-sm text-accent">Saved and verified with Meta.</p>}
       <button type="submit" disabled={pending} className="sk-btn sk-btn-primary disabled:opacity-60">
-        {pending ? "Saving…" : "Save"}
+        {pending ? "Verifying…" : "Save"}
       </button>
     </form>
   );

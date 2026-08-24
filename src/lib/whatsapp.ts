@@ -116,6 +116,50 @@ export function isWhatsAppConfigured(ws: WorkspaceCreds): boolean {
   return Boolean(ws.whatsapp_phone_number_id && ws.whatsapp_access_token);
 }
 
+// ── WABA webhook subscription ───────────────────────────────────────────────
+// Entering a correct phone_number_id + access_token is enough to SEND
+// messages, but Meta only delivers inbound messages and delivery-status
+// webhooks to Sendkar's callback URL for a WABA that has explicitly
+// subscribed Sendkar's app — a separate API call nothing in this codebase
+// was making. Without it, a workspace could send campaigns successfully
+// and never see a single reply or a single delivered/read status update,
+// with nothing in the UI explaining why.
+
+export async function subscribeAppToWaba(wabaId: string, token: string): Promise<void> {
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${wabaId}/subscribed_apps`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const json = (await res.json()) as { success?: boolean; error?: { message?: string } };
+  if (!res.ok || json.error || !json.success) {
+    throw new Error(json.error?.message ?? `Meta rejected the webhook subscription (HTTP ${res.status})`);
+  }
+}
+
+// ── Connection verification ──────────────────────────────────────────────────
+// A read-only call against the phone number itself — the cheapest way to
+// confirm a phone_number_id + access_token pair is actually valid before
+// the workspace finds out the hard way when a real campaign fails.
+
+export interface PhoneNumberInfo {
+  displayPhoneNumber: string | null;
+  verifiedName: string | null;
+  qualityRating: string | null;
+}
+
+export async function verifyPhoneNumberCreds(phoneNumberId: string, token: string): Promise<PhoneNumberInfo> {
+  const res = await fetch(
+    `https://graph.facebook.com/${GRAPH_API_VERSION}/${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`,
+    { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15_000) },
+  );
+  const json = (await res.json()) as {
+    display_phone_number?: string; verified_name?: string; quality_rating?: string; error?: { message?: string };
+  };
+  if (!res.ok || json.error) throw new Error(json.error?.message ?? `Meta rejected these credentials (HTTP ${res.status})`);
+  return { displayPhoneNumber: json.display_phone_number ?? null, verifiedName: json.verified_name ?? null, qualityRating: json.quality_rating ?? null };
+}
+
 // ── Read receipts + typing indicator ────────────────────────────────────────
 // One call does both: marks the customer's message read (blue ticks) and
 // shows "typing…" in their WhatsApp for up to 25s or until the next message

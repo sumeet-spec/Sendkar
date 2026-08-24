@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
+import { verifyPhoneNumberCreds, subscribeAppToWaba } from "@/lib/whatsapp";
 import { revalidatePath } from "next/cache";
 
 export async function saveInstagramCreds(_prevState: unknown, formData: FormData) {
@@ -92,6 +93,18 @@ export async function saveWhatsAppCredsFromChannels(_prevState: unknown, formDat
   const catalogId = String(formData.get("catalogId") ?? "").trim();
   const accessToken = String(formData.get("accessToken") ?? "").trim();
 
+  // Only verify when a real token+phone number pair was actually submitted —
+  // a save that only changes catalogId, for instance, with the token field
+  // left blank (meaning "keep the existing one") has nothing new to verify.
+  let verifyWarning: string | null = null;
+  if (accessToken && phoneNumberId) {
+    try {
+      await verifyPhoneNumberCreds(phoneNumberId, accessToken);
+    } catch (err) {
+      return { error: `Meta rejected these credentials: ${err instanceof Error ? err.message : "unknown error"}` };
+    }
+  }
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("workspaces")
@@ -105,6 +118,15 @@ export async function saveWhatsAppCredsFromChannels(_prevState: unknown, formDat
     .eq("id", workspace.id);
 
   if (error) return { error: error.message };
+
+  if (accessToken && wabaId) {
+    try {
+      await subscribeAppToWaba(wabaId, accessToken);
+    } catch (err) {
+      verifyWarning = `Saved and verified for sending, but webhook subscription failed: ${err instanceof Error ? err.message : "unknown error"}. Inbound replies and delivery statuses may not arrive until this is resolved.`;
+    }
+  }
   revalidatePath("/settings/channels");
+  if (verifyWarning) return { success: true, warning: verifyWarning };
   return { success: true };
 }
