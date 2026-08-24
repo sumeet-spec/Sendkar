@@ -8,8 +8,15 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
 import type { Dictionary, LanguageCode } from "@/lib/i18n/dictionaries";
 
+// Channels and API keys sit here, not under Settings: both gate whether the
+// product works at all (no WhatsApp number connected = nothing sends; no
+// API key = the MCP/API story doesn't work), the same reason a BSP like
+// Resend surfaces Domains and API keys as flat top-level nav instead of
+// burying them in an account-settings menu. Settings below is left for
+// genuinely account-level configuration only.
 const NAV_KEYS = [
   { href: "/dashboard", key: "overview", icon: "grid" },
+  { href: "/settings/channels", key: "channels", icon: "channel" },
   { href: "/contacts", key: "contacts", icon: "users" },
   { href: "/templates", key: "templates", icon: "doc" },
   { href: "/catalog", key: "catalog", icon: "catalog" },
@@ -20,6 +27,7 @@ const NAV_KEYS = [
   { href: "/forms", key: "forms", icon: "form" },
   { href: "/automations", key: "automations", icon: "bolt" },
   { href: "/webhooks", key: "webhooks", icon: "webhook" },
+  { href: "/settings/api-keys", key: "apiKeys", icon: "key" },
   { href: "/links", key: "linksWidget", icon: "link" },
   { href: "/agency", key: "agency", icon: "agency" },
 ] as const satisfies ReadonlyArray<{ href: string; key: keyof Dictionary["nav"]; icon: string }>;
@@ -27,9 +35,7 @@ const NAV_KEYS = [
 const SETTINGS_NAV_KEYS = [
   { href: "/settings/billing", key: "billing" },
   { href: "/settings/team", key: "team" },
-  { href: "/settings/channels", key: "channels" },
   { href: "/settings/canned-responses", key: "cannedResponses" },
-  { href: "/settings/api-keys", key: "apiKeys" },
   { href: "/settings/integrations", key: "integrations" },
 ] as const satisfies ReadonlyArray<{ href: string; key: keyof Dictionary["nav"] }>;
 
@@ -62,6 +68,10 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><rect x="2.5" y="3" width="6" height="6" rx="1" /><rect x="11.5" y="3" width="6" height="6" rx="1" /><rect x="2.5" y="11" width="6" height="6" rx="1" /><rect x="11.5" y="11" width="6" height="6" rx="1" /></svg>;
     case "agency":
       return <svg {...common}><rect x="3" y="8" width="4.5" height="9" rx="0.8" /><rect x="8.5" y="4" width="4.5" height="13" rx="0.8" /><rect x="14" y="11" width="3" height="6" rx="0.8" /></svg>;
+    case "channel":
+      return <svg {...common}><path d="M10 3.5v13" /><path d="M6.3 6.8a5.3 5.3 0 017.4 0M4.2 4.6a8.3 8.3 0 0111.6 0" /><circle cx="10" cy="16.2" r="1.1" fill="currentColor" stroke="none" /></svg>;
+    case "key":
+      return <svg {...common}><circle cx="6.2" cy="6.2" r="3.3" /><path d="M8.5 8.5L16.5 16.5M13 13l1.8 1.8M15.3 10.7l1.8 1.8" /></svg>;
     default:
       return null;
   }
