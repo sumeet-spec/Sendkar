@@ -11,16 +11,18 @@ export interface PlanLimits {
 }
 
 // Priced at roughly half of Interakt's comparable paid tiers (₹2,799 Growth,
-// ₹3,799 Advanced — their own pricing page, checked directly), while
-// matching or beating their limits at each: Interakt caps chatbot flows to
-// linear-only below Advanced and gates full API/webhook access the same
-// way; Sendkar's flow builder branches at every paid tier and team-member
-// caps here are set generously above what unlimited-seats-but-owner-only
-// free tiers like theirs actually give a small team in practice.
+// ₹3,799 Advanced — their own pricing page, checked directly, one tier up:
+// Sendkar Starter vs their Growth, Sendkar Growth vs their Advanced), while
+// matching or beating their limits at each. That includes seats: Interakt
+// gives unlimited agents starting at their Starter tier, so a 5- or 15-seat
+// cap on Sendkar's paid tiers would undercut the exact claim being made —
+// every paid tier here is uncapped on seats too, same as theirs. Chatbot
+// flows still branch at every paid tier here, where Interakt keeps that
+// linear-only below their Advanced tier.
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   free:    { maxTeamMembers: 1,         automationsEnabled: false, outboundWebhooksEnabled: false, instagramEnabled: false, priceInr: 0 },
-  starter: { maxTeamMembers: 5,         automationsEnabled: true,  outboundWebhooksEnabled: false, instagramEnabled: false, priceInr: 1399 },
-  growth:  { maxTeamMembers: 15,        automationsEnabled: true,  outboundWebhooksEnabled: true,  instagramEnabled: true,  priceInr: 1899 },
+  starter: { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: false, instagramEnabled: false, priceInr: 1399 },
+  growth:  { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: true,  instagramEnabled: true,  priceInr: 1899 },
   scale:   { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: true,  instagramEnabled: true,  priceInr: 4999 },
 };
 

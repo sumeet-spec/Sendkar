@@ -20,8 +20,8 @@ const MORE_BUILT = [
 
 const PLANS = [
   { key: "free", name: "Free" as const, blurb: "One number, one seat — try it for real." },
-  { key: "starter", name: "Starter" as const, blurb: "Automations + branching chatbot flows, up to 5 seats." },
-  { key: "growth", name: "Growth" as const, blurb: "Catalog, Instagram, Messenger, webhooks, up to 15 seats.", featured: true },
+  { key: "starter", name: "Starter" as const, blurb: "Automations + branching chatbot flows, unlimited seats." },
+  { key: "growth", name: "Growth" as const, blurb: "Catalog, Instagram, Messenger, webhooks, unlimited seats.", featured: true },
   { key: "scale", name: "Scale" as const, blurb: "Everything, unlimited seats." },
 ];
 

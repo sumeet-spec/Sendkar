@@ -25,7 +25,9 @@ export default async function TeamPage() {
     <div className="max-w-3xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Team</h1>
-        <div className="sk-pill">{members?.length ?? 0} / {limits.maxTeamMembers} members</div>
+        <div className="sk-pill">
+          {members?.length ?? 0} {limits.maxTeamMembers >= 1_000_000 ? "members" : `/ ${limits.maxTeamMembers} members`}
+        </div>
       </div>
 
       <InviteForm />
