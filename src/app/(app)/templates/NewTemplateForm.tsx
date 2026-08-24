@@ -21,6 +21,7 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
   const [bodyText, setBodyText] = useState("");
   const [footerText, setFooterText] = useState("");
   const [quickReplies, setQuickReplies] = useState("");
+  const [isCarousel, setIsCarousel] = useState(false);
 
   const [aiDescription, setAiDescription] = useState("");
   const [aiPending, startAiTransition] = useTransition();
@@ -153,6 +154,28 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
           <label className="sk-label">Quick-reply buttons (comma-separated, up to 3)</label>
           <input name="quickReplies" value={quickReplies} onChange={(e) => setQuickReplies(e.target.value)} className="sk-input" placeholder="Yes, No" />
         </div>
+      </div>
+
+      <div className="rounded-md border border-border p-3">
+        <label className="flex items-center gap-2 text-[13px]">
+          <input type="checkbox" name="isCarousel" checked={isCarousel} onChange={(e) => setIsCarousel(e.target.checked)} />
+          Make this a carousel — 2-10 scrollable cards instead of one message
+        </label>
+        {isCarousel && (
+          <div className="mt-2">
+            <label className="sk-label">One card per line: media handle | card body text | button1, button2 (buttons optional)</label>
+            <textarea
+              name="carouselCards"
+              className="sk-input font-mono text-[12px]"
+              rows={4}
+              placeholder={"4::abc123handle | The Diwali Kurta Set — ₹1,899 | Buy now, More colors\n4::def456handle | The Festive Saree — ₹2,499 | Buy now"}
+            />
+            <p className="mt-1 text-[11.5px] text-faint">
+              The media handle comes from Meta&apos;s Resumable Upload API — there&apos;s no plain-image-URL shortcut for a
+              template&apos;s stored card asset, unlike a one-off send.
+            </p>
+          </div>
+        )}
       </div>
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}

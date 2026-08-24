@@ -2,9 +2,25 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { submitTemplateToMeta } from "@/lib/whatsapp";
+import { submitTemplateToMeta, type CarouselCard } from "@/lib/whatsapp";
 import { generateTemplateDraft, type GeneratedTemplateDraft } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
+
+/** One card per line: "media handle | body text | button1, button2" — buttons are optional. */
+function parseCarouselCards(raw: string): CarouselCard[] {
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [headerHandle, bodyText, buttonsRaw] = line.split("|").map((s) => s.trim());
+      if (!headerHandle || !bodyText) return null;
+      const buttons = buttonsRaw ? buttonsRaw.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 2).map((text) => ({ type: "QUICK_REPLY" as const, text })) : undefined;
+      const card: CarouselCard = { headerHandle, bodyText, buttons };
+      return card;
+    })
+    .filter((c): c is CarouselCard => c !== null);
+}
 
 export async function generateTemplateWithAi(description: string, language: string): Promise<{ draft?: GeneratedTemplateDraft; error?: string }> {
   if (!description.trim()) return { error: "Describe what the message should say." };
@@ -34,9 +50,14 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
     .map((s) => s.trim())
     .filter(Boolean)
     .slice(0, 3); // Meta caps quick-reply buttons at 3
+  const isCarousel = formData.get("isCarousel") === "on";
+  const carouselCards = isCarousel ? parseCarouselCards(String(formData.get("carouselCards") ?? "")) : [];
 
   if (!name || !language || !metaTemplateName || !bodyText) {
     return { error: "Name, language, the Meta template name, and body text are all required." };
+  }
+  if (isCarousel && (carouselCards.length < 2 || carouselCards.length > 10)) {
+    return { error: "A carousel template needs between 2 and 10 valid card lines." };
   }
 
   const buttons = quickReplies.length > 0 ? quickReplies.map((text) => ({ type: "QUICK_REPLY" as const, text })) : undefined;
@@ -56,7 +77,7 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
         name: metaTemplateName,
         language,
         category,
-        components: { headerType, headerText, bodyText, footerText, buttons },
+        components: { headerType, headerText, bodyText, footerText, buttons, carouselCards: isCarousel ? carouselCards : undefined },
       });
     } catch (err) {
       // Save the draft locally anyway — a rejected/failed submission shouldn't lose the work,
@@ -78,6 +99,7 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
     body_preview: bodyText,
     footer_text: footerText ?? null,
     buttons: buttons ?? null,
+    carousel_cards: isCarousel ? carouselCards : null,
     meta_response: metaResponse,
     rejection_reason: submitError,
     template_group: templateGroup,

@@ -414,12 +414,19 @@ export async function sendCatalogMessage(input: SendCatalogInput) {
 // Submission is scoped to the WhatsApp Business Account (WABA), not the
 // phone number, so it needs its own credential.
 
+export interface CarouselCard {
+  headerHandle: string; // a Meta media handle from the Resumable Upload API — not a plain URL
+  bodyText: string;
+  buttons?: Array<{ type: "QUICK_REPLY" | "URL"; text: string; url?: string }>;
+}
+
 export interface TemplateComponents {
   headerType?: "none" | "text" | "image";
   headerText?: string;
   bodyText: string;
   footerText?: string;
   buttons?: Array<{ type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER"; text: string; url?: string; phone_number?: string }>;
+  carouselCards?: CarouselCard[]; // 2-10 cards — when present, this becomes a carousel template
 }
 
 export interface SubmitTemplateInput {
@@ -447,6 +454,26 @@ export async function submitTemplateToMeta(input: SubmitTemplateInput) {
   }
   if (input.components.buttons?.length) {
     components.push({ type: "BUTTONS", buttons: input.components.buttons });
+  }
+
+  // A carousel replaces the body/header above with per-card versions of the
+  // same idea — Meta's top-level BODY is still required as the intro text
+  // shown above the scrollable cards.
+  if (input.components.carouselCards?.length) {
+    if (input.components.carouselCards.length < 2 || input.components.carouselCards.length > 10) {
+      throw new Error("A carousel template needs between 2 and 10 cards.");
+    }
+    components.push({
+      type: "CAROUSEL",
+      cards: input.components.carouselCards.map((card, i) => ({
+        card_index: i,
+        components: [
+          { type: "HEADER", format: "IMAGE", example: { header_handle: [card.headerHandle] } },
+          { type: "BODY", text: card.bodyText },
+          ...(card.buttons?.length ? [{ type: "BUTTONS", buttons: card.buttons }] : []),
+        ],
+      })),
+    });
   }
 
   const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${input.wabaId}/message_templates`, {
