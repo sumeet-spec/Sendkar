@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { NewCampaignForm } from "./NewCampaignForm";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -14,6 +16,7 @@ export default async function CampaignsPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
+  const dict = getDictionary(await getCurrentLanguage()).campaigns;
 
   const [{ data: campaigns }, { data: templates }, { data: numbers }] = await Promise.all([
     supabase
@@ -36,7 +39,7 @@ export default async function CampaignsPage() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Campaigns</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{dict.title}</h1>
         <NewCampaignForm templates={templates ?? []} numbers={numbers ?? []} />
       </div>
       {(templates?.length ?? 0) === 0 && (
@@ -58,7 +61,7 @@ export default async function CampaignsPage() {
             </Link>
           );
         })}
-        {(!campaigns || campaigns.length === 0) && <p className="py-8 text-center text-muted">No campaigns yet.</p>}
+        {(!campaigns || campaigns.length === 0) && <p className="py-8 text-center text-muted">{dict.noCampaigns}</p>}
       </div>
     </div>
   );

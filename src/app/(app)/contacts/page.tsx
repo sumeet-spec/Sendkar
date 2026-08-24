@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { ImportForm } from "./ImportForm";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 const LANGUAGE_LABEL: Record<string, string> = {
   hi: "Hindi", mr: "Marathi", ta: "Tamil", te: "Telugu", kn: "Kannada", en: "English",
@@ -11,6 +13,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
+  const dict = getDictionary(await getCurrentLanguage()).contacts;
 
   let query = supabase
     .from("contacts")
@@ -38,16 +41,16 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Contacts</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{dict.title}</h1>
         <div className="flex items-center gap-3">
-          <div className="sk-pill">{totalCount ?? 0} total</div>
-          <a href="/api/contacts/export" className="sk-btn sk-btn-ghost">Export CSV</a>
+          <div className="sk-pill">{totalCount ?? 0} {dict.total}</div>
+          <a href="/api/contacts/export" className="sk-btn sk-btn-ghost">{dict.exportCsv}</a>
         </div>
       </div>
 
       <form className="mb-4 flex gap-3">
-        <input type="text" name="q" defaultValue={q} placeholder="Search by phone or name…" className="sk-input flex-1" />
-        <button type="submit" className="sk-btn sk-btn-ghost">Search</button>
+        <input type="text" name="q" defaultValue={q} placeholder={dict.searchPlaceholder} className="sk-input flex-1" />
+        <button type="submit" className="sk-btn sk-btn-ghost">{dict.search}</button>
       </form>
 
       <ImportForm />
@@ -57,7 +60,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              {["Phone", "Name", "Language", "Tags", "Source", "Spend", "Added"].map((h) => (
+              {[dict.colPhone, dict.colName, dict.colLanguage, dict.colTags, dict.colSource, dict.colSpend, dict.colAdded].map((h) => (
                 <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
               ))}
             </tr>
@@ -96,7 +99,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
             {(!contacts || contacts.length === 0) && (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-muted">
-                  No contacts yet — import a CSV above.
+                  {dict.noContacts}
                 </td>
               </tr>
             )}

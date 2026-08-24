@@ -4,32 +4,34 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
+import type { Dictionary, LanguageCode } from "@/lib/i18n/dictionaries";
 
-const NAV = [
-  { href: "/dashboard", label: "Overview", icon: "grid" },
-  { href: "/contacts", label: "Contacts", icon: "users" },
-  { href: "/templates", label: "Templates", icon: "doc" },
-  { href: "/catalog", label: "Catalog", icon: "catalog" },
-  { href: "/campaigns", label: "Campaigns", icon: "send" },
-  { href: "/inbox", label: "Inbox", icon: "chat" },
-  { href: "/analytics", label: "Analytics", icon: "chart" },
-  { href: "/flows", label: "Chatbot flows", icon: "flow" },
-  { href: "/forms", label: "Forms", icon: "form" },
-  { href: "/automations", label: "Automations", icon: "bolt" },
-  { href: "/webhooks", label: "Webhooks", icon: "webhook" },
-  { href: "/links", label: "Links & widget", icon: "link" },
-  { href: "/agency", label: "Agency", icon: "agency" },
-] as const;
+const NAV_KEYS = [
+  { href: "/dashboard", key: "overview", icon: "grid" },
+  { href: "/contacts", key: "contacts", icon: "users" },
+  { href: "/templates", key: "templates", icon: "doc" },
+  { href: "/catalog", key: "catalog", icon: "catalog" },
+  { href: "/campaigns", key: "campaigns", icon: "send" },
+  { href: "/inbox", key: "inbox", icon: "chat" },
+  { href: "/analytics", key: "analytics", icon: "chart" },
+  { href: "/flows", key: "chatbotFlows", icon: "flow" },
+  { href: "/forms", key: "forms", icon: "form" },
+  { href: "/automations", key: "automations", icon: "bolt" },
+  { href: "/webhooks", key: "webhooks", icon: "webhook" },
+  { href: "/links", key: "linksWidget", icon: "link" },
+  { href: "/agency", key: "agency", icon: "agency" },
+] as const satisfies ReadonlyArray<{ href: string; key: keyof Dictionary["nav"]; icon: string }>;
 
-const SETTINGS_NAV = [
-  { href: "/settings/billing", label: "Billing" },
-  { href: "/settings/team", label: "Team" },
-  { href: "/settings/channels", label: "Channels" },
-  { href: "/settings/canned-responses", label: "Canned responses" },
-  { href: "/settings/api-keys", label: "API keys" },
-  { href: "/settings/integrations", label: "Integrations" },
-] as const;
+const SETTINGS_NAV_KEYS = [
+  { href: "/settings/billing", key: "billing" },
+  { href: "/settings/team", key: "team" },
+  { href: "/settings/channels", key: "channels" },
+  { href: "/settings/canned-responses", key: "cannedResponses" },
+  { href: "/settings/api-keys", key: "apiKeys" },
+  { href: "/settings/integrations", key: "integrations" },
+] as const satisfies ReadonlyArray<{ href: string; key: keyof Dictionary["nav"] }>;
 
 function Icon({ name }: { name: string }) {
   const common = { width: 17, height: 17, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -71,7 +73,17 @@ interface UserWorkspace {
   role: string;
 }
 
-export function Sidebar({ workspaceId, workspaces }: { workspaceId: string; workspaces: UserWorkspace[] }) {
+export function Sidebar({
+  workspaceId,
+  workspaces,
+  nav,
+  lang,
+}: {
+  workspaceId: string;
+  workspaces: UserWorkspace[];
+  nav: Dictionary["nav"];
+  lang: LanguageCode;
+}) {
   const pathname = usePathname();
 
   return (
@@ -82,7 +94,7 @@ export function Sidebar({ workspaceId, workspaces }: { workspaceId: string; work
       </div>
 
       <nav className="mt-4 flex flex-col gap-0.5">
-        {NAV.map((item) => {
+        {NAV_KEYS.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
             <Link
@@ -94,16 +106,16 @@ export function Sidebar({ workspaceId, workspaces }: { workspaceId: string; work
               style={active ? { background: "rgba(34,197,94,0.10)" } : undefined}
             >
               <Icon name={item.icon} />
-              {item.label}
+              {nav[item.key]}
             </Link>
           );
         })}
       </nav>
 
       <div className="mt-5 border-t border-border pt-3">
-        <div className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-faint">Settings</div>
+        <div className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-faint">{nav.settings}</div>
         <nav className="flex flex-col gap-0.5">
-          {SETTINGS_NAV.map((item) => {
+          {SETTINGS_NAV_KEYS.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
               <Link
@@ -114,14 +126,18 @@ export function Sidebar({ workspaceId, workspaces }: { workspaceId: string; work
                 }`}
                 style={active ? { background: "rgba(34,197,94,0.10)" } : undefined}
               >
-                {item.label}
+                {nav[item.key]}
               </Link>
             );
           })}
         </nav>
       </div>
 
-      <div className="mt-auto border-t border-border pt-3">
+      <div className="mt-3 border-t border-border pt-3">
+        <LanguageSwitcher current={lang} compact />
+      </div>
+
+      <div className="mt-3 border-t border-border pt-3">
         <div className="flex items-center gap-1">
           <div className="flex-1">
             <WorkspaceSwitcher workspaces={workspaces} currentId={workspaceId} />
@@ -130,7 +146,7 @@ export function Sidebar({ workspaceId, workspaces }: { workspaceId: string; work
             onClick={() => logout()}
             className="px-2 text-[11.5px] font-medium text-faint hover:text-danger"
           >
-            Log out
+            {nav.logout}
           </button>
         </div>
       </div>
