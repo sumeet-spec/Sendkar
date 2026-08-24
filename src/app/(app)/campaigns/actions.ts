@@ -47,7 +47,7 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
  * a campaign's audience should be fixed the moment it launches, not shift
  * under it if contacts are imported mid-send.
  */
-export async function startCampaign(campaignId: string) {
+export async function startCampaign(campaignId: string): Promise<{ error?: string }> {
   const supabase = await createClient();
 
   const { data: campaign } = await supabase
@@ -55,7 +55,7 @@ export async function startCampaign(campaignId: string) {
     .select("id, workspace_id, template_id, status, segment_tag, template_group, templates(language)")
     .eq("id", campaignId)
     .single();
-  if (!campaign || campaign.status !== "draft") return;
+  if (!campaign || campaign.status !== "draft") return { error: "Campaign not found or not a draft." };
 
   let query = supabase.from("contacts").select("id").eq("workspace_id", campaign.workspace_id).eq("opted_out", false); // marketing sends must respect opt-out, unlike replies/automations
 
@@ -78,9 +78,13 @@ export async function startCampaign(campaignId: string) {
   const { data: contacts } = await query;
 
   if (contacts && contacts.length > 0) {
-    await supabase.from("campaign_recipients").insert(
+    const { error: recipientsError } = await supabase.from("campaign_recipients").insert(
       contacts.map((c) => ({ campaign_id: campaign.id, contact_id: c.id, status: "queued" as const })),
     );
+    // Surfaced instead of swallowed: a failed insert here used to leave the
+    // campaign flipped to "sending" with zero real recipients — the cron
+    // would then find nothing queued and silently mark it "completed".
+    if (recipientsError) return { error: `Couldn't snapshot the audience: ${recipientsError.message}` };
   }
 
   await supabase
@@ -89,6 +93,7 @@ export async function startCampaign(campaignId: string) {
     .eq("id", campaign.id);
 
   revalidatePath(`/campaigns/${campaignId}`);
+  return {};
 }
 
 export async function sendTestMessage(_prevState: unknown, formData: FormData) {

@@ -28,7 +28,12 @@ export function WhatsAppForm({ workspace }: { workspace: Workspace }) {
       </div>
       <div>
         <label className="sk-label">System user access token</label>
-        <input name="accessToken" type="password" defaultValue={workspace.whatsapp_access_token ?? ""} className="sk-input font-mono text-sm" />
+        <input
+          name="accessToken"
+          type="password"
+          placeholder={workspace.whatsapp_access_token ? "•••••••• (set — enter a new token to replace it)" : "EAAG..."}
+          className="sk-input font-mono text-sm"
+        />
       </div>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       {state?.success && <p className="text-sm text-accent">Saved.</p>}
@@ -54,7 +59,13 @@ export function InstagramForm({ workspace, locked }: { workspace: Workspace; loc
       </div>
       <div>
         <label className="sk-label">Page access token</label>
-        <input name="accessToken" type="password" defaultValue={workspace.instagram_access_token ?? ""} disabled={locked} className="sk-input font-mono text-sm disabled:opacity-50" />
+        <input
+          name="accessToken"
+          type="password"
+          placeholder={workspace.instagram_access_token ? "•••••••• (set — enter a new token to replace it)" : "EAAG..."}
+          disabled={locked}
+          className="sk-input font-mono text-sm disabled:opacity-50"
+        />
       </div>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       {state?.success && <p className="text-sm text-accent">Saved.</p>}
@@ -80,7 +91,13 @@ export function MessengerForm({ workspace, locked }: { workspace: Workspace; loc
       </div>
       <div>
         <label className="sk-label">Page access token</label>
-        <input name="accessToken" type="password" defaultValue={workspace.messenger_access_token ?? ""} disabled={locked} className="sk-input font-mono text-sm disabled:opacity-50" />
+        <input
+          name="accessToken"
+          type="password"
+          placeholder={workspace.messenger_access_token ? "•••••••• (set — enter a new token to replace it)" : "EAAG..."}
+          disabled={locked}
+          className="sk-input font-mono text-sm disabled:opacity-50"
+        />
       </div>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       {state?.success && <p className="text-sm text-accent">Saved.</p>}

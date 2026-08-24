@@ -29,25 +29,37 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
   const rows = parseCsv(text);
   if (rows.length === 0) return { error: "That file is empty." };
 
-  // First row is a header (`phone,email`) if its first cell isn't all digits.
-  const hasHeader = !/^\d+$/.test(rows[0][0] ?? "");
+  // First row is a header (`phone,email`) if its first cell doesn't look like
+  // a real phone number once non-digit characters are stripped — checking
+  // the raw cell against /^\d+$/ misfires on a very common export format
+  // like "+919876543210" (or "91-987-654-3210"), wrongly treating the first
+  // real contact as a header and silently dropping it.
+  const firstCellDigits = (rows[0][0] ?? "").replace(/[^\d]/g, "");
+  const hasHeader = firstCellDigits.length < 10;
   const dataRows = hasHeader ? rows.slice(1) : rows;
 
-  const contacts = dataRows
+  const rawContacts = dataRows
     .map(([phone, email, tagField]) => ({
       phone: (phone ?? "").replace(/[^\d]/g, ""),
       email: email || null,
       tags: (tagField ?? "").split(";").map((t) => t.trim()).filter(Boolean),
     }))
-    .filter((c) => c.phone.length >= 10)
-    .map((c) => ({
-      workspace_id: workspace.id,
-      phone: c.phone,
-      email: c.email,
-      tags: c.tags,
-      language,
-      source: "apify_scrape",
-    }));
+    .filter((c) => c.phone.length >= 10);
+
+  // Postgres's ON CONFLICT DO UPDATE errors ("command cannot affect row a
+  // second time") if the same conflict key appears twice in one upsert —
+  // a real-world scraped CSV repeating the same phone number would
+  // otherwise fail the entire import, not just that one row. Last
+  // occurrence wins, same as a plain object key collision would.
+  const dedupedByPhone = new Map(rawContacts.map((c) => [c.phone, c]));
+  const contacts = [...dedupedByPhone.values()].map((c) => ({
+    workspace_id: workspace.id,
+    phone: c.phone,
+    email: c.email,
+    tags: c.tags,
+    language,
+    source: "apify_scrape",
+  }));
 
   if (contacts.length === 0) return { error: "No valid phone numbers found in that file." };
 

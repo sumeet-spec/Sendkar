@@ -16,9 +16,12 @@ export async function saveInstagramCreds(_prevState: unknown, formData: FormData
   const accessToken = String(formData.get("accessToken") ?? "").trim();
 
   const supabase = await createClient();
+  // The token input is never pre-filled with the real value (it'd leak the
+  // live secret into the page's HTML) — so a blank submit means "unchanged",
+  // not "clear", or every save that touches only pageId would wipe it.
   const { error } = await supabase
     .from("workspaces")
-    .update({ instagram_page_id: pageId || null, instagram_access_token: accessToken || null })
+    .update({ instagram_page_id: pageId || null, ...(accessToken ? { instagram_access_token: accessToken } : {}) })
     .eq("id", workspace.id);
 
   if (error) return { error: error.message };
@@ -39,7 +42,7 @@ export async function saveMessengerCreds(_prevState: unknown, formData: FormData
   const supabase = await createClient();
   const { error } = await supabase
     .from("workspaces")
-    .update({ messenger_page_id: pageId || null, messenger_access_token: accessToken || null })
+    .update({ messenger_page_id: pageId || null, ...(accessToken ? { messenger_access_token: accessToken } : {}) })
     .eq("id", workspace.id);
 
   if (error) return { error: error.message };
@@ -97,7 +100,7 @@ export async function saveWhatsAppCredsFromChannels(_prevState: unknown, formDat
       whatsapp_waba_id: wabaId || null,
       whatsapp_display_number: displayNumber || null,
       catalog_id: catalogId || null,
-      whatsapp_access_token: accessToken || null,
+      ...(accessToken ? { whatsapp_access_token: accessToken } : {}),
     })
     .eq("id", workspace.id);
 

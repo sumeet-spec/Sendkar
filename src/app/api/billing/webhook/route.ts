@@ -69,12 +69,25 @@ export async function POST(request: NextRequest) {
   const metadata = event.data?.metadata ?? event.metadata ?? {};
   const workspaceId = metadata["workspace_id"];
   const metadataPlan = metadata["plan"] as Plan | undefined;
+  const eventTs = Number(headerTs);
+  const eventTime = Number.isFinite(eventTs) ? new Date(eventTs * 1000).toISOString() : null;
 
   try {
-    if (workspaceId && UPGRADE_EVENTS.has(eventType) && metadataPlan && PAID_PLANS.includes(metadataPlan)) {
-      await admin.from("workspaces").update({ plan: metadataPlan }).eq("id", workspaceId);
-    } else if (workspaceId && DOWNGRADE_EVENTS.has(eventType)) {
-      await admin.from("workspaces").update({ plan: "free" }).eq("id", workspaceId);
+    const isPlanChange = workspaceId && (UPGRADE_EVENTS.has(eventType) || DOWNGRADE_EVENTS.has(eventType));
+    if (isPlanChange) {
+      // Dedup only stops the same delivery twice — this stops a genuinely
+      // older event, redelivered late, from undoing a newer one that
+      // already landed (e.g. a late "renewed" re-upgrading a workspace a
+      // more recent "cancelled" already downgraded).
+      const { data: ws } = await admin.from("workspaces").select("plan_synced_at").eq("id", workspaceId).maybeSingle();
+      const isStale = eventTime && ws?.plan_synced_at && eventTime < ws.plan_synced_at;
+      if (!isStale) {
+        if (UPGRADE_EVENTS.has(eventType) && metadataPlan && PAID_PLANS.includes(metadataPlan)) {
+          await admin.from("workspaces").update({ plan: metadataPlan, plan_synced_at: eventTime }).eq("id", workspaceId);
+        } else if (DOWNGRADE_EVENTS.has(eventType)) {
+          await admin.from("workspaces").update({ plan: "free", plan_synced_at: eventTime }).eq("id", workspaceId);
+        }
+      }
     }
   } catch (err) {
     if (dedupeId) await admin.from("processed_dodo_webhooks").delete().eq("id", dedupeId);

@@ -56,9 +56,13 @@ export async function saveWooCommerceCreds(_prevState: unknown, formData: FormDa
   const webhookSecret = String(formData.get("webhookSecret") ?? "").trim();
 
   const supabase = await createClient();
+  // The secret field is never pre-filled (same reasoning as the WhatsApp/
+  // Instagram/Messenger token fields), so a blank submit here means
+  // "unchanged" — otherwise updating just the store URL would silently
+  // wipe out an already-working webhook secret.
   const { error } = await supabase
     .from("workspaces")
-    .update({ woocommerce_store_url: storeUrl || null, woocommerce_webhook_secret: webhookSecret || null })
+    .update({ woocommerce_store_url: storeUrl || null, ...(webhookSecret ? { woocommerce_webhook_secret: webhookSecret } : {}) })
     .eq("id", workspace.id);
   if (error) return { error: error.message };
 
