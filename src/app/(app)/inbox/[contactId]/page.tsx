@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace, listWorkspaceMembers } from "@/lib/workspace";
 import { notFound } from "next/navigation";
 import { ReplyBox } from "./ReplyBox";
+import { MessageBubble } from "./MessageBubble";
 import { AssigneeSelect } from "./AssigneeSelect";
 import { NotesPanel } from "./NotesPanel";
 import { SummaryPanel } from "./SummaryPanel";
@@ -63,15 +64,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
         <div className="sk-card flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {(messages ?? []).map((m) => (
-              <div key={m.id} className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[75%] rounded-lg px-3.5 py-2 text-[13.5px] ${
-                    m.direction === "outbound" ? "bg-accent text-[#05130a]" : "bg-surface-2 border border-border"
-                  }`}
-                >
-                  {m.body ?? "[template message]"}
-                </div>
-              </div>
+              <MessageBubble key={m.id} contactId={contactId} message={{ id: m.id, direction: m.direction, body: m.body, reaction: m.reaction ?? null }} />
             ))}
             {(!messages || messages.length === 0) && <p className="text-center text-muted">No messages yet.</p>}
           </div>

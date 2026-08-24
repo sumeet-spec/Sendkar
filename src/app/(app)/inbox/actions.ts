@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
-import { sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
+import { sendSessionMessage, sendProductMessage, sendReaction, sendButtonsMessage, markReadWithTypingIndicator, type InteractiveButton } from "@/lib/whatsapp";
 import { sendInstagramMessage } from "@/lib/instagram";
 import { sendMessengerMessage } from "@/lib/messenger";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
@@ -121,6 +121,86 @@ export async function sendProductToContact(contactId: string, productId: string)
       contact_id: contactId,
       direction: "outbound",
       body: `[Product: ${product.name}]`,
+      meta_message_id: metaMessageId,
+      status: "sent",
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Send failed." };
+  }
+
+  revalidatePath(`/inbox/${contactId}`);
+  return { success: true };
+}
+
+export async function reactToMessage(contactId: string, messageId: string, emoji: string): Promise<{ success?: boolean; error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const supabase = await createClient();
+  const [{ data: contact }, { data: message }] = await Promise.all([
+    supabase.from("contacts").select("phone, whatsapp_number_id").eq("id", contactId).single(),
+    supabase.from("messages").select("meta_message_id").eq("id", messageId).single(),
+  ]);
+  if (!contact || !message?.meta_message_id) return { error: "Message not found." };
+
+  const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
+  try {
+    await sendReaction({ workspace: creds, to: contact.phone, messageId: message.meta_message_id, emoji });
+    await supabase.from("messages").update({ reaction: emoji || null }).eq("id", messageId);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Reaction failed." };
+  }
+
+  revalidatePath(`/inbox/${contactId}`);
+  return { success: true };
+}
+
+/** Fired when a team member opens a thread — shows the customer a "typing…" status and marks their last message read. */
+export async function sendTypingIndicator(contactId: string): Promise<void> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return;
+
+  const supabase = await createClient();
+  const { data: lastInbound } = await supabase
+    .from("messages")
+    .select("meta_message_id")
+    .eq("contact_id", contactId)
+    .eq("direction", "inbound")
+    .not("meta_message_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!lastInbound?.meta_message_id) return;
+
+  const { data: contact } = await supabase.from("contacts").select("whatsapp_number_id").eq("id", contactId).single();
+  const creds = await resolveNumberCredentials(workspace, contact?.whatsapp_number_id ?? null);
+  try {
+    await markReadWithTypingIndicator(creds, lastInbound.meta_message_id);
+  } catch {
+    // Best-effort — a customer never sees a difference if this silently fails.
+  }
+}
+
+export async function sendButtonsToContact(contactId: string, bodyText: string, buttons: InteractiveButton[]): Promise<{ success?: boolean; error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+  if (!bodyText.trim() || buttons.length === 0) return { error: "Enter a message and at least one button." };
+
+  const supabase = await createClient();
+  const { data: contact } = await supabase.from("contacts").select("phone, session_expires_at, whatsapp_number_id").eq("id", contactId).single();
+  if (!contact) return { error: "Contact not found." };
+  if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
+    return { error: "The 24h reply window has closed for this contact." };
+  }
+
+  const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
+  try {
+    const { metaMessageId } = await sendButtonsMessage({ workspace: creds, to: contact.phone, bodyText, buttons });
+    await supabase.from("messages").insert({
+      workspace_id: workspace.id,
+      contact_id: contactId,
+      direction: "outbound",
+      body: bodyText,
       meta_message_id: metaMessageId,
       status: "sent",
     });

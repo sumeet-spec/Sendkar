@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useRef, useState, useTransition } from "react";
-import { replyToContact, draftReplySuggestion, sendProductToContact } from "../actions";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { replyToContact, draftReplySuggestion, sendProductToContact, sendTypingIndicator, sendButtonsToContact } from "../actions";
 
 interface CannedResponse {
   id: string;
@@ -31,7 +31,38 @@ export function ReplyBox({
   const [aiError, setAiError] = useState<string | null>(null);
   const [productPending, startProductTransition] = useTransition();
   const [productError, setProductError] = useState<string | null>(null);
+  const [buttonsOpen, setButtonsOpen] = useState(false);
+  const [buttonLabels, setButtonLabels] = useState(["", "", ""]);
+  const [buttonsBody, setButtonsBody] = useState("");
+  const [buttonsPending, startButtonsTransition] = useTransition();
+  const [buttonsError, setButtonsError] = useState<string | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const typingFiredRef = useRef(false);
+
+  useEffect(() => {
+    // Fire once per thread visit, not on every re-render — the customer
+    // only needs to see "typing…" once when someone actually opens the chat.
+    if (typingFiredRef.current || !sessionOpen) return;
+    typingFiredRef.current = true;
+    sendTypingIndicator(contactId);
+  }, [contactId, sessionOpen]);
+
+  function sendButtons() {
+    setButtonsError(null);
+    const buttons = buttonLabels
+      .map((title, i) => ({ id: `btn_${i + 1}`, title: title.trim() }))
+      .filter((b) => b.title);
+    startButtonsTransition(async () => {
+      const result = await sendButtonsToContact(contactId, buttonsBody, buttons);
+      if (result.error) {
+        setButtonsError(result.error);
+        return;
+      }
+      setButtonsOpen(false);
+      setButtonsBody("");
+      setButtonLabels(["", "", ""]);
+    });
+  }
 
   function draftWithAi() {
     setAiError(null);
@@ -114,11 +145,42 @@ export function ReplyBox({
               ))}
             </select>
           )}
+          <button type="button" onClick={() => setButtonsOpen((v) => !v)} disabled={!sessionOpen} className="sk-btn sk-btn-ghost disabled:opacity-60">
+            ▭ Buttons
+          </button>
         </div>
         <button type="submit" disabled={pending || !sessionOpen} className="sk-btn sk-btn-primary disabled:opacity-60">
           {pending ? "Sending…" : "Send"}
         </button>
       </div>
+
+      {buttonsOpen && (
+        <div className="flex flex-col gap-2 rounded-md border border-border bg-surface-2 p-3">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Send up to 3 tappable buttons</div>
+          <input
+            value={buttonsBody}
+            onChange={(e) => setButtonsBody(e.target.value)}
+            className="sk-input text-[13px]"
+            placeholder={'Message body, e.g. "Want us to hold your order?"'}
+          />
+          <div className="flex gap-2">
+            {buttonLabels.map((label, i) => (
+              <input
+                key={i}
+                value={label}
+                onChange={(e) => setButtonLabels((prev) => prev.map((l, idx) => (idx === i ? e.target.value : l)))}
+                maxLength={20}
+                className="sk-input text-[12.5px]"
+                placeholder={`Button ${i + 1}`}
+              />
+            ))}
+          </div>
+          {buttonsError && <p className="text-[12px] text-danger">{buttonsError}</p>}
+          <button type="button" onClick={sendButtons} disabled={buttonsPending} className="sk-btn sk-btn-primary self-start disabled:opacity-60">
+            {buttonsPending ? "Sending…" : "Send buttons"}
+          </button>
+        </div>
+      )}
     </form>
   );
 }
