@@ -17,6 +17,8 @@ const TOOLS = [
   ["send_product_message", "Send a product card from the catalog to a contact"],
   ["log_order", "Record a real sale against a contact, no storefront required"],
   ["get_revenue_summary", "Total revenue tracked, broken down by which campaign drove it"],
+  ["send_reaction", "React to a contact's message with an emoji"],
+  ["send_buttons_message", "Send a message with up to 3 tappable reply buttons"],
 ];
 
 export default async function McpPage() {

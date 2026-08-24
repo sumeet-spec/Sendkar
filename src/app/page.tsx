@@ -75,7 +75,7 @@ export default async function RootPage() {
                 <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">Channels</div>
               </div>
               <div>
-                <div className="text-2xl font-bold">13</div>
+                <div className="text-2xl font-bold">15</div>
                 <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">MCP tools for Claude</div>
               </div>
               <div>

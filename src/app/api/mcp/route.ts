@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveApiKey } from "@/lib/apiKeys";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendTemplateMessage, sendSessionMessage, sendProductMessage } from "@/lib/whatsapp";
+import { sendTemplateMessage, sendSessionMessage, sendProductMessage, sendReaction, sendButtonsMessage } from "@/lib/whatsapp";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { attributeOrder } from "@/lib/attribution";
 
@@ -135,6 +135,35 @@ const TOOLS = [
     name: "get_revenue_summary",
     description: "Total revenue tracked in Sendkar (manual + Shopify + WooCommerce), broken down by which campaign — if any — drove each sale.",
     inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "send_reaction",
+    description: "React to a contact's message with an emoji, or pass an empty emoji to remove a reaction you already sent.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        to: { type: "string" },
+        messageId: { type: "string", description: "The wamid of the message to react to — from list_contacts' recent messages or a webhook payload." },
+        emoji: { type: "string", description: "A single emoji, or \"\" to remove the reaction." },
+      },
+      required: ["to", "messageId"],
+    },
+  },
+  {
+    name: "send_buttons_message",
+    description: "Send a free-text message with up to 3 tappable reply buttons. Only works within 24h of the contact's last inbound message.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        to: { type: "string" },
+        bodyText: { type: "string" },
+        buttons: {
+          type: "array", maxItems: 3,
+          items: { type: "object", properties: { id: { type: "string" }, title: { type: "string", description: "Max 20 characters" } }, required: ["id", "title"] },
+        },
+      },
+      required: ["to", "bodyText", "buttons"],
+    },
   },
   {
     name: "send_product_message",
@@ -441,6 +470,50 @@ export async function POST(request: NextRequest) {
           organicRevenue,
           byCampaign: Array.from(byCampaign.entries()).map(([campaignId, c]) => ({ campaignId, ...c })),
         }));
+      }
+
+      case "send_reaction": {
+        const to = String(args.to ?? "").replace(/[^\d]/g, "");
+        const messageId = String(args.messageId ?? "");
+        const emoji = typeof args.emoji === "string" ? args.emoji : "";
+        if (!to || !messageId) return textResult(id, "to and messageId are required.", true);
+
+        const { data: workspace } = await admin.from("workspaces").select("whatsapp_phone_number_id, whatsapp_access_token").eq("id", workspaceId).single();
+        if (!workspace) return textResult(id, "Workspace not found.", true);
+
+        try {
+          await sendReaction({ workspace, to, messageId, emoji });
+          await admin.from("messages").update({ reaction: emoji || null }).eq("workspace_id", workspaceId).eq("meta_message_id", messageId);
+        } catch (err) {
+          return textResult(id, err instanceof Error ? err.message : "Reaction failed.", true);
+        }
+        return textResult(id, JSON.stringify({ sent: true }));
+      }
+
+      case "send_buttons_message": {
+        const to = String(args.to ?? "").replace(/[^\d]/g, "");
+        const bodyText = String(args.bodyText ?? "");
+        const buttons = Array.isArray(args.buttons) ? (args.buttons as Array<{ id: string; title: string }>) : [];
+        if (!to || !bodyText || buttons.length === 0) return textResult(id, "to, bodyText, and at least one button are required.", true);
+
+        const [{ data: contact }, { data: workspace }] = await Promise.all([
+          admin.from("contacts").select("id, session_expires_at, whatsapp_number_id").eq("workspace_id", workspaceId).eq("phone", to).maybeSingle(),
+          admin.from("workspaces").select("id, whatsapp_phone_number_id, whatsapp_access_token").eq("id", workspaceId).single(),
+        ]);
+        if (!contact) return textResult(id, "No contact with that phone number has messaged this workspace yet.", true);
+        if (!workspace) return textResult(id, "Workspace not found.", true);
+        if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
+          return textResult(id, "The 24h reply window has closed for this contact.", true);
+        }
+
+        const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
+        try {
+          const { metaMessageId } = await sendButtonsMessage({ workspace: creds, to, bodyText, buttons });
+          await admin.from("messages").insert({ workspace_id: workspaceId, contact_id: contact.id, direction: "outbound", body: bodyText, meta_message_id: metaMessageId, status: "sent" });
+        } catch (err) {
+          return textResult(id, err instanceof Error ? err.message : "Send failed.", true);
+        }
+        return textResult(id, JSON.stringify({ sent: true }));
       }
 
       case "send_product_message": {
