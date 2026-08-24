@@ -5,6 +5,7 @@ const PUBLIC_PATHS = [
   "/login", "/signup", "/invite",
   "/api/whatsapp/webhook", "/api/instagram/webhook", "/api/billing/webhook", "/api/cron",
   "/api/mcp", "/mcp",
+  "/privacy", "/terms", "/support",
   "/api/shopify/callback", "/api/shopify/webhook",
   "/api/woocommerce/webhook",
   "/api/v1/send",

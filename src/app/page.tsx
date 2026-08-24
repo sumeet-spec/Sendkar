@@ -3,13 +3,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PLAN_LIMITS } from "@/lib/plans";
 
-const MOCK_LOG = [
-  { status: "done" as const, title: "TEMPLATE SUBMITTED", detail: "diwali_sale — hi, ta, te" },
-  { status: "done" as const, title: "META APPROVED", detail: "3/3 languages" },
-  { status: "done" as const, title: "CAMPAIGN LAUNCHED", detail: "auto-routed by contact language" },
-  { status: "active" as const, title: "SENDING", detail: "1,204 / 3,000 delivered" },
-  { status: "todo" as const, title: "AI TAGGED REPLY", detail: "\"price-question\" · sentiment: neutral" },
-  { status: "todo" as const, title: "CLAUDE CONNECTED", detail: "13 tools ready via MCP" },
+const CHAT_DEMO = [
+  { side: "in" as const, text: "Hi! Is the Diwali set still available in medium?" },
+  { side: "out" as const, text: "Yes — ₹1,899, ships tomorrow if you order today 🎉" },
+  { side: "in" as const, text: "Perfect, sending payment now" },
 ] as const;
 
 const FEATURES = [
@@ -52,8 +49,8 @@ export default async function RootPage() {
   if (data.user) redirect("/dashboard");
 
   return (
-    <div className="flex-1">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+    <div className="flex-1 overflow-x-hidden">
+      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent">
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
@@ -70,75 +67,83 @@ export default async function RootPage() {
         </nav>
       </header>
 
-      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-6 pt-14 pb-24 lg:grid-cols-2">
-        <div>
-          <div className="sk-eyebrow mb-5">WhatsApp Business Platform</div>
-          <h1 className="text-[40px] font-extrabold leading-[1.08] tracking-tight sm:text-[52px]">
-            Send once.
-            <br />
-            Every language.
-            <br />
-            <span className="text-accent">Half the price.</span>
-          </h1>
-          <p className="mt-5 max-w-md text-[15.5px] text-muted">
-            Campaigns, a shared team inbox, chatbot flows, and a product catalog on Meta&apos;s real Cloud API — plus
-            AI features and a Claude connector no other WhatsApp platform ships.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/signup" className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">Get started free →</Link>
-            <a href="#pricing" className="sk-btn sk-btn-ghost px-5 py-2.5 text-[14.5px]">See pricing</a>
-          </div>
-          <p className="mt-4 text-[12.5px] text-faint">No card required for Free · Meta&apos;s official Cloud API, not a reseller</p>
+      <section className="relative px-6 pb-28 pt-16">
+        <div className="sk-grid-bg" />
+        <div className="sk-glow" />
 
-          <div className="mt-10 grid grid-cols-3 gap-6 border-t border-border pt-6">
-            <div>
-              <div className="text-2xl font-bold">3</div>
-              <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">Channels</div>
+        <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2">
+          <div>
+            <div className="sk-eyebrow mb-6">WhatsApp Business Platform</div>
+            <h1 className="text-[46px] font-extrabold leading-[1.02] tracking-tight sm:text-[64px]">
+              Send once.
+              <br />
+              <span className="font-light text-muted">Every language,</span>
+              <br />
+              <span className="text-accent">half the price.</span>
+            </h1>
+            <p className="mt-6 max-w-md text-[16px] leading-relaxed text-muted">
+              Campaigns, a shared team inbox, chatbot flows, and a product catalog on Meta&apos;s real Cloud API — plus
+              revenue attribution and a Claude connector no other WhatsApp platform ships.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link href="/signup" className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">Get started free →</Link>
+              <a href="#pricing" className="sk-btn sk-btn-ghost px-5 py-2.5 text-[14.5px]">See pricing</a>
             </div>
-            <div>
-              <div className="text-2xl font-bold">13</div>
-              <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">MCP tools for Claude</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-accent">½</div>
-              <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">The price of the rest</div>
-            </div>
-          </div>
-        </div>
+            <p className="mt-4 text-[12.5px] text-faint">No card required for Free · Meta&apos;s official Cloud API, not a reseller</p>
 
-        <div className="sk-mock-panel">
-          <div className="mb-3 flex items-center gap-2 border-b border-border pb-3">
-            <span className="h-2.5 w-2.5 rounded-full bg-danger opacity-60" />
-            <span className="h-2.5 w-2.5 rounded-full bg-warn opacity-60" />
-            <span className="h-2.5 w-2.5 rounded-full bg-accent opacity-60" />
-            <span className="ml-2 font-mono text-[11.5px] text-faint">sendkar — live campaign</span>
-          </div>
-          {MOCK_LOG.map((line) => (
-            <div key={line.title} className="sk-mock-line">
-              <span className={`sk-mock-check ${line.status === "todo" ? "" : line.status}`}>
-                {line.status === "done" ? (
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6.5L4.5 9L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                ) : line.status === "active" ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full border border-border" />
-                )}
-              </span>
+            <div className="mt-12 grid grid-cols-3 gap-6 border-t border-border pt-6">
               <div>
-                <div className="font-mono text-[12px] font-semibold tracking-wide text-foreground">{line.title}</div>
-                <div className="font-mono text-[11.5px] text-faint">{line.detail}</div>
+                <div className="text-2xl font-bold">3</div>
+                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">Channels</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">13</div>
+                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">MCP tools for Claude</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-accent">½</div>
+                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">The price of the rest</div>
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="sk-phone">
+            <div className="sk-phone-notch" />
+            <div className="sk-phone-header">
+              <div className="sk-phone-avatar" />
+              <div>
+                <div className="text-[13px] font-medium">Meera Textiles</div>
+                <div className="text-[11px] text-faint">via Sendkar</div>
+              </div>
+            </div>
+            <div className="sk-phone-body">
+              {CHAT_DEMO.map((m, i) => (
+                <div key={i} className={`sk-chat-bubble ${m.side}`} style={{ animationDelay: `${0.3 + i * 0.55}s` }}>
+                  {m.text}
+                </div>
+              ))}
+              <div className="sk-typing" style={{ animationDelay: `${0.3 + CHAT_DEMO.length * 0.55}s` }}>
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-20">
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="mb-10 max-w-lg">
+          <div className="sk-eyebrow mb-3">What&apos;s actually built</div>
+          <h2 className="text-[28px] font-semibold tracking-tight">Not a landing page promise.</h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="sk-card p-5">
+          {FEATURES.map((f, i) => (
+            <div key={f.title} className="sk-card group relative overflow-hidden p-5 transition-transform duration-200 hover:-translate-y-1 hover:border-accent-dim">
+              <div className="mb-3 font-mono text-[11px] text-faint">{String(i + 1).padStart(2, "0")}</div>
               <div className="mb-2 font-medium">{f.title}</div>
               <p className="text-[13.5px] text-muted">{f.body}</p>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 bg-accent transition-transform duration-200 group-hover:scale-x-100" />
             </div>
           ))}
         </div>
@@ -168,8 +173,25 @@ export default async function RootPage() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-6xl px-6 py-8 text-center text-[12.5px] text-faint">
-        Sendkar — built on the WhatsApp Business Platform (Meta Cloud API), not a reseller.
+      <section className="sk-cta-band relative px-6 py-20">
+        <div className="relative z-10 mx-auto max-w-2xl text-center">
+          <h2 className="text-[32px] font-semibold leading-tight tracking-tight sm:text-[40px]">
+            Your WhatsApp campaigns deserve better than a spreadsheet of phone numbers.
+          </h2>
+          <p className="mt-4 text-[15px] text-muted">Free to start, real Cloud API from day one, no card required.</p>
+          <Link href="/signup" className="sk-btn sk-btn-primary mt-7 inline-flex px-6 py-3 text-[15px]">Get started free →</Link>
+        </div>
+      </section>
+
+      <footer className="mx-auto max-w-6xl px-6 py-8">
+        <div className="flex flex-col items-center gap-3 border-t border-border pt-6 text-[12.5px] text-faint sm:flex-row sm:justify-between">
+          <span>© {new Date().getFullYear()} Signalpulse Technologies LLC — Sendkar is built on the WhatsApp Business Platform (Meta Cloud API), not a reseller.</span>
+          <div className="flex gap-4">
+            <Link href="/privacy" className="hover:text-muted">Privacy</Link>
+            <Link href="/terms" className="hover:text-muted">Terms</Link>
+            <Link href="/support" className="hover:text-muted">Support</Link>
+          </div>
+        </div>
       </footer>
     </div>
   );
