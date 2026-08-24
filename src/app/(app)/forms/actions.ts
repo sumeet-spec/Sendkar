@@ -77,7 +77,15 @@ export async function addWaFlowScreen(_prevState: unknown, formData: FormData) {
   if (flow.status === "published") return { error: "This form is already published — Meta doesn't allow editing a published flow's screens." };
 
   const screens = (flow.screens as WaFlowScreen[]) ?? [];
-  const newScreen: WaFlowScreen = { id: `SCREEN_${screens.length + 1}`, title, fields };
+  // Based on the highest existing numeric suffix, not screens.length — after
+  // deleting a middle screen, length-based numbering would collide with a
+  // screen id that still exists (delete SCREEN_2 from [1,2,3], add one back,
+  // length is 2 so length+1 is 3 — already taken by the surviving SCREEN_3).
+  const maxSuffix = screens.reduce((max, s) => {
+    const n = Number(s.id.replace("SCREEN_", ""));
+    return Number.isFinite(n) ? Math.max(max, n) : max;
+  }, 0);
+  const newScreen: WaFlowScreen = { id: `SCREEN_${maxSuffix + 1}`, title, fields };
 
   const { error } = await supabase.from("wa_flows").update({ screens: [...screens, newScreen], updated_at: new Date().toISOString() }).eq("id", waFlowId);
   if (error) return { error: error.message };
@@ -109,15 +117,19 @@ export async function publishWaFlow(waFlowId: string): Promise<{ success?: boole
   const screens = (flow.screens as WaFlowScreen[]) ?? [];
   if (screens.length === 0) return { error: "Add at least one screen first." };
 
+  let metaFlowId = flow.meta_flow_id;
   try {
-    let metaFlowId = flow.meta_flow_id;
     if (!metaFlowId) {
       metaFlowId = await createMetaFlow(workspace.whatsapp_waba_id, workspace.whatsapp_access_token, flow.name, flow.categories ?? ["OTHER"]);
+      // Persisted immediately, before upload/publish can fail — otherwise a
+      // retry after a JSON-validation error would call createMetaFlow again
+      // and orphan a duplicate draft Flow on Meta's side every time.
+      await supabase.from("wa_flows").update({ meta_flow_id: metaFlowId }).eq("id", waFlowId);
     }
     const flowJson = compileFlowJson(screens);
     await uploadFlowJson(metaFlowId, workspace.whatsapp_access_token, flowJson);
     await publishMetaFlow(metaFlowId, workspace.whatsapp_access_token);
-    await supabase.from("wa_flows").update({ meta_flow_id: metaFlowId, status: "published", error_message: null }).eq("id", waFlowId);
+    await supabase.from("wa_flows").update({ status: "published", error_message: null }).eq("id", waFlowId);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Publish failed.";
     await supabase.from("wa_flows").update({ status: "error", error_message: message }).eq("id", waFlowId);
