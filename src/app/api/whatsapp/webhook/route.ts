@@ -13,6 +13,7 @@ import { isStatusRegression } from "@/lib/messageStatus";
 import { isWithinBusinessHours } from "@/lib/businessHours";
 import { pickAssignee } from "@/lib/assignment";
 import { enrollContactInSequence } from "@/lib/sequences";
+import { parseCallWebhookEvent } from "@/lib/calling";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -72,6 +73,10 @@ interface WebhookPayload {
           recipient_id?: string;
           errors?: Array<{ message?: string }>;
         }>;
+        // Call events (WhatsApp Calling API) — field name/shape per Meta's
+        // documented "calls" webhook object; unverified against a live
+        // calling-enabled WABA since none exists to test against yet.
+        calls?: Array<{ id?: string; from?: string; status?: string; timestamp?: string }>;
         // message_template_status_update fields
         event?: string;
         message_template_name?: string;
@@ -261,6 +266,31 @@ export async function POST(request: NextRequest) {
       });
 
       if (!workspaceId) continue; // event for a phone number we don't recognize — nothing more to do
+
+      // ── Call events — log-only for now; see lib/calling.ts for why placing
+      // or answering a call with real audio isn't implemented. ─────────────
+      for (const call of parseCallWebhookEvent(value)) {
+        const { data: contact } = await admin
+          .from("contacts")
+          .select("id")
+          .eq("workspace_id", workspaceId)
+          .eq("phone", call.from)
+          .maybeSingle();
+
+        if (call.status === "ringing") {
+          await admin.from("calls").insert({
+            workspace_id: workspaceId,
+            contact_id: contact?.id ?? null,
+            direction: "inbound",
+            status: "ringing",
+            meta_call_id: call.callId,
+            started_at: call.timestamp,
+          });
+        } else {
+          const mappedStatus = call.status === "connected" ? "connected" : call.status === "missed" ? "missed" : "ended";
+          await admin.from("calls").update({ status: mappedStatus, ended_at: call.timestamp }).eq("meta_call_id", call.callId);
+        }
+      }
 
       // ── Delivery status updates ────────────────────────────────────────────
       for (const status of value.statuses ?? []) {

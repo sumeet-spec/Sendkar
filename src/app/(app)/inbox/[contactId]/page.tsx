@@ -8,6 +8,7 @@ import { NotesPanel } from "./NotesPanel";
 import { SummaryPanel } from "./SummaryPanel";
 import { OrdersPanel } from "./OrdersPanel";
 import { RealtimeRefresher } from "./RealtimeRefresher";
+import { CallPermissionButton } from "./CallPermissionButton";
 
 export default async function ThreadPage({ params }: { params: Promise<{ contactId: string }> }) {
   const { contactId } = await params;
@@ -78,6 +79,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
           <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">Assigned to</div>
           <AssigneeSelect contactId={contactId} members={members} assigneeId={contact.assignee_id} />
         </div>
+        {workspace.calling_enabled && <CallPermissionButton phone={contact.phone} />}
         <SummaryPanel contactId={contactId} />
         <OrdersPanel contactId={contactId} orders={orders ?? []} />
         <NotesPanel contactId={contactId} notes={notesWithAuthor} />

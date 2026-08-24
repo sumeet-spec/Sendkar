@@ -27,6 +27,7 @@ const NAV_KEYS = [
   { href: "/forms", key: "forms", icon: "form" },
   { href: "/automations", key: "automations", icon: "bolt" },
   { href: "/sequences", key: "sequences", icon: "flow" },
+  { href: "/segments", key: "segments", icon: "users" },
   { href: "/webhooks", key: "webhooks", icon: "webhook" },
   { href: "/settings/api-keys", key: "apiKeys", icon: "key" },
   { href: "/links", key: "linksWidget", icon: "link" },
@@ -38,6 +39,7 @@ const SETTINGS_NAV_KEYS = [
   { href: "/settings/team", key: "team" },
   { href: "/settings/business-hours", key: "businessHours" },
   { href: "/settings/payments", key: "payments" },
+  { href: "/settings/calling", key: "calling" },
   { href: "/settings/canned-responses", key: "cannedResponses" },
   { href: "/settings/integrations", key: "integrations" },
 ] as const satisfies ReadonlyArray<{ href: string; key: keyof Dictionary["nav"] }>;

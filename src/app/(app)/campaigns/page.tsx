@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { NewCampaignForm } from "./NewCampaignForm";
+import { AiStrategistPanel } from "./AiStrategistPanel";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export default async function CampaignsPage() {
   const supabase = await createClient();
   const dict = getDictionary(await getCurrentLanguage()).campaigns;
 
-  const [{ data: campaigns }, { data: templates }, { data: numbers }] = await Promise.all([
+  const [{ data: campaigns }, { data: templates }, { data: numbers }, { data: segments }] = await Promise.all([
     supabase
       .from("campaigns")
       .select("id, name, status, created_at, templates(name, language)")
@@ -34,17 +35,24 @@ export default async function CampaignsPage() {
       .select("id, label")
       .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("segments")
+      .select("id, name")
+      .eq("workspace_id", workspace.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">{dict.title}</h1>
-        <NewCampaignForm templates={templates ?? []} numbers={numbers ?? []} />
+        <NewCampaignForm templates={templates ?? []} numbers={numbers ?? []} segments={segments ?? []} />
       </div>
       {(templates?.length ?? 0) === 0 && (
         <p className="mb-4 text-sm text-muted">Add a template first before you can create a campaign.</p>
       )}
+
+      <AiStrategistPanel />
 
       <div className="flex flex-col gap-3">
         {(campaigns ?? []).map((c) => {

@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { CampaignControls } from "./StartButton";
 import { TestSendForm } from "./TestSendForm";
 import { notFound } from "next/navigation";
+import { estimateCampaignCostInr, type TemplateCategory } from "@/lib/metaRates";
 
 const RECIPIENT_STATUS_STYLE: Record<string, string> = {
   delivered: "border-accent text-accent",
@@ -20,7 +21,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("*, templates(name, language, meta_template_name)")
+    .select("*, templates(name, language, meta_template_name, category)")
     .eq("id", id)
     .eq("workspace_id", workspace.id)
     .maybeSingle();
@@ -47,11 +48,35 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   ]);
   const revenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
 
-  const template = campaign.templates as { name?: string; language?: string; meta_template_name?: string } | null;
+  const template = campaign.templates as { name?: string; language?: string; meta_template_name?: string; category?: string } | null;
   const counts = (recipients ?? []).reduce<Record<string, number>>((acc, r) => {
     acc[r.status] = (acc[r.status] ?? 0) + 1;
     return acc;
   }, {});
+
+  // ── Cost transparency — an estimate before sending (draft), or actual
+  // spend so far (once it's snapshotted real recipients). Neither Wati nor
+  // Interakt show this inline on a campaign; it's shown here specifically
+  // because Meta starts charging for service messages Oct 1, 2026 and
+  // marketing/utility/authentication rates already apply today. ──────────
+  const { data: rateRows } = await supabase.from("meta_rate_card").select("category, price_inr").eq("country_code", "IN");
+  let audienceCount = 0;
+  if (campaign.status === "draft") {
+    let countQuery = supabase.from("contacts").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id).eq("opted_out", false);
+    if (campaign.template_group) {
+      countQuery = groupLanguages.length > 0 ? countQuery.in("language", groupLanguages) : countQuery;
+    } else if (template?.language) {
+      countQuery = countQuery.eq("language", template.language);
+    }
+    if (campaign.segment_tag) countQuery = countQuery.contains("tags", [campaign.segment_tag]);
+    const { count } = await countQuery;
+    audienceCount = count ?? 0;
+  } else {
+    audienceCount = recipients?.length ?? 0;
+  }
+  const estimatedCost = template?.category
+    ? estimateCampaignCostInr(audienceCount, template.category as TemplateCategory, rateRows ?? [])
+    : 0;
 
   return (
     <div className="max-w-4xl">
@@ -72,6 +97,21 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           <CampaignControls campaignId={campaign.id} status={campaign.status} />
         </div>
       </div>
+
+      {audienceCount > 0 && (
+        <div className="sk-card mb-6 flex items-center justify-between p-4">
+          <div>
+            <div className="text-[11px] font-medium uppercase tracking-wide text-faint">
+              {campaign.status === "draft" ? "Estimated Meta cost before you send" : "Meta cost so far"}
+            </div>
+            <p className="mt-1 text-[12px] text-faint">
+              {audienceCount.toLocaleString("en-IN")} recipient{audienceCount === 1 ? "" : "s"} × {template?.category ?? "—"} rate — India,
+              checked against Interakt&apos;s published card. Not your Sendkar subscription fee, this is what Meta itself charges.
+            </p>
+          </div>
+          <div className="text-xl font-semibold text-accent">₹{estimatedCost.toLocaleString("en-IN")}</div>
+        </div>
+      )}
 
       <div className="mb-6 grid grid-cols-5 gap-3">
         {["queued", "sent", "delivered", "read", "failed"].map((s) => (

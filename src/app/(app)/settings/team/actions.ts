@@ -50,3 +50,16 @@ export async function removeInvite(inviteId: string) {
   await supabase.from("workspace_invites").delete().eq("id", inviteId);
   revalidatePath("/settings/team");
 }
+
+export async function toggleAutoAssignment(_prevState: unknown, formData: FormData) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const enabled = formData.get("enabled") === "on";
+  const supabase = await createClient();
+  const { error } = await supabase.from("workspaces").update({ auto_assignment_enabled: enabled }).eq("id", workspace.id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings/team");
+  return { success: true };
+}

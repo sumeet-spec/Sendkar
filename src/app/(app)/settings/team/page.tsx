@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
 import { InviteForm } from "./InviteForm";
+import { AutoAssignmentToggle } from "./AutoAssignmentToggle";
 
 export default async function TeamPage() {
   const workspace = await getCurrentWorkspace();
@@ -31,6 +32,10 @@ export default async function TeamPage() {
       </div>
 
       <InviteForm />
+
+      <div className="mt-4">
+        <AutoAssignmentToggle enabled={workspace.auto_assignment_enabled} />
+      </div>
 
       <div className="sk-card mt-6 overflow-hidden">
         <div className="border-b border-border px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">Members</div>

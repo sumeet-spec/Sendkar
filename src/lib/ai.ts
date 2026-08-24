@@ -175,6 +175,64 @@ export async function suggestAutomationsFromHistory(inboundBodies: string[]): Pr
   return parsed.slice(0, 4);
 }
 
+/**
+ * AI campaign strategist — composes a segment + template + send-time
+ * suggestion as ONE unit from a plain-English goal, instead of drafting
+ * just the template text (generateTemplateDraft above) and leaving the
+ * audience and timing to the business owner to figure out separately.
+ * Neither Wati's nor Interakt's AI copilots compose all three together.
+ */
+export interface CampaignStrategyDraft {
+  segmentName: string;
+  segmentConditions: Array<{ field: "tag" | "language" | "source" | "sentiment"; value: string }>;
+  template: GeneratedTemplateDraft;
+  suggestedSendTime: string; // free text, e.g. "Weekday evening, 6-8pm IST"
+  rationale: string;
+}
+
+export async function draftCampaignStrategy(
+  goal: string,
+  context: { availableTags: string[]; availableLanguages: string[] },
+): Promise<CampaignStrategyDraft> {
+  const prompt = `A WhatsApp business owner describes a campaign goal in plain English. Compose a complete campaign plan: who to target, what to say, and when to send it.
+
+Goal: "${goal}"
+
+Contacts in this workspace carry these tags (pick from these, or propose a sensible new one if none fit): ${context.availableTags.join(", ") || "(none yet)"}
+Languages present: ${context.availableLanguages.join(", ") || "(none yet)"}
+
+Respond with ONLY strict JSON, no markdown fences, no prose, in this exact shape:
+{
+  "segmentName": "short name for this audience",
+  "segmentConditions": [{"field": "tag" | "language" | "source" | "sentiment", "value": "string"}] (0-3 conditions, AND-combined; omit entirely if the goal is genuinely "everyone"),
+  "template": {"headerType": "none" | "text", "headerText": "string or omit", "bodyText": "string with {{1}}, {{2}}... for variables", "footerText": "string or omit", "quickReplies": ["string", ...] (0-3, omit if none)},
+  "suggestedSendTime": "one short phrase, e.g. 'Weekday evening, 6-8pm IST'",
+  "rationale": "1-2 sentences on why this audience/timing fits the goal"
+}`;
+
+  const raw = await callClaude(prompt, 700);
+  let parsed: CampaignStrategyDraft;
+  try {
+    parsed = JSON.parse(raw.trim().replace(/^```(json)?/i, "").replace(/```$/, "").trim());
+  } catch {
+    throw new Error("AI returned a plan that wasn't valid JSON — try rephrasing the goal.");
+  }
+  if (!parsed.template?.bodyText) throw new Error("AI plan was missing the template body.");
+  return {
+    segmentName: parsed.segmentName || "AI segment",
+    segmentConditions: Array.isArray(parsed.segmentConditions) ? parsed.segmentConditions.slice(0, 3) : [],
+    template: {
+      headerType: parsed.template.headerType === "text" ? "text" : "none",
+      headerText: parsed.template.headerText,
+      bodyText: parsed.template.bodyText,
+      footerText: parsed.template.footerText,
+      quickReplies: Array.isArray(parsed.template.quickReplies) ? parsed.template.quickReplies.slice(0, 3) : [],
+    },
+    suggestedSendTime: parsed.suggestedSendTime || "",
+    rationale: parsed.rationale || "",
+  };
+}
+
 /** A quick "catch me up" summary of a thread — for an agent picking up a conversation cold, or a handoff between team members. */
 export async function summarizeThread(thread: ThreadMessage[], contactName: string | null): Promise<string> {
   const transcript = thread

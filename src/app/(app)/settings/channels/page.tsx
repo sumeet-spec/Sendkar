@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
 import { WhatsAppForm, InstagramForm, MessengerForm } from "./ChannelForms";
 import { AdditionalNumbers } from "./AdditionalNumbers";
+import { EmbeddedSignupButton } from "./EmbeddedSignupButton";
 
 export default async function ChannelsPage() {
   const workspace = await getCurrentWorkspace();
@@ -28,6 +29,7 @@ export default async function ChannelsPage() {
     <div className="max-w-2xl">
       <h1 className="mb-6 text-xl font-semibold tracking-tight">Channels</h1>
       <div className="flex flex-col gap-5">
+        <EmbeddedSignupButton workspaceId={workspace.id} />
         <WhatsAppForm workspace={workspace} />
         {qualityHistory && qualityHistory.length > 0 && (
           <div className="sk-card overflow-hidden">
