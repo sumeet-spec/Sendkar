@@ -27,12 +27,14 @@ export async function connectShopify(_prevState: unknown, formData: FormData) {
   redirect(url);
 }
 
-export async function disconnectShopify() {
+export async function disconnectShopify(): Promise<{ error?: string }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return;
+  if (!workspace) return { error: "No workspace found." };
   const supabase = await createClient();
-  await supabase.from("workspaces").update({ shopify_shop_domain: null, shopify_access_token: null }).eq("id", workspace.id);
+  const { error } = await supabase.from("workspaces").update({ shopify_shop_domain: null, shopify_access_token: null }).eq("id", workspace.id);
+  if (error) return { error: error.message };
   revalidatePath("/settings/integrations");
+  return {};
 }
 
 export async function setOrderConfirmationTemplate(_prevState: unknown, formData: FormData) {

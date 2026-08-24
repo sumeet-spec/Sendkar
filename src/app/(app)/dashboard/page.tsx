@@ -21,7 +21,11 @@ export default async function DashboardPage() {
   const total = recipientStats?.length ?? 0;
   const delivered = recipientStats?.filter((r) => r.status === "delivered" || r.status === "read").length ?? 0;
   const failed = recipientStats?.filter((r) => r.status === "failed").length ?? 0;
-  const deliveryRate = total > 0 ? Math.round((delivered / total) * 100) : null;
+  // Out of recipients actually sent to so far, not the whole audience —
+  // counting still-queued ones in the denominator understates the rate for
+  // any campaign the cron hasn't finished working through yet.
+  const concluded = recipientStats?.filter((r) => r.status !== "queued").length ?? 0;
+  const deliveryRate = concluded > 0 ? Math.round((delivered / concluded) * 100) : null;
 
   const totalRevenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
   const attributedRevenue = (orders ?? []).filter((o) => o.attributed_campaign_id).reduce((sum, o) => sum + Number(o.total_amount), 0);

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
+import { INVITE_EXPIRY_DAYS } from "./constants";
 
 export async function acceptInvite(token: string) {
   const supabase = await createClient();
@@ -19,12 +20,15 @@ export async function acceptInvite(token: string) {
 
   const { data: invite } = await admin
     .from("workspace_invites")
-    .select("id, workspace_id, role, email, accepted_at")
+    .select("id, workspace_id, role, email, accepted_at, created_at")
     .eq("token", token)
     .maybeSingle();
 
   if (!invite) return { error: "This invite link is invalid." };
   if (invite.accepted_at) return { error: "This invite has already been used." };
+  if (Date.now() - new Date(invite.created_at).getTime() > INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000) {
+    return { error: "This invite link has expired — ask for a new one." };
+  }
 
   const { error: memberError } = await admin
     .from("workspace_members")

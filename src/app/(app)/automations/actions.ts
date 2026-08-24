@@ -33,12 +33,19 @@ export async function createAutomationFromSuggestion(suggestion: AutomationSugge
   if (!workspace) return { error: "No workspace found." };
 
   const supabase = await createClient();
+  // Starts inactive, deliberately: the suggestion's reply body is compiled
+  // from raw contact-message history by an AI that never distinguishes
+  // customer text from instructions, so a crafted repeated message could
+  // in principle steer what gets suggested. Requiring a second, explicit
+  // toggle in the Automations list (where it sits next to every other rule)
+  // means one inattentive click can't put a bad suggestion live immediately.
   const { error } = await supabase.from("automations").insert({
     workspace_id: workspace.id,
     name: suggestion.triggerKeyword,
     trigger_keyword: suggestion.triggerKeyword.toLowerCase(),
     match_type: suggestion.matchType,
     reply_body: suggestion.replyBody,
+    is_active: false,
   });
   if (error) return { error: error.message };
 

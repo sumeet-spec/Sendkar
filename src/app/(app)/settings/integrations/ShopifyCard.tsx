@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { connectShopify, disconnectShopify } from "./actions";
 
 export function ShopifyCard({ connected, shopDomain, configured }: { connected: boolean; shopDomain: string | null; configured: boolean }) {
   const [state, formAction, pending] = useActionState(connectShopify, null);
   const [disconnectPending, startDisconnect] = useTransition();
+  const [disconnectError, setDisconnectError] = useState<string | null>(null);
 
   if (!configured) {
     return (
@@ -26,11 +27,18 @@ export function ShopifyCard({ connected, shopDomain, configured }: { connected: 
         <p className="mb-2 font-mono text-[12.5px] text-faint">{shopDomain}</p>
         <button
           disabled={disconnectPending}
-          onClick={() => startDisconnect(() => disconnectShopify())}
+          onClick={() =>
+            startDisconnect(async () => {
+              setDisconnectError(null);
+              const result = await disconnectShopify();
+              if (result.error) setDisconnectError(result.error);
+            })
+          }
           className="text-xs text-faint hover:text-danger"
         >
           Disconnect
         </button>
+        {disconnectError && <p className="mt-1.5 text-[12px] text-danger">{disconnectError}</p>}
       </div>
     );
   }

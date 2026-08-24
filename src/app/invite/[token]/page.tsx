@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { acceptInvite } from "./actions";
+import { INVITE_EXPIRY_DAYS } from "./constants";
 import Link from "next/link";
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
@@ -9,11 +10,13 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const supabase = await createClient();
 
   const [{ data: invite }, { data: userData }] = await Promise.all([
-    admin.from("workspace_invites").select("email, role, accepted_at, workspaces(name)").eq("token", token).maybeSingle(),
+    admin.from("workspace_invites").select("email, role, accepted_at, created_at, workspaces(name)").eq("token", token).maybeSingle(),
     supabase.auth.getUser(),
   ]);
 
-  if (!invite) {
+  const isExpired = Boolean(invite && new Date().getTime() - new Date(invite.created_at).getTime() > INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+  if (!invite || isExpired) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="sk-card max-w-sm p-8 text-center">
