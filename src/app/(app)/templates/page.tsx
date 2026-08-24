@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { NewTemplateForm } from "./NewTemplateForm";
+import { explainRejection } from "@/lib/templateRejectionReasons";
 
 const LANGUAGE_LABEL: Record<string, string> = {
   hi: "Hindi", mr: "Marathi", ta: "Tamil", te: "Telugu", kn: "Kannada", en: "English",
@@ -54,13 +55,24 @@ export default async function TemplatesPage() {
             </div>
             <div className="font-mono text-[12.5px] text-faint">{t.meta_template_name}</div>
             {t.body_preview && <p className="mt-2 text-[13px] text-muted line-clamp-3">{t.body_preview}</p>}
-            {t.status === "rejected" && t.rejection_reason && (
-              <p className="mt-2 text-[12px] text-danger">{t.rejection_reason}</p>
+            {t.status === "rejected" && (() => {
+              const { plainLanguage, fix } = explainRejection(t.rejection_reason);
+              return (
+                <div className="mt-2 rounded-md border border-danger/30 bg-danger/5 p-2.5">
+                  <p className="text-[12px] font-medium text-danger">{plainLanguage}</p>
+                  <p className="mt-1 text-[11.5px] text-muted">{fix}</p>
+                </div>
+              );
+            })()}
+            {t.status === "pending" && (
+              <p className="mt-2 text-[11.5px] text-faint">Under Meta review — usually resolves within a few hours, sometimes up to 48h. This updates automatically, no need to refresh.</p>
             )}
           </div>
         ))}
         {(!templates || templates.length === 0) && (
-          <p className="col-span-2 py-8 text-center text-muted">No templates yet.</p>
+          <p className="col-span-2 py-8 text-center text-muted">
+            No templates yet — every campaign needs at least one approved template. Click &quot;New template&quot; above to submit your first one.
+          </p>
         )}
       </div>
     </div>

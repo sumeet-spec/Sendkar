@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { isWhatsAppConfigured } from "@/lib/whatsapp";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { ActivationChecklist } from "./ActivationChecklist";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -11,7 +12,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const t = getDictionary(await getCurrentLanguage()).dashboard;
 
-  const [{ count: contactCount }, { count: campaignCount }, { data: recipientStats }, { data: orders }] = await Promise.all([
+  const [{ count: contactCount }, { count: campaignCount }, { data: recipientStats }, { data: orders }, { count: approvedTemplateCount }] = await Promise.all([
     supabase.from("contacts").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
     supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
     supabase
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
       .select("status, campaign_id, campaigns!inner(workspace_id)")
       .eq("campaigns.workspace_id", workspace.id),
     supabase.from("orders").select("contact_id, total_amount, attributed_campaign_id, contacts(phone, name)").eq("workspace_id", workspace.id),
+    supabase.from("templates").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id).eq("status", "approved"),
   ]);
 
   const total = recipientStats?.length ?? 0;
@@ -59,6 +61,16 @@ export default async function DashboardPage() {
           </p>
         </div>
       )}
+
+      <ActivationChecklist
+        title={t.checklistTitle}
+        steps={[
+          { label: t.checklistConnect, done: configured, href: "/onboarding" },
+          { label: t.checklistTemplate, done: (approvedTemplateCount ?? 0) > 0, href: "/templates" },
+          { label: t.checklistContacts, done: (contactCount ?? 0) > 0, href: "/contacts" },
+          { label: t.checklistCampaign, done: (campaignCount ?? 0) > 0, href: "/campaigns" },
+        ]}
+      />
 
       <div className="grid grid-cols-4 gap-4">
         <div className="sk-card p-5">

@@ -36,6 +36,8 @@ export interface Dictionary {
     title: string; whatsappConnected: string; whatsappNotConnected: string; noWhatsappBanner: string;
     contacts: string; campaigns: string; messagesSent: string; deliveryRate: string; failedSuffix: string;
     revenueTracked: string; fromCampaign: string; topCustomers: string; messagingTier: string;
+    checklistTitle: string; checklistConnect: string; checklistTemplate: string; checklistContacts: string;
+    checklistCampaign: string;
   };
   contacts: {
     title: string; searchPlaceholder: string; search: string; exportCsv: string; total: string;
@@ -69,6 +71,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       contacts: "Contacts", campaigns: "Campaigns", messagesSent: "Messages sent", deliveryRate: "Delivery rate",
       failedSuffix: "failed", revenueTracked: "Revenue tracked", fromCampaign: "From a campaign",
       topCustomers: "Top customers", messagingTier: "Messaging tier",
+      checklistTitle: "Get to your first message", checklistConnect: "Connect your WhatsApp Business number",
+      checklistTemplate: "Get one template approved", checklistContacts: "Import your contacts",
+      checklistCampaign: "Send your first campaign",
     },
     contacts: {
       title: "Contacts", searchPlaceholder: "Search by phone or name…", search: "Search", exportCsv: "Export CSV",
@@ -100,6 +105,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       contacts: "संपर्क", campaigns: "कैंपेन", messagesSent: "भेजे गए मैसेज", deliveryRate: "डिलीवरी दर",
       failedSuffix: "असफल", revenueTracked: "दर्ज की गई कमाई", fromCampaign: "किसी कैंपेन से",
       topCustomers: "टॉप ग्राहक", messagingTier: "मैसेजिंग टियर",
+      checklistTitle: "अपना पहला मैसेज भेजने तक पहुँचें", checklistConnect: "अपना WhatsApp Business नंबर जोड़ें",
+      checklistTemplate: "एक टेम्पलेट अप्रूव कराएं", checklistContacts: "अपने संपर्क इम्पोर्ट करें",
+      checklistCampaign: "अपना पहला कैंपेन भेजें",
     },
     contacts: {
       title: "संपर्क", searchPlaceholder: "फ़ोन या नाम से खोजें…", search: "खोजें", exportCsv: "CSV एक्सपोर्ट करें",
@@ -131,6 +139,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       contacts: "संपर्क", campaigns: "कॅम्पेन", messagesSent: "पाठवलेले मेसेज", deliveryRate: "डिलिव्हरी दर",
       failedSuffix: "अयशस्वी", revenueTracked: "नोंदवलेली कमाई", fromCampaign: "एका कॅम्पेनमधून",
       topCustomers: "टॉप ग्राहक", messagingTier: "मेसेजिंग टियर",
+      checklistTitle: "तुमच्या पहिल्या मेसेजपर्यंत पोहोचा", checklistConnect: "तुमचा WhatsApp Business नंबर जोडा",
+      checklistTemplate: "एक टेम्पलेट मंजूर करा", checklistContacts: "तुमचे संपर्क इम्पोर्ट करा",
+      checklistCampaign: "तुमचा पहिला कॅम्पेन पाठवा",
     },
     contacts: {
       title: "संपर्क", searchPlaceholder: "फोन किंवा नावाने शोधा…", search: "शोधा", exportCsv: "CSV एक्सपोर्ट करा",
@@ -162,6 +173,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       contacts: "தொடர்புகள்", campaigns: "பிரச்சாரங்கள்", messagesSent: "அனுப்பிய செய்திகள்", deliveryRate: "விநியோக விகிதம்",
       failedSuffix: "தோல்வி", revenueTracked: "பதிவான வருவாய்", fromCampaign: "ஒரு பிரச்சாரத்திலிருந்து",
       topCustomers: "சிறந்த வாடிக்கையாளர்கள்", messagingTier: "மெசேஜிங் அடுக்கு",
+      checklistTitle: "உங்கள் முதல் செய்தியை அடையுங்கள்", checklistConnect: "உங்கள் WhatsApp Business எண்ணை இணைக்கவும்",
+      checklistTemplate: "ஒரு வார்ப்புருவை அங்கீகரிக்கச் செய்யவும்", checklistContacts: "உங்கள் தொடர்புகளை இறக்கவும்",
+      checklistCampaign: "உங்கள் முதல் பிரச்சாரத்தை அனுப்பவும்",
     },
     contacts: {
       title: "தொடர்புகள்", searchPlaceholder: "எண் அல்லது பெயரால் தேடவும்…", search: "தேடு", exportCsv: "CSV ஏற்றுமதி",
@@ -193,6 +207,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       contacts: "పరిచయాలు", campaigns: "క్యాంపెయిన్‌లు", messagesSent: "పంపిన మెసేజ్‌లు", deliveryRate: "డెలివరీ రేటు",
       failedSuffix: "విఫలమైంది", revenueTracked: "నమోదైన ఆదాయం", fromCampaign: "ఒక క్యాంపెయిన్ నుండి",
       topCustomers: "టాప్ కస్టమర్‌లు", messagingTier: "మెసేజింగ్ టైర్",
+      checklistTitle: "మీ మొదటి మెసేజ్‌కి చేరుకోండి", checklistConnect: "మీ WhatsApp Business నంబర్‌ను కనెక్ట్ చేయండి",
+      checklistTemplate: "ఒక టెంప్లేట్‌ను ఆమోదించండి", checklistContacts: "మీ పరిచయాలను దిగుమతి చేయండి",
+      checklistCampaign: "మీ మొదటి క్యాంపెయిన్‌ను పంపండి",
     },
     contacts: {
       title: "పరిచయాలు", searchPlaceholder: "ఫోన్ లేదా పేరుతో వెతకండి…", search: "వెతకండి", exportCsv: "CSV ఎగుమతి",
@@ -224,6 +241,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       contacts: "ಸಂಪರ್ಕಗಳು", campaigns: "ಕ್ಯಾಂಪೇನ್‌ಗಳು", messagesSent: "ಕಳುಹಿಸಿದ ಸಂದೇಶಗಳು", deliveryRate: "ಡೆಲಿವರಿ ದರ",
       failedSuffix: "ವಿಫಲವಾಗಿದೆ", revenueTracked: "ದಾಖಲಾದ ಆದಾಯ", fromCampaign: "ಒಂದು ಕ್ಯಾಂಪೇನ್‌ನಿಂದ",
       topCustomers: "ಟಾಪ್ ಗ್ರಾಹಕರು", messagingTier: "ಮೆಸೇಜಿಂಗ್ ಟಯರ್",
+      checklistTitle: "ನಿಮ್ಮ ಮೊದಲ ಸಂದೇಶವನ್ನು ತಲುಪಿ", checklistConnect: "ನಿಮ್ಮ WhatsApp Business ಸಂಖ್ಯೆಯನ್ನು ಸಂಪರ್ಕಿಸಿ",
+      checklistTemplate: "ಒಂದು ಟೆಂಪ್ಲೇಟ್ ಅನುಮೋದನೆ ಪಡೆಯಿರಿ", checklistContacts: "ನಿಮ್ಮ ಸಂಪರ್ಕಗಳನ್ನು ಇಂಪೋರ್ಟ್ ಮಾಡಿ",
+      checklistCampaign: "ನಿಮ್ಮ ಮೊದಲ ಕ್ಯಾಂಪೇನ್ ಕಳುಹಿಸಿ",
     },
     contacts: {
       title: "ಸಂಪರ್ಕಗಳು", searchPlaceholder: "ಫೋನ್ ಅಥವಾ ಹೆಸರಿನಿಂದ ಹುಡುಕಿ…", search: "ಹುಡುಕಿ", exportCsv: "CSV ಎಕ್ಸ್‌ಪೋರ್ಟ್",

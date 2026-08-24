@@ -93,6 +93,14 @@ export function Sidebar({
         <span className="text-[15px] font-semibold tracking-tight">Sendkar</span>
       </div>
 
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("sk:open-command-palette"))}
+        className="mt-2 flex items-center justify-between rounded-md border border-border px-2.5 py-1.5 text-[12.5px] text-faint hover:border-accent-dim hover:text-muted"
+      >
+        <span>Jump to…</span>
+        <span className="font-mono text-[11px]">⌘K</span>
+      </button>
+
       <nav className="mt-4 flex flex-col gap-0.5">
         {NAV_KEYS.map((item) => {
           const active = pathname.startsWith(item.href);
