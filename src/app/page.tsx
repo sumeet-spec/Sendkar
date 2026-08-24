@@ -4,12 +4,45 @@ import Link from "next/link";
 import { PLAN_LIMITS } from "@/lib/plans";
 import { Logo } from "@/components/Logo";
 import { Reveal } from "@/components/Reveal";
+import { StoryCarousel, type StoryMoment } from "@/components/StoryCarousel";
 
-const CHAT_DEMO = [
-  { side: "in" as const, text: "Hi! Is the Diwali set still available in medium?" },
-  { side: "out" as const, text: "Yes — ₹1,899, ships tomorrow if you order today 🎉" },
-  { side: "in" as const, text: "Perfect, sending payment now" },
-] as const;
+const STORY_MOMENTS: StoryMoment[] = [
+  {
+    emoji: "📸",
+    tag: "From an Instagram ad — tagged automatically",
+    lines: [{ side: "in", text: "Hi! Is the Diwali set still available in medium?" }],
+  },
+  {
+    emoji: "🌐",
+    tag: "Auto-sent in her language — one campaign, not five",
+    lines: [{ side: "out", text: "ஆமாம், medium available — ₹1,899, ships tomorrow 🎉" }],
+  },
+  {
+    emoji: "🌙",
+    tag: "Auto-reply — outside business hours",
+    lines: [
+      { side: "in", text: "Are you open? 🙏" },
+      { side: "out", text: "We're closed till 10am — here's what we sell 🧵" },
+    ],
+  },
+  { emoji: "🛍️", tag: "Real catalog, sent in-chat", card: { title: "Kanjivaram Silk — Diwali Edition", price: "₹4,200" } },
+  {
+    emoji: "⏰",
+    tag: "2 hours later — cart recovery, automatic",
+    lines: [{ side: "out", text: "Still want this? Here's your payment link 💳" }],
+  },
+  { emoji: "💳", tag: "Razorpay link, right in the thread", card: { title: "Pay Priya Textiles", price: "₹4,200", cta: true } },
+  {
+    emoji: "🔄",
+    tag: "Shopify order synced — no one typed this",
+    lines: [{ side: "out", text: "Paid ✅ — order confirmed, shipping tomorrow 🎉" }],
+  },
+  {
+    emoji: "📊",
+    tag: "Traced back to that one ad — not just delivered/read",
+    lines: [{ side: "out", text: "₹4,200 from the Diwali Collection Instagram ad ✅" }],
+  },
+];
 
 const MORE_BUILT = [
   { title: "One campaign, every language", body: "Group translated templates together — Sendkar auto-sends each contact their own-language version from a single broadcast." },
@@ -45,9 +78,13 @@ export default async function RootPage() {
         </nav>
       </header>
 
-      <section className="relative px-6 pb-28 pt-16">
-        <div className="sk-grid-bg" />
+      <section className="relative overflow-hidden px-6 pb-28 pt-16">
+        <video className="sk-hero-video" autoPlay muted loop playsInline poster="/hero/hero-poster.jpg">
+          <source src="/hero/hero-bg-web.mp4" type="video/mp4" />
+        </video>
+        <div className="sk-hero-fade" />
         <div className="sk-glow" />
+        <div className="sk-glow-core" />
 
         <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <div>
@@ -60,8 +97,9 @@ export default async function RootPage() {
               <span className="text-accent">half the price.</span>
             </h1>
             <p className="mt-6 max-w-md text-[16px] leading-relaxed text-muted">
-              Campaigns, a shared team inbox, chatbot flows, and a product catalog on Meta&apos;s real Cloud API — plus
-              revenue attribution and a Claude connector no other WhatsApp platform ships.
+              This is Priya Textiles&apos; actual order, start to finish — an Instagram ad, a reply in her
+              customer&apos;s own language, a payment collected without leaving WhatsApp, and revenue traced back to
+              the ad that earned it.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/signup" className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">Get started free →</Link>
@@ -85,27 +123,9 @@ export default async function RootPage() {
             </div>
           </div>
 
-          <div className="sk-phone">
-            <div className="sk-phone-notch" />
-            <div className="sk-phone-header">
-              <div className="sk-phone-avatar" />
-              <div>
-                <div className="text-[13px] font-medium">Meera Textiles</div>
-                <div className="text-[11px] text-faint">via Sendkar</div>
-              </div>
-            </div>
-            <div className="sk-phone-body">
-              {CHAT_DEMO.map((m, i) => (
-                <div key={i} className={`sk-chat-bubble ${m.side}`} style={{ animationDelay: `${0.3 + i * 0.55}s` }}>
-                  {m.text}
-                </div>
-              ))}
-              <div className="sk-typing" style={{ animationDelay: `${0.3 + CHAT_DEMO.length * 0.55}s` }}>
-                <span />
-                <span />
-                <span />
-              </div>
-            </div>
+          <div>
+            <StoryCarousel moments={STORY_MOMENTS} name="Priya Textiles" subtitle="via Sendkar" />
+            <p className="mt-4 text-center text-[11.5px] text-faint">Priya Textiles&apos; actual order — one ad to one confirmed sale, every step automatic.</p>
           </div>
         </div>
       </section>
@@ -116,8 +136,8 @@ export default async function RootPage() {
             <div className="sk-eyebrow mb-4">Revenue, not just delivery</div>
             <h2 className="text-[28px] font-semibold leading-tight tracking-tight">See which campaign actually made you money.</h2>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
-              WATI and Interakt stop at delivered/read. Sendkar links real sales — logged by hand or synced from
-              Shopify — back to the campaign that drove them, with a 7-day attribution window.
+              WATI and Interakt stop at delivered/read. Sendkar links Priya&apos;s sale — synced straight from
+              Shopify — back to the exact Instagram ad that drove it, with a 7-day attribution window.
             </p>
           </div>
           <div className="sk-window">
@@ -128,20 +148,24 @@ export default async function RootPage() {
             <div className="p-5">
               <div className="grid grid-cols-2 gap-3">
                 <div className="sk-card p-4">
-                  <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue tracked</div>
-                  <div className="text-xl font-semibold">₹18,540</div>
+                  <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue this month</div>
+                  <div className="text-xl font-semibold">₹1,84,500</div>
                 </div>
                 <div className="sk-card p-4">
-                  <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">From a campaign</div>
-                  <div className="text-xl font-semibold text-accent">₹11,200</div>
+                  <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">From that Instagram ad</div>
+                  <div className="text-xl font-semibold text-accent">₹4,200</div>
                 </div>
               </div>
               <div className="sk-card mt-3 overflow-hidden">
-                <div className="border-b border-border px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">Top customers</div>
-                {[["919900...1122", "Priya Sharma", "₹5,600"], ["919900...1189", "Rohan Gupta", "₹3,200"], ["919900...1156", "Kavya Menon", "₹2,499"]].map((row) => (
+                <div className="border-b border-border px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">Recent orders</div>
+                {[
+                  ["919900...1122", "the order above", "Diwali IG ad", "₹4,200"],
+                  ["919900...1189", "Rohan Gupta", "organic", "₹3,200"],
+                  ["919900...1156", "Kavya Menon", "organic", "₹2,499"],
+                ].map((row) => (
                   <div key={row[0]} className="flex items-center justify-between border-b border-border px-4 py-2 text-[12.5px] last:border-0">
-                    <span className="font-mono text-faint">{row[0]} <span className="text-muted">· {row[1]}</span></span>
-                    <span className="text-accent">{row[2]}</span>
+                    <span className="font-mono text-faint">{row[0]} <span className="text-muted">· {row[1]} · {row[2]}</span></span>
+                    <span className="text-accent">{row[3]}</span>
                   </div>
                 ))}
               </div>
@@ -157,10 +181,14 @@ export default async function RootPage() {
             </div>
             <div className="flex h-64">
               <div className="w-2/5 border-r border-border p-2">
-                {["Priya Sharma", "Ravi Kumar", "Ananya Iyer"].map((n, i) => (
+                {[
+                  ["Meena Reddy", "Perfect, sending payment now"],
+                  ["Ravi Kumar", "Can I get this in blue?"],
+                  ["Ananya Iyer", "Order arrived, thank you! 🙏"],
+                ].map(([n, preview], i) => (
                   <div key={n} className={`rounded-md px-2.5 py-2 text-[12px] ${i === 0 ? "bg-surface-2" : ""}`}>
                     <div className="font-medium text-foreground">{n}</div>
-                    <div className="text-faint">Perfect, sending payment now</div>
+                    <div className="text-faint">{preview}</div>
                   </div>
                 ))}
               </div>
@@ -173,15 +201,16 @@ export default async function RootPage() {
           </div>
           <div className="order-1 lg:order-2">
             <div className="sk-eyebrow mb-4">One inbox, every reply</div>
-            <h2 className="text-[28px] font-semibold leading-tight tracking-tight">A shared team inbox, not five people&apos;s phones.</h2>
+            <h2 className="text-[28px] font-semibold leading-tight tracking-tight">Priya&apos;s grown to three people. Still one inbox.</h2>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
-              Every conversation in one place, with AI-drafted replies, canned responses, private notes, and
-              assignment to a teammate — inside the same 24-hour window Meta actually enforces.
+              Every conversation in one place, with AI-drafted replies, canned responses, and private notes. A new
+              chat gets auto-assigned to whoever&apos;s free — not whoever grabs their phone first — inside the same
+              24-hour window Meta actually enforces.
             </p>
           </div>
         </Reveal>
 
-        <Reveal className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 border-t border-border pt-14 sm:grid-cols-2">
+        <Reveal stagger className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 border-t border-border pt-14 sm:grid-cols-2">
           {MORE_BUILT.map((f) => (
             <div key={f.title} className="flex gap-3">
               <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent" />
@@ -198,25 +227,25 @@ export default async function RootPage() {
         <Reveal>
           <h2 className="mb-2 text-center text-2xl font-semibold tracking-tight">Pricing</h2>
           <p className="mb-6 text-center text-[13px] text-faint">Roughly half of what comparable WhatsApp platforms charge for the same limits.</p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {PLANS.map((p) => {
-              const limits = PLAN_LIMITS[p.key as keyof typeof PLAN_LIMITS];
-              return (
-                <div
-                  key={p.name}
-                  className="sk-card p-5"
-                  style={p.featured ? { borderColor: "var(--accent-dim)", boxShadow: "0 0 0 1px var(--accent-dim)" } : undefined}
-                >
-                  <div className="mb-1 font-medium">{p.name}</div>
-                  <div className="mb-2 text-2xl font-semibold">
-                    {limits.priceInr === 0 ? "₹0" : `₹${limits.priceInr.toLocaleString("en-IN")}`}
-                    <span className="text-[13px] font-normal text-faint">/mo</span>
-                  </div>
-                  <p className="text-[12.5px] text-muted">{p.blurb}</p>
+        </Reveal>
+        <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PLANS.map((p) => {
+            const limits = PLAN_LIMITS[p.key as keyof typeof PLAN_LIMITS];
+            return (
+              <div
+                key={p.name}
+                className="sk-card p-5"
+                style={p.featured ? { borderColor: "var(--accent-dim)", boxShadow: "0 0 0 1px var(--accent-dim)" } : undefined}
+              >
+                <div className="mb-1 font-medium">{p.name}</div>
+                <div className="mb-2 text-2xl font-semibold">
+                  {limits.priceInr === 0 ? "₹0" : `₹${limits.priceInr.toLocaleString("en-IN")}`}
+                  <span className="text-[13px] font-normal text-faint">/mo</span>
                 </div>
-              );
-            })}
-          </div>
+                <p className="text-[12.5px] text-muted">{p.blurb}</p>
+              </div>
+            );
+          })}
         </Reveal>
       </section>
 

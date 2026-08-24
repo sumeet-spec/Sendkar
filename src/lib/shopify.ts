@@ -16,7 +16,7 @@ export class ShopifyNotConfiguredError extends Error {
   }
 }
 
-const SCOPES = "read_orders,read_customers";
+const SCOPES = "read_orders,read_customers,read_checkouts";
 const API_VERSION = "2024-10";
 
 export function isShopifyAppConfigured(): boolean {
@@ -109,14 +109,14 @@ export async function exchangeCodeForToken(shop: string, code: string): Promise<
   return json.access_token;
 }
 
-export async function registerOrderWebhook(shop: string, accessToken: string, callbackUrl: string): Promise<void> {
+export async function registerWebhook(shop: string, accessToken: string, topic: string, callbackUrl: string): Promise<void> {
   const res = await fetch(`https://${shop}/admin/api/${API_VERSION}/webhooks.json`, {
     method: "POST",
     headers: { "X-Shopify-Access-Token": accessToken, "Content-Type": "application/json" },
-    body: JSON.stringify({ webhook: { topic: "orders/create", address: callbackUrl, format: "json" } }),
+    body: JSON.stringify({ webhook: { topic, address: callbackUrl, format: "json" } }),
     signal: AbortSignal.timeout(15_000),
   });
-  if (!res.ok) throw new Error(`Failed to register the Shopify order webhook (HTTP ${res.status})`);
+  if (!res.ok) throw new Error(`Failed to register the Shopify ${topic} webhook (HTTP ${res.status})`);
 }
 
 export interface ShopifyOrderPayload {
@@ -132,6 +132,24 @@ export interface ShopifyOrderPayload {
 
 export function extractOrderPhone(order: ShopifyOrderPayload): string | null {
   const raw = order.phone || order.customer?.phone || order.shipping_address?.phone;
+  if (!raw) return null;
+  const digits = raw.replace(/[^\d]/g, "");
+  return digits.length >= 10 ? digits : null;
+}
+
+export interface ShopifyCheckoutPayload {
+  token?: string; // Shopify's own checkout id, e.g. "abc123" — stable across create/update events for the same cart
+  abandoned_checkout_url?: string;
+  total_price?: string;
+  currency?: string;
+  phone?: string | null;
+  customer?: { first_name?: string; phone?: string | null } | null;
+  shipping_address?: { phone?: string | null } | null;
+  completed_at?: string | null; // set once the checkout actually converts to an order
+}
+
+export function extractCheckoutPhone(checkout: ShopifyCheckoutPayload): string | null {
+  const raw = checkout.phone || checkout.customer?.phone || checkout.shipping_address?.phone;
   if (!raw) return null;
   const digits = raw.replace(/[^\d]/g, "");
   return digits.length >= 10 ? digits : null;

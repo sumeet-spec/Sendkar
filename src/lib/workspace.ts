@@ -53,6 +53,15 @@ export interface Workspace {
   woocommerce_store_url: string | null;
   woocommerce_webhook_secret: string | null;
   klaviyo_api_key: string | null;
+  business_hours_enabled: boolean;
+  business_hours_timezone: string;
+  away_message: string;
+  auto_assignment_enabled: boolean;
+  calling_enabled: boolean;
+  razorpay_key_id: string | null;
+  razorpay_key_secret: string | null;
+  payu_merchant_key: string | null;
+  payu_salt: string | null;
   created_at: string;
 }
 

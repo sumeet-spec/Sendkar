@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyOAuthCallbackHmac, verifyState, exchangeCodeForToken, registerOrderWebhook } from "@/lib/shopify";
+import { verifyOAuthCallbackHmac, verifyState, exchangeCodeForToken, registerWebhook } from "@/lib/shopify";
 
 /**
  * Shopify redirects here after the merchant approves the install. No
@@ -40,10 +40,18 @@ export async function GET(request: NextRequest) {
     .eq("id", stateResult.workspaceId);
 
   try {
-    await registerOrderWebhook(shop, accessToken, `${appUrl}/api/shopify/webhook`);
+    await registerWebhook(shop, accessToken, "orders/create", `${appUrl}/api/shopify/webhook`);
   } catch {
     // The store connection itself succeeded even if webhook registration didn't —
     // surfaced as "connected, but no auto-send yet" on the settings page, not a hard failure here.
+  }
+  try {
+    // Powers abandoned-cart recovery: checkouts/update fires on every change to
+    // an in-progress checkout (not just creation), which is what actually lets
+    // Sendkar catch the cart's final state before it goes cold.
+    await registerWebhook(shop, accessToken, "checkouts/update", `${appUrl}/api/shopify/webhook`);
+  } catch {
+    // Same posture as the order webhook above — non-fatal to the connection itself.
   }
 
   return NextResponse.redirect(`${appUrl}/settings/channels?shopify=connected`);

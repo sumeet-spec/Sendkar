@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getPlanLimits } from "@/lib/plans";
 import { NewProductForm } from "./NewProductForm";
 import { ProductCard } from "./ProductCard";
 import Link from "next/link";
@@ -8,6 +9,7 @@ export default async function CatalogPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
+  const limits = getPlanLimits(workspace.plan);
 
   const { data: products } = await supabase
     .from("products")
@@ -22,6 +24,11 @@ export default async function CatalogPage() {
         <NewProductForm />
       </div>
 
+      {!limits.catalogEnabled && (
+        <div className="sk-card mb-5 p-4" style={{ borderColor: "rgba(251,191,36,0.3)" }}>
+          <p className="text-sm">Catalog needs the Growth plan or above — <a href="/settings/billing" className="text-accent hover:text-accent-hover">upgrade</a>.</p>
+        </div>
+      )}
       {!workspace.catalog_id && (
         <div className="sk-card mb-5 p-4" style={{ borderColor: "rgba(251,191,36,0.3)" }}>
           <p className="text-sm">

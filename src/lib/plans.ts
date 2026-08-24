@@ -7,6 +7,7 @@ export interface PlanLimits {
   automationsEnabled: boolean;
   outboundWebhooksEnabled: boolean;
   instagramEnabled: boolean;
+  catalogEnabled: boolean;
   priceInr: number; // per month, for display only — Dodo's product config is the source of truth for actual billing
 }
 
@@ -20,10 +21,10 @@ export interface PlanLimits {
 // flows still branch at every paid tier here, where Interakt keeps that
 // linear-only below their Advanced tier.
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  free:    { maxTeamMembers: 1,         automationsEnabled: false, outboundWebhooksEnabled: false, instagramEnabled: false, priceInr: 0 },
-  starter: { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: false, instagramEnabled: false, priceInr: 1399 },
-  growth:  { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: true,  instagramEnabled: true,  priceInr: 1899 },
-  scale:   { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: true,  instagramEnabled: true,  priceInr: 4999 },
+  free:    { maxTeamMembers: 1,         automationsEnabled: false, outboundWebhooksEnabled: false, instagramEnabled: false, catalogEnabled: false, priceInr: 0 },
+  starter: { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: false, instagramEnabled: false, catalogEnabled: false, priceInr: 1399 },
+  growth:  { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: true,  instagramEnabled: true,  catalogEnabled: true,  priceInr: 1899 },
+  scale:   { maxTeamMembers: 1_000_000, automationsEnabled: true,  outboundWebhooksEnabled: true,  instagramEnabled: true,  catalogEnabled: true,  priceInr: 4999 },
 };
 
 export function getPlanLimits(plan: string): PlanLimits {

@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/send",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/sequences",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/quality-check",
+      "schedule": "0 4 * * *"
     }
   ]
 }

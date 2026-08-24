@@ -2,11 +2,15 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getPlanLimits } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
 
 export async function createProduct(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
+
+  const limits = getPlanLimits(workspace.plan);
+  if (!limits.catalogEnabled) return { error: "Catalog needs the Growth plan or above." };
 
   const retailerId = String(formData.get("retailerId") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();

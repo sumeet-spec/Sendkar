@@ -10,6 +10,9 @@ import { syncKlaviyoProfile } from "@/lib/klaviyo";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { classifyInboundMessage } from "@/lib/ai";
 import { isStatusRegression } from "@/lib/messageStatus";
+import { isWithinBusinessHours } from "@/lib/businessHours";
+import { pickAssignee } from "@/lib/assignment";
+import { enrollContactInSequence } from "@/lib/sequences";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -307,10 +310,18 @@ export async function POST(request: NextRequest) {
 
         const { data: contact } = await admin
           .from("contacts")
-          .select("id")
+          .select("id, session_expires_at")
           .eq("workspace_id", workspaceId)
           .eq("phone", msg.from)
           .maybeSingle();
+
+        // Captured BEFORE this message extends the session below — this is
+        // what tells the away-message check whether this is the start of a
+        // fresh conversation (worth greeting) or a reply mid-conversation
+        // (the customer already knows we're here, don't repeat it).
+        const hadActiveSessionBeforeThisMessage = Boolean(
+          contact?.session_expires_at && new Date(contact.session_expires_at) > new Date(),
+        );
 
         let contactId = contact?.id as string | undefined;
         let isNewContact = false;
@@ -411,6 +422,12 @@ export async function POST(request: NextRequest) {
             const { data: ws } = await admin.from("workspaces").select("klaviyo_api_key").eq("id", wsId).single();
             if (ws?.klaviyo_api_key) await syncKlaviyoProfile(ws.klaviyo_api_key, msg.from!, profileNameForNewContact);
           });
+          after(async () => {
+            const { data: ws } = await admin.from("workspaces").select("auto_assignment_enabled").eq("id", wsId).single();
+            if (!ws?.auto_assignment_enabled) return;
+            const assigneeId = await pickAssignee(admin, wsId);
+            if (assigneeId) await admin.from("contacts").update({ assignee_id: assigneeId }).eq("id", contactId);
+          });
         }
         after(() => dispatchOutboundWebhooks(wsId, "message.received", { contactId, phone: msg.from, body: inboundBody }));
 
@@ -442,6 +459,12 @@ export async function POST(request: NextRequest) {
           await admin.from("contacts").update({ opted_out: false }).eq("id", contactId);
           handledAsComplianceKeyword = true;
         }
+
+        // Tracks whether anything (opt-out/in confirmation, a flow step, or a
+        // keyword automation) already replied to this inbound message — the
+        // business-hours away-message further below only fires when nothing
+        // else did.
+        let respondedToInbound = handledAsComplianceKeyword;
 
         // ── Chatbot flows — multi-step, branching; checked before the
         // single-keyword automations fallback below ────────────────────────
@@ -516,6 +539,7 @@ export async function POST(request: NextRequest) {
               ? await sendAndLog(admin, workspaceId, contactId, msg.from, stepToSend.message_body, matchedNumberId)
               : await sendFlowStepAndLog(admin, workspaceId, contactId, msg.from, stepToSend, matchedNumberId);
             if (sent) {
+              respondedToInbound = true;
               const stepContinues = stepToSend.branches.length > 0 || stepToSend.default_next_step_order != null;
               if (stepContinues) {
                 await admin.from("contact_flow_state").upsert({
@@ -543,7 +567,81 @@ export async function POST(request: NextRequest) {
             const matched = (automations ?? []).find((a) =>
               a.match_type === "exact" ? normalized === a.trigger_keyword : normalized.includes(a.trigger_keyword),
             );
-            if (matched) await sendAndLog(admin, workspaceId, contactId, msg.from, matched.reply_body, matchedNumberId);
+            if (matched) {
+              const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, matched.reply_body, matchedNumberId);
+              if (sent) respondedToInbound = true;
+            }
+
+            // ── Keyword-triggered sequences — a multi-step drip instead of a
+            // single fixed reply. If the first step has no delay, send it
+            // immediately (matching what a "keyword trigger" naturally
+            // implies); any later step still goes through the sequences
+            // cron, same as an abandoned-cart enrollment. ──────────────────
+            if (!matched) {
+              const { data: seqs } = await admin
+                .from("sequences")
+                .select("id, trigger_keyword, match_type")
+                .eq("workspace_id", workspaceId)
+                .eq("trigger_type", "keyword")
+                .eq("is_active", true);
+              const matchedSeq = (seqs ?? []).find((s) =>
+                s.match_type === "exact" ? normalized === s.trigger_keyword : normalized.includes(s.trigger_keyword ?? ""),
+              );
+              if (matchedSeq) {
+                const { data: firstStep } = await admin
+                  .from("sequence_steps")
+                  .select("step_order, delay_minutes, message_body")
+                  .eq("sequence_id", matchedSeq.id)
+                  .order("step_order", { ascending: true })
+                  .limit(1)
+                  .maybeSingle();
+
+                if (firstStep && firstStep.delay_minutes === 0) {
+                  const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, firstStep.message_body, matchedNumberId);
+                  if (sent) {
+                    respondedToInbound = true;
+                    const { data: secondStep } = await admin
+                      .from("sequence_steps")
+                      .select("delay_minutes")
+                      .eq("sequence_id", matchedSeq.id)
+                      .eq("step_order", firstStep.step_order + 1)
+                      .maybeSingle();
+                    await admin.from("sequence_enrollments").upsert({
+                      sequence_id: matchedSeq.id,
+                      contact_id: contactId,
+                      workspace_id: workspaceId,
+                      current_step_order: firstStep.step_order,
+                      status: secondStep ? "active" : "completed",
+                      next_send_at: secondStep ? new Date(Date.now() + secondStep.delay_minutes * 60_000).toISOString() : new Date().toISOString(),
+                    }, { onConflict: "sequence_id,contact_id" });
+                  }
+                } else if (firstStep) {
+                  await enrollContactInSequence(admin, { sequenceId: matchedSeq.id, contactId, workspaceId });
+                  respondedToInbound = true; // an enrollment IS the response here, even though the message goes out later via cron
+                }
+              }
+            }
+          }
+        }
+
+        // ── Business-hours away-message — only for the start of a fresh
+        // conversation (no active session before this message) that nothing
+        // above already answered, and only while actually outside the
+        // workspace's configured hours right now. ─────────────────────────
+        if (!respondedToInbound && !hadActiveSessionBeforeThisMessage) {
+          const { data: wsHours } = await admin
+            .from("workspaces")
+            .select("business_hours_enabled, business_hours_timezone, away_message")
+            .eq("id", workspaceId)
+            .single();
+          if (wsHours?.business_hours_enabled) {
+            const { data: hoursRows } = await admin
+              .from("business_hours")
+              .select("day_of_week, opens_at, closes_at")
+              .eq("workspace_id", workspaceId);
+            if (!isWithinBusinessHours(hoursRows ?? [], wsHours.business_hours_timezone)) {
+              await sendAndLog(admin, workspaceId, contactId, msg.from, wsHours.away_message, matchedNumberId);
+            }
           }
         }
       }

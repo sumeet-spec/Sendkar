@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyShopifyWebhookHmac, extractOrderPhone, type ShopifyOrderPayload } from "@/lib/shopify";
+import {
+  verifyShopifyWebhookHmac, extractOrderPhone, extractCheckoutPhone,
+  type ShopifyOrderPayload, type ShopifyCheckoutPayload,
+} from "@/lib/shopify";
 import { sendTemplateMessage } from "@/lib/whatsapp";
 import { attributeOrder } from "@/lib/attribution";
 
@@ -8,6 +11,7 @@ export async function POST(request: NextRequest) {
   const rawBody = await request.text();
   const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
   const shopDomain = request.headers.get("x-shopify-shop-domain");
+  const topic = request.headers.get("x-shopify-topic");
 
   const apiSecret = process.env.SHOPIFY_API_SECRET;
   if (!apiSecret || !verifyShopifyWebhookHmac(rawBody, hmacHeader, apiSecret)) {
@@ -22,6 +26,54 @@ export async function POST(request: NextRequest) {
     .eq("shopify_shop_domain", shopDomain)
     .maybeSingle();
   if (!workspace) return NextResponse.json({ received: true }); // a shop we don't recognize — nothing to do
+
+  // ── Checkout events — abandoned-cart tracking, no message sent from here ──
+  // (the recovery nudge itself is a sequence step, processed by the
+  // sequences cron once the cart's been open long enough to call it
+  // abandoned — this route only ever records the cart's current state).
+  if (topic === "checkouts/create" || topic === "checkouts/update") {
+    let checkout: ShopifyCheckoutPayload;
+    try {
+      checkout = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+    if (!checkout.token) return NextResponse.json({ received: true });
+
+    const phone = extractCheckoutPhone(checkout);
+    let contactId: string | null = null;
+    if (phone) {
+      const { data: contact } = await admin
+        .from("contacts")
+        .upsert(
+          { workspace_id: workspace.id, phone, name: checkout.customer?.first_name ?? null, source: "shopify_checkout" },
+          { onConflict: "workspace_id,channel,phone", ignoreDuplicates: false },
+        )
+        .select("id")
+        .maybeSingle();
+      contactId = contact?.id ?? null;
+    }
+
+    if (checkout.completed_at) {
+      // Converted to an order — orders/create will log the actual order; this
+      // cart's job is done, so it shouldn't also fire a recovery nudge later.
+      await admin.from("carts").update({ status: "recovered" }).eq("workspace_id", workspace.id).eq("shopify_checkout_id", checkout.token);
+    } else {
+      await admin.from("carts").upsert(
+        {
+          workspace_id: workspace.id,
+          contact_id: contactId,
+          shopify_checkout_id: checkout.token,
+          checkout_url: checkout.abandoned_checkout_url ?? null,
+          total_amount: Number.parseFloat(checkout.total_price ?? "0") || 0,
+          currency: checkout.currency ?? "INR",
+          status: "open",
+        },
+        { onConflict: "workspace_id,shopify_checkout_id", ignoreDuplicates: false },
+      );
+    }
+    return NextResponse.json({ received: true });
+  }
 
   let order: ShopifyOrderPayload;
   try {
@@ -52,6 +104,11 @@ export async function POST(request: NextRequest) {
   const orderDate = new Date();
   const totalAmount = Number.parseFloat(order.total_price ?? "0") || 0;
   if (contact?.id) {
+    // Belt-and-suspenders against the checkouts/update completed_at path above:
+    // any of this contact's still-open carts are done the moment a real order
+    // lands, regardless of which webhook noticed first.
+    await admin.from("carts").update({ status: "recovered" }).eq("workspace_id", workspace.id).eq("contact_id", contact.id).eq("status", "open");
+
     const attributedCampaignId = await attributeOrder(admin, contact.id, orderDate);
     await admin.from("orders").upsert(
       {

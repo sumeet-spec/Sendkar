@@ -23,8 +23,9 @@ export interface Dictionary {
   nav: {
     overview: string; contacts: string; templates: string; catalog: string; campaigns: string;
     inbox: string; analytics: string; chatbotFlows: string; forms: string; automations: string;
-    webhooks: string; linksWidget: string; agency: string; settings: string; billing: string;
+    webhooks: string; linksWidget: string; agency: string; settings: string; billing: string; sequences: string;
     team: string; channels: string; cannedResponses: string; apiKeys: string; integrations: string;
+    businessHours: string; payments: string;
     logout: string;
   };
   auth: {
@@ -55,8 +56,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     nav: {
       overview: "Overview", contacts: "Contacts", templates: "Templates", catalog: "Catalog", campaigns: "Campaigns",
       inbox: "Inbox", analytics: "Analytics", chatbotFlows: "Chatbot flows", forms: "Forms", automations: "Automations",
-      webhooks: "Webhooks", linksWidget: "Links & widget", agency: "Agency", settings: "Settings", billing: "Billing",
+      webhooks: "Webhooks", linksWidget: "Links & widget", agency: "Agency", settings: "Settings", billing: "Billing", sequences: "Sequences",
       team: "Team", channels: "Channels", cannedResponses: "Canned responses", apiKeys: "API keys", integrations: "Integrations",
+      businessHours: "Business hours", payments: "Payments",
       logout: "Log out",
     },
     auth: {
@@ -89,8 +91,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     nav: {
       overview: "अवलोकन", contacts: "संपर्क", templates: "टेम्पलेट", catalog: "कैटलॉग", campaigns: "कैंपेन",
       inbox: "इनबॉक्स", analytics: "एनालिटिक्स", chatbotFlows: "चैटबॉट फ्लो", forms: "फ़ॉर्म", automations: "ऑटोमेशन",
-      webhooks: "वेबहुक", linksWidget: "लिंक और विजेट", agency: "एजेंसी", settings: "सेटिंग्स", billing: "बिलिंग",
+      webhooks: "वेबहुक", linksWidget: "लिंक और विजेट", agency: "एजेंसी", settings: "सेटिंग्स", billing: "बिलिंग", sequences: "सीक्वेंस",
       team: "टीम", channels: "चैनल", cannedResponses: "सेव्ड रिप्लाई", apiKeys: "API कीज़", integrations: "इंटीग्रेशन",
+      businessHours: "बिज़नेस समय", payments: "पेमेंट्स",
       logout: "लॉग आउट",
     },
     auth: {
@@ -123,8 +126,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     nav: {
       overview: "आढावा", contacts: "संपर्क", templates: "टेम्पलेट", catalog: "कॅटलॉग", campaigns: "कॅम्पेन",
       inbox: "इनबॉक्स", analytics: "अॅनालिटिक्स", chatbotFlows: "चॅटबॉट फ्लो", forms: "फॉर्म", automations: "ऑटोमेशन",
-      webhooks: "वेबहुक", linksWidget: "लिंक आणि विजेट", agency: "एजन्सी", settings: "सेटिंग्ज", billing: "बिलिंग",
+      webhooks: "वेबहुक", linksWidget: "लिंक आणि विजेट", agency: "एजन्सी", settings: "सेटिंग्ज", billing: "बिलिंग", sequences: "सीक्वेन्स",
       team: "टीम", channels: "चॅनेल्स", cannedResponses: "सेव्ह केलेली उत्तरे", apiKeys: "API कीज", integrations: "इंटिग्रेशन्स",
+      businessHours: "व्यवसाय वेळ", payments: "पेमेंट्स",
       logout: "लॉग आउट",
     },
     auth: {
@@ -157,8 +161,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     nav: {
       overview: "மேலோட்டம்", contacts: "தொடர்புகள்", templates: "வார்ப்புருக்கள்", catalog: "பட்டியல்", campaigns: "பிரச்சாரங்கள்",
       inbox: "இன்பாக்ஸ்", analytics: "பகுப்பாய்வு", chatbotFlows: "சாட்பாட் ஃப்ளோ", forms: "படிவங்கள்", automations: "ஆட்டோமேஷன்",
-      webhooks: "வெப்ஹூக்குகள்", linksWidget: "இணைப்புகள் & விட்ஜெட்", agency: "ஏஜென்சி", settings: "அமைப்புகள்", billing: "பில்லிங்",
+      webhooks: "வெப்ஹூக்குகள்", linksWidget: "இணைப்புகள் & விட்ஜெட்", agency: "ஏஜென்சி", settings: "அமைப்புகள்", billing: "பில்லிங்", sequences: "சீக்வென்ஸ்கள்",
       team: "குழு", channels: "சேனல்கள்", cannedResponses: "சேமித்த பதில்கள்", apiKeys: "API கீகள்", integrations: "இன்டகிரேஷன்கள்",
+      businessHours: "வணிக நேரம்", payments: "பணம் செலுத்துதல்",
       logout: "வெளியேறு",
     },
     auth: {
@@ -191,8 +196,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     nav: {
       overview: "అవలోకనం", contacts: "పరిచయాలు", templates: "టెంప్లేట్‌లు", catalog: "క్యాటలాగ్", campaigns: "క్యాంపెయిన్‌లు",
       inbox: "ఇన్‌బాక్స్", analytics: "అనలిటిక్స్", chatbotFlows: "చాట్‌బాట్ ఫ్లోలు", forms: "ఫారమ్‌లు", automations: "ఆటోమేషన్‌లు",
-      webhooks: "వెబ్‌హుక్‌లు", linksWidget: "లింక్‌లు & విడ్జెట్", agency: "ఏజెన్సీ", settings: "సెట్టింగ్‌లు", billing: "బిల్లింగ్",
+      webhooks: "వెబ్‌హుక్‌లు", linksWidget: "లింక్‌లు & విడ్జెట్", agency: "ఏజెన్సీ", settings: "సెట్టింగ్‌లు", billing: "బిల్లింగ్", sequences: "సీక్వెన్స్‌లు",
       team: "టీమ్", channels: "ఛానెల్‌లు", cannedResponses: "సేవ్ చేసిన రిప్లైలు", apiKeys: "API కీలు", integrations: "ఇంటిగ్రేషన్‌లు",
+      businessHours: "వ్యాపార వేళలు", payments: "పేమెంట్స్",
       logout: "లాగ్ అవుట్",
     },
     auth: {
@@ -225,8 +231,9 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     nav: {
       overview: "ಅವಲೋಕನ", contacts: "ಸಂಪರ್ಕಗಳು", templates: "ಟೆಂಪ್ಲೇಟ್‌ಗಳು", catalog: "ಕ್ಯಾಟಲಾಗ್", campaigns: "ಕ್ಯಾಂಪೇನ್‌ಗಳು",
       inbox: "ಇನ್‌ಬಾಕ್ಸ್", analytics: "ಅನಾಲಿಟಿಕ್ಸ್", chatbotFlows: "ಚಾಟ್‌ಬಾಟ್ ಫ್ಲೋಗಳು", forms: "ಫಾರ್ಮ್‌ಗಳು", automations: "ಆಟೊಮೇಷನ್‌ಗಳು",
-      webhooks: "ವೆಬ್‌ಹುಕ್‌ಗಳು", linksWidget: "ಲಿಂಕ್‌ಗಳು ಮತ್ತು ವಿಡ್ಜೆಟ್", agency: "ಏಜೆನ್ಸಿ", settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು", billing: "ಬಿಲ್ಲಿಂಗ್",
+      webhooks: "ವೆಬ್‌ಹುಕ್‌ಗಳು", linksWidget: "ಲಿಂಕ್‌ಗಳು ಮತ್ತು ವಿಡ್ಜೆಟ್", agency: "ಏಜೆನ್ಸಿ", settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು", billing: "ಬಿಲ್ಲಿಂಗ್", sequences: "ಸೀಕ್ವೆನ್ಸ್‌ಗಳು",
       team: "ತಂಡ", channels: "ಚಾನೆಲ್‌ಗಳು", cannedResponses: "ಉಳಿಸಿದ ಪ್ರತ್ಯುತ್ತರಗಳು", apiKeys: "API ಕೀಗಳು", integrations: "ಇಂಟಿಗ್ರೇಷನ್‌ಗಳು",
+      businessHours: "ವ್ಯಾಪಾರ ಸಮಯ", payments: "ಪೇಮೆಂಟ್‌ಗಳು",
       logout: "ಲಾಗ್ ಔಟ್",
     },
     auth: {

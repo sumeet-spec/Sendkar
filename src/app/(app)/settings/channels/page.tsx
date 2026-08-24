@@ -16,11 +16,38 @@ export default async function ChannelsPage() {
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false });
 
+  const { data: qualityHistory } = await supabase
+    .from("quality_rating_history")
+    .select("quality_rating, checked_at")
+    .eq("workspace_id", workspace.id)
+    .is("whatsapp_number_id", null)
+    .order("checked_at", { ascending: false })
+    .limit(5);
+
   return (
     <div className="max-w-2xl">
       <h1 className="mb-6 text-xl font-semibold tracking-tight">Channels</h1>
       <div className="flex flex-col gap-5">
         <WhatsAppForm workspace={workspace} />
+        {qualityHistory && qualityHistory.length > 0 && (
+          <div className="sk-card overflow-hidden">
+            <div className="border-b border-border px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">
+              Quality rating — last {qualityHistory.length} checks
+            </div>
+            {qualityHistory.map((row, i) => (
+              <div key={i} className="flex items-center justify-between border-b border-border px-4 py-2 text-[12.5px] last:border-0">
+                <span className="text-faint">{new Date(row.checked_at).toLocaleDateString()}</span>
+                <span
+                  className={
+                    row.quality_rating === "GREEN" ? "text-accent" : row.quality_rating === "YELLOW" ? "text-warn" : "text-danger"
+                  }
+                >
+                  {row.quality_rating}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         <AdditionalNumbers numbers={numbers ?? []} />
         <InstagramForm workspace={workspace} locked={!limits.instagramEnabled} />
         <MessengerForm workspace={workspace} locked={!limits.instagramEnabled} />
