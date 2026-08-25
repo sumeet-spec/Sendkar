@@ -40,6 +40,7 @@ const SETTINGS_NAV_KEYS = [
   { href: "/settings/business-hours", key: "businessHours" },
   { href: "/settings/payments", key: "payments" },
   { href: "/settings/calling", key: "calling" },
+  { href: "/settings/language", key: "language" },
   { href: "/settings/canned-responses", key: "cannedResponses" },
   { href: "/settings/integrations", key: "integrations" },
 ] as const satisfies ReadonlyArray<{ href: string; key: keyof Dictionary["nav"] }>;

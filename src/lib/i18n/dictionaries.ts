@@ -25,7 +25,7 @@ export interface Dictionary {
     inbox: string; analytics: string; chatbotFlows: string; forms: string; automations: string; segments: string;
     webhooks: string; linksWidget: string; agency: string; settings: string; billing: string; sequences: string;
     team: string; channels: string; cannedResponses: string; apiKeys: string; integrations: string;
-    businessHours: string; payments: string; calling: string;
+    businessHours: string; payments: string; calling: string; language: string;
     logout: string;
   };
   auth: {
@@ -55,6 +55,15 @@ export interface Dictionary {
     badgeReseller: string; badgeFree: string; ctaGetStarted: string; ctaSeePricing: string;
     statChannels: string; statMcp: string; statPrice: string;
   };
+  onboarding: {
+    title: string; introBefore: string; skipLabel: string; introAfter: string;
+    step1Title: string; step1Body: string; phoneIdPlaceholder: string; wabaIdPlaceholder: string;
+    step2Title: string; step2Body: string; tokenPlaceholder: string;
+    step3Title: string; step3Body: string;
+    submitButton: string; submitPending: string;
+    noMetaApp: string; createOne: string;
+    successTitle: string; successAs: string; successBody: string; continueButton: string;
+  };
 }
 
 export const dictionaries: Record<LanguageCode, Dictionary> = {
@@ -64,7 +73,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "Inbox", analytics: "Analytics", chatbotFlows: "Chatbot flows", forms: "Forms", automations: "Automations", segments: "Segments",
       webhooks: "Webhooks", linksWidget: "Links & widget", agency: "Agency", settings: "Settings", billing: "Billing", sequences: "Sequences",
       team: "Team", channels: "Channels", cannedResponses: "Canned responses", apiKeys: "API keys", integrations: "Integrations",
-      businessHours: "Business hours", payments: "Payments", calling: "Calling",
+      businessHours: "Business hours", payments: "Payments", calling: "Calling", language: "Language",
       logout: "Log out",
     },
     auth: {
@@ -100,6 +109,24 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       ctaGetStarted: "Get started free →", ctaSeePricing: "See pricing",
       statChannels: "Channels", statMcp: "MCP tools for Claude", statPrice: "The price of the rest",
     },
+    onboarding: {
+      title: "Connect WhatsApp",
+      introBefore: "Three things from Meta Business Manager. Don't have a WhatsApp Business number yet?",
+      skipLabel: "Skip this",
+      introAfter: "— everything else in Sendkar already works, sending just stays off until this is filled in.",
+      step1Title: "Get your Phone Number ID and WABA ID",
+      step1Body: "In your Meta App → WhatsApp → API Setup, you'll see a \"From\" phone number with its Phone number ID beneath it, and a WhatsApp Business Account ID field nearby.",
+      phoneIdPlaceholder: "Phone number ID — e.g. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
+      step2Title: "Get an access token",
+      step2Body: "The temporary token on that same API Setup page works for testing (expires in 24h). For real use, create a System User in Meta Business Settings, assign it this app with whatsapp_business_messaging and whatsapp_business_management permissions, and generate its token there instead.",
+      tokenPlaceholder: "EAAG...",
+      step3Title: "We verify it, live",
+      step3Body: "Sendkar checks these credentials against Meta's API before saving, and subscribes your WABA to receive replies and delivery statuses — the two steps most WhatsApp platforms skip, which is why \"connected\" sometimes doesn't mean messages actually flow both ways.",
+      submitButton: "Connect & verify", submitPending: "Verifying with Meta…",
+      noMetaApp: "No Meta app yet?", createOne: "Create one at developers.facebook.com →",
+      successTitle: "Connected", successAs: " as ", successBody: "Meta confirmed these credentials actually work — not just saved, verified.",
+      continueButton: "Continue to dashboard →",
+    },
   },
   hi: {
     nav: {
@@ -107,7 +134,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "इनबॉक्स", analytics: "एनालिटिक्स", chatbotFlows: "चैटबॉट फ्लो", forms: "फ़ॉर्म", automations: "ऑटोमेशन", segments: "सेगमेंट्स",
       webhooks: "वेबहुक", linksWidget: "लिंक और विजेट", agency: "एजेंसी", settings: "सेटिंग्स", billing: "बिलिंग", sequences: "सीक्वेंस",
       team: "टीम", channels: "चैनल", cannedResponses: "सेव्ड रिप्लाई", apiKeys: "API कीज़", integrations: "इंटीग्रेशन",
-      businessHours: "बिज़नेस समय", payments: "पेमेंट्स", calling: "कॉलिंग",
+      businessHours: "बिज़नेस समय", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा",
       logout: "लॉग आउट",
     },
     auth: {
@@ -143,6 +170,24 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       ctaGetStarted: "मुफ़्त में शुरू करें →", ctaSeePricing: "प्राइसिंग देखें",
       statChannels: "चैनल", statMcp: "Claude के लिए MCP टूल्स", statPrice: "बाकियों की आधी कीमत",
     },
+    onboarding: {
+      title: "WhatsApp कनेक्ट करें",
+      introBefore: "Meta Business Manager से तीन चीज़ें चाहिए। अभी तक WhatsApp Business नंबर नहीं है?",
+      skipLabel: "इसे छोड़ें",
+      introAfter: "— Sendkar में बाकी सब पहले से काम करता है, बस यह भरने तक मैसेज भेजना बंद रहेगा।",
+      step1Title: "अपना फ़ोन नंबर ID और WABA ID लें",
+      step1Body: "अपने Meta App → WhatsApp → API Setup में, आपको एक \"From\" फ़ोन नंबर दिखेगा जिसके नीचे उसका Phone number ID होगा, और पास में एक WhatsApp Business Account ID फ़ील्ड होगी।",
+      phoneIdPlaceholder: "फ़ोन नंबर ID — जैसे 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
+      step2Title: "एक्सेस टोकन लें",
+      step2Body: "उसी API Setup पेज पर मौजूद टेम्पररी टोकन टेस्टिंग के लिए काम करता है (24 घंटे में एक्सपायर होता है)। असली इस्तेमाल के लिए, Meta Business Settings में एक System User बनाएं, इसे whatsapp_business_messaging और whatsapp_business_management परमिशन दें, और वहीं से इसका टोकन जनरेट करें।",
+      tokenPlaceholder: "EAAG...",
+      step3Title: "हम इसे लाइव वेरिफ़ाई करते हैं",
+      step3Body: "Sendkar सेव करने से पहले इन क्रेडेंशियल्स को Meta के API से जांचता है, और आपके WABA को रिप्लाई व डिलीवरी स्टेटस पाने के लिए सब्सक्राइब करता है — ये वो दो कदम हैं जो ज़्यादातर WhatsApp प्लेटफ़ॉर्म छोड़ देते हैं, इसलिए \"कनेक्टेड\" होने का मतलब हमेशा यह नहीं होता कि मैसेज दोनों तरफ़ चल रहे हैं।",
+      submitButton: "कनेक्ट करें और वेरिफ़ाई करें", submitPending: "Meta से वेरिफ़ाई हो रहा है…",
+      noMetaApp: "अभी तक Meta App नहीं है?", createOne: "developers.facebook.com पर एक बनाएं →",
+      successTitle: "कनेक्ट हो गया", successAs: " — ", successBody: "Meta ने पुष्टि की कि ये क्रेडेंशियल्स वाक़ई काम करते हैं — सिर्फ़ सेव नहीं, वेरिफ़ाई किए गए।",
+      continueButton: "डैशबोर्ड पर जाएं →",
+    },
   },
   mr: {
     nav: {
@@ -150,7 +195,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "इनबॉक्स", analytics: "अॅनालिटिक्स", chatbotFlows: "चॅटबॉट फ्लो", forms: "फॉर्म", automations: "ऑटोमेशन", segments: "सेगमेंट्स",
       webhooks: "वेबहुक", linksWidget: "लिंक आणि विजेट", agency: "एजन्सी", settings: "सेटिंग्ज", billing: "बिलिंग", sequences: "सीक्वेन्स",
       team: "टीम", channels: "चॅनेल्स", cannedResponses: "सेव्ह केलेली उत्तरे", apiKeys: "API कीज", integrations: "इंटिग्रेशन्स",
-      businessHours: "व्यवसाय वेळ", payments: "पेमेंट्स", calling: "कॉलिंग",
+      businessHours: "व्यवसाय वेळ", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा",
       logout: "लॉग आउट",
     },
     auth: {
@@ -186,6 +231,24 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       ctaGetStarted: "मोफत सुरू करा →", ctaSeePricing: "किंमत पहा",
       statChannels: "चॅनेल्स", statMcp: "Claude साठी MCP टूल्स", statPrice: "इतरांच्या निम्मी किंमत",
     },
+    onboarding: {
+      title: "WhatsApp कनेक्ट करा",
+      introBefore: "Meta Business Manager कडून तीन गोष्टी हव्यात. अजून WhatsApp Business नंबर नाही?",
+      skipLabel: "हे वगळा",
+      introAfter: "— Sendkar मधील बाकी सर्व आधीच काम करते, फक्त हे भरेपर्यंत मेसेज पाठवणे बंद राहील.",
+      step1Title: "तुमचा फोन नंबर ID आणि WABA ID मिळवा",
+      step1Body: "तुमच्या Meta App → WhatsApp → API Setup मध्ये, तुम्हाला एक \"From\" फोन नंबर दिसेल ज्याच्या खाली त्याचा Phone number ID असेल, आणि जवळच एक WhatsApp Business Account ID फील्ड असेल.",
+      phoneIdPlaceholder: "फोन नंबर ID — उदा. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
+      step2Title: "अ‍ॅक्सेस टोकन मिळवा",
+      step2Body: "त्याच API Setup पेजवरील तात्पुरता टोकन चाचणीसाठी काम करतो (24 तासांत एक्सपायर होतो). खऱ्या वापरासाठी, Meta Business Settings मध्ये एक System User तयार करा, त्याला whatsapp_business_messaging आणि whatsapp_business_management परवानग्या द्या, आणि तिथूनच त्याचा टोकन तयार करा.",
+      tokenPlaceholder: "EAAG...",
+      step3Title: "आम्ही ते थेट पडताळतो",
+      step3Body: "Sendkar सेव्ह करण्यापूर्वी ही क्रेडेन्शियल्स Meta च्या API कडून तपासते, आणि तुमचे WABA रिप्लाय व डिलिव्हरी स्टेटस मिळवण्यासाठी सबस्क्राइब करते — बहुतांश WhatsApp प्लॅटफॉर्म हे दोन टप्पे वगळतात, म्हणूनच \"कनेक्टेड\" असण्याचा अर्थ नेहमी दोन्ही बाजूंनी मेसेज चालणे असा नसतो.",
+      submitButton: "कनेक्ट करा आणि पडताळा", submitPending: "Meta कडून पडताळणी सुरू आहे…",
+      noMetaApp: "अजून Meta App नाही?", createOne: "developers.facebook.com वर एक तयार करा →",
+      successTitle: "कनेक्ट झाले", successAs: " — ", successBody: "Meta ने पुष्टी केली की ही क्रेडेन्शियल्स खरोखर काम करतात — फक्त सेव्ह नाही, पडताळलेली.",
+      continueButton: "डॅशबोर्डवर जा →",
+    },
   },
   ta: {
     nav: {
@@ -193,7 +256,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "இன்பாக்ஸ்", analytics: "பகுப்பாய்வு", chatbotFlows: "சாட்பாட் ஃப்ளோ", forms: "படிவங்கள்", automations: "ஆட்டோமேஷன்", segments: "செக்மென்ட்கள்",
       webhooks: "வெப்ஹூக்குகள்", linksWidget: "இணைப்புகள் & விட்ஜெட்", agency: "ஏஜென்சி", settings: "அமைப்புகள்", billing: "பில்லிங்", sequences: "சீக்வென்ஸ்கள்",
       team: "குழு", channels: "சேனல்கள்", cannedResponses: "சேமித்த பதில்கள்", apiKeys: "API கீகள்", integrations: "இன்டகிரேஷன்கள்",
-      businessHours: "வணிக நேரம்", payments: "பணம் செலுத்துதல்", calling: "கால் செய்தல்",
+      businessHours: "வணிக நேரம்", payments: "பணம் செலுத்துதல்", calling: "கால் செய்தல்", language: "மொழி",
       logout: "வெளியேறு",
     },
     auth: {
@@ -229,6 +292,24 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       ctaGetStarted: "இலவசமாகத் தொடங்குங்கள் →", ctaSeePricing: "விலையைப் பார்க்க",
       statChannels: "சேனல்கள்", statMcp: "Claude-க்கான MCP கருவிகள்", statPrice: "மற்றவற்றின் பாதி விலை",
     },
+    onboarding: {
+      title: "WhatsApp இணைக்கவும்",
+      introBefore: "Meta Business Manager-இலிருந்து மூன்று விஷயங்கள் தேவை. இன்னும் WhatsApp Business எண் இல்லையா?",
+      skipLabel: "இதைத் தவிர்",
+      introAfter: "— Sendkar-இல் மற்ற அனைத்தும் ஏற்கனவே வேலை செய்கிறது, இது நிரப்பப்படும் வரை மட்டும் அனுப்புவது நிறுத்தப்பட்டிருக்கும்.",
+      step1Title: "உங்கள் Phone Number ID மற்றும் WABA ID-ஐப் பெறுங்கள்",
+      step1Body: "உங்கள் Meta App → WhatsApp → API Setup-இல், ஒரு \"From\" ஃபோன் எண்ணையும் அதன் கீழ் Phone number ID-ஐயும், அருகில் ஒரு WhatsApp Business Account ID புலத்தையும் காண்பீர்கள்.",
+      phoneIdPlaceholder: "Phone number ID — எ.கா. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
+      step2Title: "ஒரு அணுகல் டோக்கனைப் பெறுங்கள்",
+      step2Body: "அதே API Setup பக்கத்தில் உள்ள தற்காலிக டோக்கன் சோதனைக்கு வேலை செய்யும் (24 மணி நேரத்தில் காலாவதியாகும்). உண்மையான பயன்பாட்டிற்கு, Meta Business Settings-இல் ஒரு System User-ஐ உருவாக்கி, அதற்கு whatsapp_business_messaging மற்றும் whatsapp_business_management அனுமதிகளை வழங்கி, அங்கிருந்தே அதன் டோக்கனை உருவாக்குங்கள்.",
+      tokenPlaceholder: "EAAG...",
+      step3Title: "நாங்கள் அதை நேரலையில் சரிபார்க்கிறோம்",
+      step3Body: "சேமிக்கும் முன் Sendkar இந்த விவரங்களை Meta-வின் API-க்கு எதிராக சரிபார்க்கிறது, மேலும் பதில்கள் மற்றும் டெலிவரி நிலைகளைப் பெற உங்கள் WABA-ஐ சப்ஸ்கிரைப் செய்கிறது — பெரும்பாலான WhatsApp தளங்கள் தவிர்க்கும் இரண்டு படிகள் இவை, அதனால்தான் \"இணைக்கப்பட்டது\" என்பது எப்போதும் இரு திசைகளிலும் மெசேஜ் ஓடுகிறது என்று அர்த்தமாகாது.",
+      submitButton: "இணைத்து சரிபார்க்கவும்", submitPending: "Meta-வுடன் சரிபார்க்கப்படுகிறது…",
+      noMetaApp: "இன்னும் Meta App இல்லையா?", createOne: "developers.facebook.com-இல் ஒன்றை உருவாக்குங்கள் →",
+      successTitle: "இணைக்கப்பட்டது", successAs: " — ", successBody: "இந்த விவரங்கள் உண்மையில் வேலை செய்கின்றன என்பதை Meta உறுதிப்படுத்தியது — வெறும் சேமிக்கப்படவில்லை, சரிபார்க்கப்பட்டது.",
+      continueButton: "டாஷ்போர்டுக்குச் செல்லுங்கள் →",
+    },
   },
   te: {
     nav: {
@@ -236,7 +317,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "ఇన్‌బాక్స్", analytics: "అనలిటిక్స్", chatbotFlows: "చాట్‌బాట్ ఫ్లోలు", forms: "ఫారమ్‌లు", automations: "ఆటోమేషన్‌లు", segments: "సెగ్మెంట్‌లు",
       webhooks: "వెబ్‌హుక్‌లు", linksWidget: "లింక్‌లు & విడ్జెట్", agency: "ఏజెన్సీ", settings: "సెట్టింగ్‌లు", billing: "బిల్లింగ్", sequences: "సీక్వెన్స్‌లు",
       team: "టీమ్", channels: "ఛానెల్‌లు", cannedResponses: "సేవ్ చేసిన రిప్లైలు", apiKeys: "API కీలు", integrations: "ఇంటిగ్రేషన్‌లు",
-      businessHours: "వ్యాపార వేళలు", payments: "పేమెంట్స్", calling: "కాలింగ్",
+      businessHours: "వ్యాపార వేళలు", payments: "పేమెంట్స్", calling: "కాలింగ్", language: "భాష",
       logout: "లాగ్ అవుట్",
     },
     auth: {
@@ -272,6 +353,24 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       ctaGetStarted: "ఉచితంగా ప్రారంభించండి →", ctaSeePricing: "ధర చూడండి",
       statChannels: "ఛానెల్‌లు", statMcp: "Claude కోసం MCP టూల్స్", statPrice: "మిగతా వాటి సగం ధర",
     },
+    onboarding: {
+      title: "WhatsApp కనెక్ట్ చేయండి",
+      introBefore: "Meta Business Manager నుండి మూడు విషయాలు కావాలి. ఇంకా WhatsApp Business నంబర్ లేదా?",
+      skipLabel: "దీన్ని దాటవేయండి",
+      introAfter: "— Sendkar లో మిగతా అన్నీ ఇప్పటికే పనిచేస్తాయి, ఇది నింపేవరకు మెసేజ్‌లు పంపడం మాత్రమే ఆఫ్‌లో ఉంటుంది.",
+      step1Title: "మీ Phone Number ID మరియు WABA ID పొందండి",
+      step1Body: "మీ Meta App → WhatsApp → API Setup లో, మీకు ఒక \"From\" ఫోన్ నంబర్ దాని కింద Phone number ID తో, మరియు దగ్గరలో WhatsApp Business Account ID ఫీల్డ్ కనిపిస్తుంది.",
+      phoneIdPlaceholder: "Phone number ID — ఉదా. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
+      step2Title: "యాక్సెస్ టోకెన్ పొందండి",
+      step2Body: "అదే API Setup పేజీలో ఉన్న తాత్కాలిక టోకెన్ టెస్టింగ్‌కి పనిచేస్తుంది (24 గంటల్లో గడువు ముగుస్తుంది). నిజమైన వాడకానికి, Meta Business Settings లో ఒక System User ని సృష్టించి, దానికి whatsapp_business_messaging మరియు whatsapp_business_management అనుమతులు ఇచ్చి, అక్కడి నుండే దాని టోకెన్ జనరేట్ చేయండి.",
+      tokenPlaceholder: "EAAG...",
+      step3Title: "మేము దీన్ని లైవ్‌లో వెరిఫై చేస్తాము",
+      step3Body: "సేవ్ చేయడానికి ముందు Sendkar ఈ క్రెడెన్షియల్స్‌ని Meta యొక్క API కి వ్యతిరేకంగా తనిఖీ చేస్తుంది, మరియు రిప్లైలు మరియు డెలివరీ స్టేటస్‌లు అందుకోవడానికి మీ WABA ని సబ్‌స్క్రైబ్ చేస్తుంది — చాలా WhatsApp ప్లాట్‌ఫారమ్‌లు వదిలేసే రెండు దశలు ఇవే, అందుకే \"కనెక్ట్ అయింది\" అంటే ఎప్పుడూ రెండు వైపులా మెసేజ్‌లు నడుస్తున్నాయని అర్థం కాదు.",
+      submitButton: "కనెక్ట్ చేసి వెరిఫై చేయండి", submitPending: "Meta తో వెరిఫై అవుతోంది…",
+      noMetaApp: "ఇంకా Meta App లేదా?", createOne: "developers.facebook.com లో ఒకటి సృష్టించండి →",
+      successTitle: "కనెక్ట్ అయింది", successAs: " — ", successBody: "ఈ క్రెడెన్షియల్స్ నిజంగా పనిచేస్తున్నాయని Meta నిర్ధారించింది — కేవలం సేవ్ కాలేదు, వెరిఫై చేయబడింది.",
+      continueButton: "డాష్‌బోర్డ్‌కి వెళ్లండి →",
+    },
   },
   kn: {
     nav: {
@@ -279,7 +378,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "ಇನ್‌ಬಾಕ್ಸ್", analytics: "ಅನಾಲಿಟಿಕ್ಸ್", chatbotFlows: "ಚಾಟ್‌ಬಾಟ್ ಫ್ಲೋಗಳು", forms: "ಫಾರ್ಮ್‌ಗಳು", automations: "ಆಟೊಮೇಷನ್‌ಗಳು", segments: "ಸೆಗ್ಮೆಂಟ್‌ಗಳು",
       webhooks: "ವೆಬ್‌ಹುಕ್‌ಗಳು", linksWidget: "ಲಿಂಕ್‌ಗಳು ಮತ್ತು ವಿಡ್ಜೆಟ್", agency: "ಏಜೆನ್ಸಿ", settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು", billing: "ಬಿಲ್ಲಿಂಗ್", sequences: "ಸೀಕ್ವೆನ್ಸ್‌ಗಳು",
       team: "ತಂಡ", channels: "ಚಾನೆಲ್‌ಗಳು", cannedResponses: "ಉಳಿಸಿದ ಪ್ರತ್ಯುತ್ತರಗಳು", apiKeys: "API ಕೀಗಳು", integrations: "ಇಂಟಿಗ್ರೇಷನ್‌ಗಳು",
-      businessHours: "ವ್ಯಾಪಾರ ಸಮಯ", payments: "ಪೇಮೆಂಟ್‌ಗಳು", calling: "ಕಾಲಿಂಗ್",
+      businessHours: "ವ್ಯಾಪಾರ ಸಮಯ", payments: "ಪೇಮೆಂಟ್‌ಗಳು", calling: "ಕಾಲಿಂಗ್", language: "ಭಾಷೆ",
       logout: "ಲಾಗ್ ಔಟ್",
     },
     auth: {
@@ -314,6 +413,24 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       badgeReseller: "⚡ Meta ನ ಅಧಿಕೃತ Cloud API — ಮರುಮಾರಾಟಗಾರರಲ್ಲ", badgeFree: "🆓 ಶಾಶ್ವತ ಉಚಿತ ಯೋಜನೆ — 14-ದಿನಗಳ ಟ್ರಯಲ್ ಅಲ್ಲ",
       ctaGetStarted: "ಉಚಿತವಾಗಿ ಪ್ರಾರಂಭಿಸಿ →", ctaSeePricing: "ಬೆಲೆ ನೋಡಿ",
       statChannels: "ಚಾನೆಲ್‌ಗಳು", statMcp: "Claude ಗಾಗಿ MCP ಟೂಲ್‌ಗಳು", statPrice: "ಉಳಿದವರ ಅರ್ಧ ಬೆಲೆ",
+    },
+    onboarding: {
+      title: "WhatsApp ಸಂಪರ್ಕಿಸಿ",
+      introBefore: "Meta Business Manager ನಿಂದ ಮೂರು ವಿಷಯಗಳು ಬೇಕು. ಇನ್ನೂ WhatsApp Business ಸಂಖ್ಯೆ ಇಲ್ಲವೇ?",
+      skipLabel: "ಇದನ್ನು ಬಿಟ್ಟುಬಿಡಿ",
+      introAfter: "— Sendkar ನಲ್ಲಿ ಉಳಿದೆಲ್ಲವೂ ಈಗಾಗಲೇ ಕೆಲಸ ಮಾಡುತ್ತದೆ, ಇದನ್ನು ಭರ್ತಿ ಮಾಡುವವರೆಗೆ ಸಂದೇಶ ಕಳುಹಿಸುವುದು ಮಾತ್ರ ಆಫ್ ಆಗಿರುತ್ತದೆ.",
+      step1Title: "ನಿಮ್ಮ Phone Number ID ಮತ್ತು WABA ID ಪಡೆಯಿರಿ",
+      step1Body: "ನಿಮ್ಮ Meta App → WhatsApp → API Setup ನಲ್ಲಿ, ನಿಮಗೆ ಒಂದು \"From\" ಫೋನ್ ಸಂಖ್ಯೆ ಅದರ ಕೆಳಗೆ Phone number ID ಯೊಂದಿಗೆ, ಮತ್ತು ಹತ್ತಿರದಲ್ಲಿ WhatsApp Business Account ID ಕ್ಷೇತ್ರ ಕಾಣಿಸುತ್ತದೆ.",
+      phoneIdPlaceholder: "Phone number ID — ಉದಾ. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
+      step2Title: "ಆಕ್ಸೆಸ್ ಟೋಕನ್ ಪಡೆಯಿರಿ",
+      step2Body: "ಅದೇ API Setup ಪುಟದಲ್ಲಿರುವ ತಾತ್ಕಾಲಿಕ ಟೋಕನ್ ಪರೀಕ್ಷೆಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ (24 ಗಂಟೆಗಳಲ್ಲಿ ಅವಧಿ ಮುಗಿಯುತ್ತದೆ). ನಿಜವಾದ ಬಳಕೆಗೆ, Meta Business Settings ನಲ್ಲಿ ಒಂದು System User ಅನ್ನು ರಚಿಸಿ, ಅದಕ್ಕೆ whatsapp_business_messaging ಮತ್ತು whatsapp_business_management ಅನುಮತಿಗಳನ್ನು ನೀಡಿ, ಅಲ್ಲಿಂದಲೇ ಅದರ ಟೋಕನ್ ಅನ್ನು ರಚಿಸಿ.",
+      tokenPlaceholder: "EAAG...",
+      step3Title: "ನಾವು ಅದನ್ನು ಲೈವ್‌ನಲ್ಲಿ ಪರಿಶೀಲಿಸುತ್ತೇವೆ",
+      step3Body: "ಉಳಿಸುವ ಮೊದಲು Sendkar ಈ ಕ್ರೆಡೆನ್ಷಿಯಲ್‌ಗಳನ್ನು Meta ಯ API ವಿರುದ್ಧ ಪರಿಶೀಲಿಸುತ್ತದೆ, ಮತ್ತು ಪ್ರತ್ಯುತ್ತರಗಳು ಹಾಗೂ ಡೆಲಿವರಿ ಸ್ಥಿತಿಗಳನ್ನು ಪಡೆಯಲು ನಿಮ್ಮ WABA ಅನ್ನು ಚಂದಾದಾರರಾಗಿಸುತ್ತದೆ — ಹೆಚ್ಚಿನ WhatsApp ವೇದಿಕೆಗಳು ಬಿಟ್ಟುಬಿಡುವ ಎರಡು ಹಂತಗಳು ಇವು, ಅದಕ್ಕಾಗಿಯೇ \"ಸಂಪರ್ಕಗೊಂಡಿದೆ\" ಎಂದರೆ ಯಾವಾಗಲೂ ಎರಡೂ ಕಡೆ ಸಂದೇಶಗಳು ಹರಿಯುತ್ತಿವೆ ಎಂದರ್ಥವಲ್ಲ.",
+      submitButton: "ಸಂಪರ್ಕಿಸಿ ಮತ್ತು ಪರಿಶೀಲಿಸಿ", submitPending: "Meta ಜೊತೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…",
+      noMetaApp: "ಇನ್ನೂ Meta App ಇಲ್ಲವೇ?", createOne: "developers.facebook.com ನಲ್ಲಿ ಒಂದನ್ನು ರಚಿಸಿ →",
+      successTitle: "ಸಂಪರ್ಕಗೊಂಡಿದೆ", successAs: " — ", successBody: "ಈ ಕ್ರೆಡೆನ್ಷಿಯಲ್‌ಗಳು ನಿಜವಾಗಿಯೂ ಕೆಲಸ ಮಾಡುತ್ತವೆ ಎಂದು Meta ದೃಢಪಡಿಸಿದೆ — ಕೇವಲ ಉಳಿಸಲಾಗಿಲ್ಲ, ಪರಿಶೀಲಿಸಲಾಗಿದೆ.",
+      continueButton: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಮುಂದುವರಿಸಿ →",
     },
   },
 };
