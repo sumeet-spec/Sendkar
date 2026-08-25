@@ -14,6 +14,7 @@ import { isWithinBusinessHours } from "@/lib/businessHours";
 import { pickAssignee } from "@/lib/assignment";
 import { enrollContactInSequence } from "@/lib/sequences";
 import { parseCallWebhookEvent } from "@/lib/calling";
+import { matchFlowBranch, type FlowBranch } from "@/lib/flowBranching";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -105,12 +106,6 @@ const TEMPLATE_STATUS_MAP: Record<string, "approved" | "rejected" | "pending"> =
   PAUSED: "rejected",
 };
 
-interface FlowBranch {
-  keyword: string;
-  matchType: "exact" | "contains";
-  nextStepOrder: number;
-}
-
 interface FlowStepRow {
   step_order: number;
   message_body: string;
@@ -118,6 +113,7 @@ interface FlowStepRow {
   default_next_step_order: number | null;
   message_type: "text" | "buttons" | "list";
   interactive_payload: { buttons?: InteractiveButton[]; buttonText?: string; sections?: InteractiveListSection[] } | null;
+  capture_variable: string | null;
 }
 
 /**
@@ -502,33 +498,39 @@ export async function POST(request: NextRequest) {
           const normalized = matchableBody.trim().toLowerCase();
           const { data: flowState } = await admin
             .from("contact_flow_state")
-            .select("flow_id, current_step_order")
+            .select("flow_id, current_step_order, variables")
             .eq("contact_id", contactId)
             .maybeSingle();
 
           let stepToSend: FlowStepRow | null = null;
           let flowIdForState: string | null = null;
           let inActiveFlow = false;
+          // Carries forward across the whole conversation (not just this hop) —
+          // seeded from whatever's already stored, extended below if the step
+          // being answered right now captures its reply.
+          let variables: Record<string, string> = (flowState?.variables as Record<string, string>) ?? {};
 
           if (flowState) {
             inActiveFlow = true;
             const { data: currentStep } = await admin
               .from("flow_steps")
-              .select("branches, default_next_step_order")
+              .select("branches, default_next_step_order, capture_variable")
               .eq("flow_id", flowState.flow_id)
               .eq("step_order", flowState.current_step_order)
               .maybeSingle();
 
+            if (currentStep?.capture_variable) {
+              variables = { ...variables, [currentStep.capture_variable]: matchableBody.trim() };
+            }
+
             const branches = (currentStep?.branches as FlowBranch[]) ?? [];
-            const matchedBranch = branches.find((b) =>
-              b.matchType === "exact" ? normalized === b.keyword : normalized.includes(b.keyword),
-            );
+            const matchedBranch = matchFlowBranch(branches, normalized, variables);
             const nextOrder = matchedBranch?.nextStepOrder ?? currentStep?.default_next_step_order ?? null;
 
             if (nextOrder != null) {
               const { data: nextStep } = await admin
                 .from("flow_steps")
-                .select("step_order, message_body, branches, default_next_step_order, message_type, interactive_payload")
+                .select("step_order, message_body, branches, default_next_step_order, message_type, interactive_payload, capture_variable")
                 .eq("flow_id", flowState.flow_id)
                 .eq("step_order", nextOrder)
                 .maybeSingle();
@@ -553,7 +555,7 @@ export async function POST(request: NextRequest) {
             if (matchedFlow) {
               const { data: firstStep } = await admin
                 .from("flow_steps")
-                .select("step_order, message_body, branches, default_next_step_order, message_type, interactive_payload")
+                .select("step_order, message_body, branches, default_next_step_order, message_type, interactive_payload, capture_variable")
                 .eq("flow_id", matchedFlow.id)
                 .eq("step_order", 1)
                 .maybeSingle();
@@ -576,6 +578,7 @@ export async function POST(request: NextRequest) {
                   contact_id: contactId,
                   flow_id: flowIdForState,
                   current_step_order: stepToSend.step_order,
+                  variables,
                   updated_at: new Date().toISOString(),
                 });
               } else {

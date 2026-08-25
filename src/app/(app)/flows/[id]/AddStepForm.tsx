@@ -38,9 +38,25 @@ export function AddStepForm({ flowId, nextStepOrder }: { flowId: string; nextSte
         </div>
       )}
       <div>
-        <label className="sk-label">Branches (one per line: keyword =&gt; step number)</label>
-        <textarea name="branches" className="sk-input font-mono text-[12.5px]" rows={3} placeholder={"pricing => 2\nsupport => 3"} />
-        <p className="mt-1 text-[11.5px] text-faint">If the reply contains one of these keywords, the flow jumps to that step number.</p>
+        <label className="sk-label">Store this reply as a variable (optional)</label>
+        <input name="captureVariable" className="sk-input font-mono text-sm" placeholder="e.g. budget" />
+        <p className="mt-1 text-[11.5px] text-faint">
+          A later step can branch on this instead of its own reply — e.g. ask for a budget now, decide what to
+          recommend three steps later based on the answer.
+        </p>
+      </div>
+      <div>
+        <label className="sk-label">Branches (one per line)</label>
+        <textarea
+          name="branches"
+          className="sk-input font-mono text-[12.5px]"
+          rows={3}
+          placeholder={"pricing => 2\nsupport => 3\nbudget:premium => 5"}
+        />
+        <p className="mt-1 text-[11.5px] text-faint">
+          <span className="font-mono">keyword =&gt; step</span> matches this step&apos;s own reply.{" "}
+          <span className="font-mono">variable:keyword =&gt; step</span> matches a variable an earlier step captured instead.
+        </p>
       </div>
       <div>
         <label className="sk-label">Default next step (optional — used if no branch matches)</label>
