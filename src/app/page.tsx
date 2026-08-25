@@ -45,10 +45,12 @@ const STORY_MOMENTS: StoryMoment[] = [
 ];
 
 const MORE_BUILT = [
-  { title: "One campaign, every language", body: "Group translated templates together — Sendkar auto-sends each contact their own-language version from a single broadcast." },
-  { title: "AI that drafts, tags, and suggests", body: "Claude drafts templates from a plain description and auto-tags every inbound message by intent and sentiment." },
-  { title: "A chatbot builder that branches", body: "Multi-step flows that route by keyword — an actual conversation, not a canned response." },
-  { title: "Real integrations, not a promise", body: "Shopify and WooCommerce order confirmations, Klaviyo sync, Google Sheets import, and webhooks to Zapier or Make." },
+  { tag: "Marketing", title: "Broadcast in every language, one click", body: "Group translated templates together — Sendkar auto-sends each contact their own-language version from a single broadcast." },
+  { tag: "AI Copilot", title: "Drafts templates, tags leads, on its own", body: "Claude drafts a template from a plain description and auto-tags every inbound message by intent and sentiment." },
+  { tag: "Automation", title: "Chatbots that actually branch", body: "Multi-step flows that route by keyword — an actual conversation, not a single canned reply." },
+  { tag: "Commerce", title: "Catalog, cart recovery, and payments", body: "Real WhatsApp catalog cards, an automatic nudge when a Shopify cart goes cold, and a Razorpay/PayU link — all in the same thread." },
+  { tag: "Support", title: "One inbox, auto-assigned", body: "Every conversation in one place. A new chat goes to whoever's free right now, not whoever grabs their phone first." },
+  { tag: "Analytics", title: "Revenue traced to the ad, not just delivered", body: "WATI and Interakt stop at delivered/read. Sendkar links the sale back to the exact campaign that earned it." },
 ];
 
 const PLANS = [
@@ -105,7 +107,10 @@ export default async function RootPage() {
               <Link href="/signup" className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">Get started free →</Link>
               <a href="#pricing" className="sk-btn sk-btn-ghost px-5 py-2.5 text-[14.5px]">See pricing</a>
             </div>
-            <p className="mt-4 text-[12.5px] text-faint">No card required for Free · Meta&apos;s official Cloud API, not a reseller</p>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <span className="sk-pill border-accent text-accent">⚡ Meta&apos;s official Cloud API — not a reseller</span>
+              <span className="sk-pill">🆓 Free plan, forever — not a 14-day trial</span>
+            </div>
 
             <div className="mt-12 grid grid-cols-3 gap-6 border-t border-border pt-6">
               <div>
@@ -210,17 +215,20 @@ export default async function RootPage() {
           </div>
         </Reveal>
 
-        <Reveal stagger className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 border-t border-border pt-14 sm:grid-cols-2">
-          {MORE_BUILT.map((f) => (
-            <div key={f.title} className="flex gap-3">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent" />
-              <div>
-                <div className="mb-1 font-medium">{f.title}</div>
-                <p className="text-[13.5px] text-muted">{f.body}</p>
+        <div className="border-t border-border pt-14">
+          <Reveal>
+            <h2 className="mb-8 text-center text-[26px] font-semibold leading-tight tracking-tight">Everything you need to win on WhatsApp</h2>
+          </Reveal>
+          <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {MORE_BUILT.map((f) => (
+              <div key={f.title} className="sk-card p-5">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accent">{f.tag}</div>
+                <div className="mb-1.5 font-medium leading-snug">{f.title}</div>
+                <p className="text-[13px] leading-relaxed text-muted">{f.body}</p>
               </div>
-            </div>
-          ))}
-        </Reveal>
+            ))}
+          </Reveal>
+        </div>
       </section>
 
       <section id="pricing" className="mx-auto max-w-5xl px-6 pb-24">
