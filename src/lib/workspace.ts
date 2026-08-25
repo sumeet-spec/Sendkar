@@ -62,6 +62,8 @@ export interface Workspace {
   razorpay_key_secret: string | null;
   payu_merchant_key: string | null;
   payu_salt: string | null;
+  whatsapp_last_send_error: string | null;
+  whatsapp_last_send_error_at: string | null;
   created_at: string;
 }
 

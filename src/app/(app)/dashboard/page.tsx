@@ -74,6 +74,17 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {configured && workspace.whatsapp_last_send_error && (
+        <div className="sk-card mb-6 p-5" style={{ borderColor: "rgba(248,113,113,0.35)" }}>
+          <p className="text-sm text-foreground">
+            <span className="font-semibold" style={{ color: "var(--danger)" }}>Your WhatsApp connection is broken</span> — the last send failed with:{" "}
+            <span className="font-mono text-[13px]">{workspace.whatsapp_last_send_error}</span>. Flows, automations, sequences, and away-messages have all
+            stopped replying until this is fixed.{" "}
+            <Link href="/settings/channels" className="text-accent hover:text-accent-hover">Reconnect in Channels →</Link>
+          </p>
+        </div>
+      )}
+
       {(hasRevenue || !checklistDone) && (
         <div className={hasRevenue && !checklistDone ? "mb-4 grid grid-cols-[1.6fr_1fr] gap-4" : "mb-4"}>
           {hasRevenue && (

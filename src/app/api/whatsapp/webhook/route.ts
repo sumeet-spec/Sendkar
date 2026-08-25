@@ -148,11 +148,32 @@ async function sendAndLog(
       meta_message_id: metaMessageId,
       status: "sent",
     });
+    await clearSendFailure(admin, workspaceId);
     return true;
-  } catch {
-    // Send failing (e.g. outside the 24h session window) shouldn't break webhook processing.
+  } catch (err) {
+    // Send failing (e.g. outside the 24h session window) shouldn't break webhook
+    // processing — but it also can't just vanish. Flows, automations, sequences,
+    // and away-messages all go through here with no other UI surface, so a dead
+    // token would otherwise fail silently forever with nothing telling the
+    // business owner their automations stopped replying.
+    await recordSendFailure(admin, workspaceId, err);
     return false;
   }
+}
+
+async function recordSendFailure(admin: ReturnType<typeof createAdminClient>, workspaceId: string, err: unknown) {
+  await admin
+    .from("workspaces")
+    .update({ whatsapp_last_send_error: err instanceof Error ? err.message : "Send failed.", whatsapp_last_send_error_at: new Date().toISOString() })
+    .eq("id", workspaceId);
+}
+
+async function clearSendFailure(admin: ReturnType<typeof createAdminClient>, workspaceId: string) {
+  await admin
+    .from("workspaces")
+    .update({ whatsapp_last_send_error: null, whatsapp_last_send_error_at: null })
+    .eq("id", workspaceId)
+    .not("whatsapp_last_send_error", "is", null);
 }
 
 /** Same shape as sendAndLog, but for a flow step that's a button or list message instead of plain text. */
@@ -183,8 +204,10 @@ async function sendFlowStepAndLog(
       meta_message_id: metaMessageId,
       status: "sent",
     });
+    await clearSendFailure(admin, workspaceId);
     return true;
-  } catch {
+  } catch (err) {
+    await recordSendFailure(admin, workspaceId, err);
     return false;
   }
 }

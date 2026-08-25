@@ -50,8 +50,15 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
       status: "sent",
       channel: contact.channel,
     });
+    // A working manual send is proof the connection is healthy again —
+    // clears whatever the webhook's automated sends last recorded.
+    await supabase.from("workspaces").update({ whatsapp_last_send_error: null, whatsapp_last_send_error_at: null }).eq("id", workspace.id).not("whatsapp_last_send_error", "is", null);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Send failed." };
+    const message = err instanceof Error ? err.message : "Send failed.";
+    // Persisted too, not just returned — a teammate other than whoever
+    // triggered this send should still see the dashboard banner.
+    await supabase.from("workspaces").update({ whatsapp_last_send_error: message, whatsapp_last_send_error_at: new Date().toISOString() }).eq("id", workspace.id);
+    return { error: message };
   }
 
   revalidatePath(`/inbox/${contactId}`);
