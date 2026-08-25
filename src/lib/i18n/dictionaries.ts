@@ -49,6 +49,12 @@ export interface Dictionary {
     title: string; newCampaign: string; colName: string; colTemplate: string; colStatus: string;
     colCreated: string; noCampaigns: string; startSending: string;
   };
+  landing: {
+    navPricing: string; navMcp: string; navLogin: string; navGetStarted: string;
+    heroEyebrow: string; heroLine1: string; heroLine2: string; heroLine3: string; heroSubhead: string;
+    badgeReseller: string; badgeFree: string; ctaGetStarted: string; ctaSeePricing: string;
+    statChannels: string; statMcp: string; statPrice: string;
+  };
 }
 
 export const dictionaries: Record<LanguageCode, Dictionary> = {
@@ -86,6 +92,14 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       title: "Campaigns", newCampaign: "New campaign", colName: "Name", colTemplate: "Template", colStatus: "Status",
       colCreated: "Created", noCampaigns: "No campaigns yet.", startSending: "Start sending",
     },
+    landing: {
+      navPricing: "Pricing", navMcp: "MCP", navLogin: "Log in", navGetStarted: "Get started",
+      heroEyebrow: "WhatsApp Marketing Software", heroLine1: "Send once.", heroLine2: "Every language,", heroLine3: "half the price.",
+      heroSubhead: "This is Priya Textiles' actual order, start to finish — an Instagram ad, a reply in her customer's own language, a payment collected without leaving WhatsApp, and revenue traced back to the ad that earned it.",
+      badgeReseller: "⚡ Meta's official Cloud API — not a reseller", badgeFree: "🆓 Free plan, forever — not a 14-day trial",
+      ctaGetStarted: "Get started free →", ctaSeePricing: "See pricing",
+      statChannels: "Channels", statMcp: "MCP tools for Claude", statPrice: "The price of the rest",
+    },
   },
   hi: {
     nav: {
@@ -120,6 +134,14 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     campaigns: {
       title: "कैंपेन", newCampaign: "नया कैंपेन", colName: "नाम", colTemplate: "टेम्पलेट", colStatus: "स्थिति",
       colCreated: "बनाया गया", noCampaigns: "अभी कोई कैंपेन नहीं।", startSending: "भेजना शुरू करें",
+    },
+    landing: {
+      navPricing: "प्राइसिंग", navMcp: "MCP", navLogin: "लॉग इन", navGetStarted: "शुरू करें",
+      heroEyebrow: "व्हाट्सएप मार्केटिंग सॉफ्टवेयर", heroLine1: "एक बार भेजें।", heroLine2: "हर भाषा में,", heroLine3: "आधी कीमत पर।",
+      heroSubhead: "यह प्रिया टेक्सटाइल्स का असली ऑर्डर है, शुरू से आखिर तक — एक इंस्टाग्राम विज्ञापन, ग्राहक की अपनी भाषा में जवाब, व्हाट्सएप छोड़े बिना लिया गया पेमेंट, और उस बिक्री तक वापस जोड़ा गया रेवेन्यू जिसने इसे दिलाया।",
+      badgeReseller: "⚡ Meta का असली Cloud API — रीसेलर नहीं", badgeFree: "🆓 हमेशा के लिए फ्री प्लान — 14-दिन का ट्रायल नहीं",
+      ctaGetStarted: "मुफ़्त में शुरू करें →", ctaSeePricing: "प्राइसिंग देखें",
+      statChannels: "चैनल", statMcp: "Claude के लिए MCP टूल्स", statPrice: "बाकियों की आधी कीमत",
     },
   },
   mr: {
@@ -156,6 +178,14 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       title: "कॅम्पेन", newCampaign: "नवीन कॅम्पेन", colName: "नाव", colTemplate: "टेम्पलेट", colStatus: "स्थिती",
       colCreated: "तयार केले", noCampaigns: "अजून कॅम्पेन नाहीत.", startSending: "पाठवणे सुरू करा",
     },
+    landing: {
+      navPricing: "किंमत", navMcp: "MCP", navLogin: "लॉग इन", navGetStarted: "सुरू करा",
+      heroEyebrow: "व्हॉट्सअ‍ॅप मार्केटिंग सॉफ्टवेअर", heroLine1: "एकदा पाठवा.", heroLine2: "प्रत्येक भाषेत,", heroLine3: "निम्म्या किमतीत.",
+      heroSubhead: "ही प्रिया टेक्सटाइल्सची खरी ऑर्डर आहे, सुरुवातीपासून शेवटपर्यंत — एक इंस्टाग्राम जाहिरात, ग्राहकाच्या स्वतःच्या भाषेत उत्तर, व्हॉट्सअ‍ॅप न सोडता घेतलेले पेमेंट, आणि ती विक्री मिळवून देणाऱ्या जाहिरातीपर्यंत जोडलेले रेव्हेन्यू.",
+      badgeReseller: "⚡ Meta चे अधिकृत Cloud API — रिसेलर नाही", badgeFree: "🆓 कायमचा मोफत प्लॅन — 14-दिवसांची ट्रायल नाही",
+      ctaGetStarted: "मोफत सुरू करा →", ctaSeePricing: "किंमत पहा",
+      statChannels: "चॅनेल्स", statMcp: "Claude साठी MCP टूल्स", statPrice: "इतरांच्या निम्मी किंमत",
+    },
   },
   ta: {
     nav: {
@@ -190,6 +220,14 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     campaigns: {
       title: "பிரச்சாரங்கள்", newCampaign: "புதிய பிரச்சாரம்", colName: "பெயர்", colTemplate: "வார்ப்புரு", colStatus: "நிலை",
       colCreated: "உருவாக்கப்பட்டது", noCampaigns: "இன்னும் பிரச்சாரங்கள் இல்லை.", startSending: "அனுப்புவதைத் தொடங்கு",
+    },
+    landing: {
+      navPricing: "விலை", navMcp: "MCP", navLogin: "உள்நுழை", navGetStarted: "தொடங்குங்கள்",
+      heroEyebrow: "வாட்ஸ்அப் மார்க்கெட்டிங் மென்பொருள்", heroLine1: "ஒருமுறை அனுப்புங்கள்.", heroLine2: "ஒவ்வொரு மொழியிலும்,", heroLine3: "பாதி விலையில்.",
+      heroSubhead: "இது பிரியா டெக்ஸ்டைல்ஸின் உண்மையான ஆர்டர், தொடக்கத்திலிருந்து முடிவு வரை — ஒரு இன்ஸ்டாகிராம் விளம்பரம், வாடிக்கையாளரின் சொந்த மொழியில் பதில், வாட்ஸ்அப்பை விட்டு வெளியேறாமல் பெறப்பட்ட பணம், மற்றும் அந்த விற்பனையைத் தந்த விளம்பரத்திற்கு திரும்ப இணைக்கப்பட்ட வருவாய்.",
+      badgeReseller: "⚡ Meta-வின் அதிகாரப்பூர்வ Cloud API — மறுவிற்பனையாளர் அல்ல", badgeFree: "🆓 எப்போதும் இலவச திட்டம் — 14-நாள் சோதனை அல்ல",
+      ctaGetStarted: "இலவசமாகத் தொடங்குங்கள் →", ctaSeePricing: "விலையைப் பார்க்க",
+      statChannels: "சேனல்கள்", statMcp: "Claude-க்கான MCP கருவிகள்", statPrice: "மற்றவற்றின் பாதி விலை",
     },
   },
   te: {
@@ -226,6 +264,14 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       title: "క్యాంపెయిన్‌లు", newCampaign: "కొత్త క్యాంపెయిన్", colName: "పేరు", colTemplate: "టెంప్లేట్", colStatus: "స్థితి",
       colCreated: "సృష్టించబడింది", noCampaigns: "ఇంకా క్యాంపెయిన్‌లు లేవు.", startSending: "పంపడం మొదలుపెట్టండి",
     },
+    landing: {
+      navPricing: "ధర", navMcp: "MCP", navLogin: "లాగిన్", navGetStarted: "ప్రారంభించండి",
+      heroEyebrow: "వాట్సాప్ మార్కెటింగ్ సాఫ్ట్‌వేర్", heroLine1: "ఒకసారి పంపండి.", heroLine2: "ప్రతి భాషలో,", heroLine3: "సగం ధరకే.",
+      heroSubhead: "ఇది ప్రియా టెక్స్‌టైల్స్ యొక్క నిజమైన ఆర్డర్, మొదటి నుండి చివరి వరకు — ఒక ఇన్‌స్టాగ్రామ్ ప్రకటన, కస్టమర్ సొంత భాషలో సమాధానం, వాట్సాప్ వదలకుండా తీసుకున్న చెల్లింపు, మరియు ఆ అమ్మకాన్ని తెచ్చిన ప్రకటనకు తిరిగి అనుసంధానించబడిన ఆదాయం.",
+      badgeReseller: "⚡ Meta యొక్క అధికారిక Cloud API — రీసెల్లర్ కాదు", badgeFree: "🆓 ఎప్పటికీ ఉచిత ప్లాన్ — 14-రోజుల ట్రయల్ కాదు",
+      ctaGetStarted: "ఉచితంగా ప్రారంభించండి →", ctaSeePricing: "ధర చూడండి",
+      statChannels: "ఛానెల్‌లు", statMcp: "Claude కోసం MCP టూల్స్", statPrice: "మిగతా వాటి సగం ధర",
+    },
   },
   kn: {
     nav: {
@@ -260,6 +306,14 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     campaigns: {
       title: "ಕ್ಯಾಂಪೇನ್‌ಗಳು", newCampaign: "ಹೊಸ ಕ್ಯಾಂಪೇನ್", colName: "ಹೆಸರು", colTemplate: "ಟೆಂಪ್ಲೇಟ್", colStatus: "ಸ್ಥಿತಿ",
       colCreated: "ರಚಿಸಲಾಗಿದೆ", noCampaigns: "ಇನ್ನೂ ಕ್ಯಾಂಪೇನ್‌ಗಳಿಲ್ಲ.", startSending: "ಕಳುಹಿಸುವುದನ್ನು ಪ್ರಾರಂಭಿಸಿ",
+    },
+    landing: {
+      navPricing: "ಬೆಲೆ", navMcp: "MCP", navLogin: "ಲಾಗಿನ್", navGetStarted: "ಪ್ರಾರಂಭಿಸಿ",
+      heroEyebrow: "ವಾಟ್ಸಾಪ್ ಮಾರ್ಕೆಟಿಂಗ್ ಸಾಫ್ಟ್‌ವೇರ್", heroLine1: "ಒಮ್ಮೆ ಕಳುಹಿಸಿ.", heroLine2: "ಪ್ರತಿ ಭಾಷೆಯಲ್ಲಿ,", heroLine3: "ಅರ್ಧ ಬೆಲೆಗೆ.",
+      heroSubhead: "ಇದು ಪ್ರಿಯಾ ಟೆಕ್ಸ್‌ಟೈಲ್ಸ್‌ನ ನಿಜವಾದ ಆರ್ಡರ್, ಆರಂಭದಿಂದ ಅಂತ್ಯದವರೆಗೆ — ಒಂದು ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಜಾಹೀರಾತು, ಗ್ರಾಹಕರ ಸ್ವಂತ ಭಾಷೆಯಲ್ಲಿ ಪ್ರತ್ಯುತ್ತರ, ವಾಟ್ಸಾಪ್ ಬಿಡದೆ ಪಡೆದ ಪಾವತಿ, ಮತ್ತು ಆ ಮಾರಾಟವನ್ನು ತಂದ ಜಾಹೀರಾತಿಗೆ ಮರಳಿ ಜೋಡಿಸಲಾದ ಆದಾಯ.",
+      badgeReseller: "⚡ Meta ನ ಅಧಿಕೃತ Cloud API — ಮರುಮಾರಾಟಗಾರರಲ್ಲ", badgeFree: "🆓 ಶಾಶ್ವತ ಉಚಿತ ಯೋಜನೆ — 14-ದಿನಗಳ ಟ್ರಯಲ್ ಅಲ್ಲ",
+      ctaGetStarted: "ಉಚಿತವಾಗಿ ಪ್ರಾರಂಭಿಸಿ →", ctaSeePricing: "ಬೆಲೆ ನೋಡಿ",
+      statChannels: "ಚಾನೆಲ್‌ಗಳು", statMcp: "Claude ಗಾಗಿ MCP ಟೂಲ್‌ಗಳು", statPrice: "ಉಳಿದವರ ಅರ್ಧ ಬೆಲೆ",
     },
   },
 };

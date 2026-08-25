@@ -5,6 +5,9 @@ import { PLAN_LIMITS } from "@/lib/plans";
 import { Logo } from "@/components/Logo";
 import { Reveal } from "@/components/Reveal";
 import { StoryCarousel, type StoryMoment } from "@/components/StoryCarousel";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 const STORY_MOMENTS: StoryMoment[] = [
   {
@@ -65,6 +68,9 @@ export default async function RootPage() {
   const { data } = await supabase.auth.getUser();
   if (data.user) redirect("/dashboard");
 
+  const lang = await getCurrentLanguage();
+  const t = getDictionary(lang).landing;
+
   return (
     <div className="flex-1 overflow-x-hidden">
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
@@ -73,10 +79,11 @@ export default async function RootPage() {
           <span className="text-[15px] font-semibold tracking-tight">Sendkar</span>
         </div>
         <nav className="flex items-center gap-5">
-          <a href="#pricing" className="text-[13.5px] text-muted hover:text-foreground">Pricing</a>
-          <a href="/mcp" className="text-[13.5px] text-muted hover:text-foreground">MCP</a>
-          <Link href="/login" className="text-[13.5px] text-muted hover:text-foreground">Log in</Link>
-          <Link href="/signup" className="sk-btn sk-btn-primary text-[13.5px]">Get started</Link>
+          <a href="#pricing" className="text-[13.5px] text-muted hover:text-foreground">{t.navPricing}</a>
+          <a href="/mcp" className="text-[13.5px] text-muted hover:text-foreground">{t.navMcp}</a>
+          <Link href="/login" className="text-[13.5px] text-muted hover:text-foreground">{t.navLogin}</Link>
+          <Link href="/signup" className="sk-btn sk-btn-primary text-[13.5px]">{t.navGetStarted}</Link>
+          <LanguageSwitcher current={lang} compact />
         </nav>
       </header>
 
@@ -90,40 +97,38 @@ export default async function RootPage() {
 
         <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <div>
-            <div className="sk-eyebrow mb-6">WhatsApp Marketing Software</div>
+            <div className="sk-eyebrow mb-6">{t.heroEyebrow}</div>
             <h1 className="text-[46px] font-extrabold leading-[1.02] tracking-tight sm:text-[64px]">
-              Send once.
+              {t.heroLine1}
               <br />
-              <span className="font-light text-muted">Every language,</span>
+              <span className="font-light text-muted">{t.heroLine2}</span>
               <br />
-              <span className="text-accent">half the price.</span>
+              <span className="text-accent">{t.heroLine3}</span>
             </h1>
             <p className="mt-6 max-w-md text-[16px] leading-relaxed text-muted">
-              This is Priya Textiles&apos; actual order, start to finish — an Instagram ad, a reply in her
-              customer&apos;s own language, a payment collected without leaving WhatsApp, and revenue traced back to
-              the ad that earned it.
+              {t.heroSubhead}
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Link href="/signup" className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">Get started free →</Link>
-              <a href="#pricing" className="sk-btn sk-btn-ghost px-5 py-2.5 text-[14.5px]">See pricing</a>
+              <Link href="/signup" className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">{t.ctaGetStarted}</Link>
+              <a href="#pricing" className="sk-btn sk-btn-ghost px-5 py-2.5 text-[14.5px]">{t.ctaSeePricing}</a>
             </div>
             <div className="mt-5 flex flex-wrap items-center gap-2">
-              <span className="sk-pill border-accent text-accent">⚡ Meta&apos;s official Cloud API — not a reseller</span>
-              <span className="sk-pill">🆓 Free plan, forever — not a 14-day trial</span>
+              <span className="sk-pill border-accent text-accent">{t.badgeReseller}</span>
+              <span className="sk-pill">{t.badgeFree}</span>
             </div>
 
             <div className="mt-12 grid grid-cols-3 gap-6 border-t border-border pt-6">
               <div>
                 <div className="text-2xl font-bold">3</div>
-                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">Channels</div>
+                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statChannels}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold">15</div>
-                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">MCP tools for Claude</div>
+                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statMcp}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-accent">½</div>
-                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">The price of the rest</div>
+                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statPrice}</div>
               </div>
             </div>
           </div>
