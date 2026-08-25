@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           <h2 className="mb-2 text-[15px] font-medium text-foreground">What we collect</h2>
           <ul className="list-disc space-y-1.5 pl-5">
             <li>Your WhatsApp number and password, used to create and sign in to your account — we don&apos;t verify this number with Meta ourselves; it&apos;s just your login identity.</li>
-            <li>Workspace data you add or that flows in through WhatsApp: contacts, message content, templates, campaigns, and any order/revenue data you log or connect from Shopify or WooCommerce.</li>
+            <li>Your business data — contacts, message content, templates, campaigns, and any order/revenue data you log or connect from Shopify or WooCommerce.</li>
             <li>Basic account activity (sign-ins, API key usage) needed to operate and secure the product.</li>
           </ul>
         </section>

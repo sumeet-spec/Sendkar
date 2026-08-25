@@ -78,8 +78,8 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     auth: {
       loginTitle: "Log in", loginSubtitle: "Welcome back.", whatsappNumber: "WhatsApp number", password: "Password",
-      loginButton: "Log in", noAccount: "New here? Create a workspace", signupTitle: "Create your workspace",
-      signupSubtitle: "Free to start, real Cloud API from day one.", workspaceName: "Workspace name",
+      loginButton: "Log in", noAccount: "New here? Create your business account", signupTitle: "Set up your business",
+      signupSubtitle: "Free to start, real Cloud API from day one.", workspaceName: "Business name",
       signupButton: "Create workspace", haveAccount: "Already have an account?", logIn: "Log in",
     },
     dashboard: {
@@ -139,8 +139,8 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     auth: {
       loginTitle: "लॉग इन करें", loginSubtitle: "वापसी पर स्वागत है।", whatsappNumber: "WhatsApp नंबर", password: "पासवर्ड",
-      loginButton: "लॉग इन करें", noAccount: "नए हैं? वर्कस्पेस बनाएं", signupTitle: "अपना वर्कस्पेस बनाएं",
-      signupSubtitle: "शुरू करना मुफ़्त है, पहले दिन से असली Cloud API।", workspaceName: "वर्कस्पेस का नाम",
+      loginButton: "लॉग इन करें", noAccount: "नए हैं? अपना बिज़नेस बनाएं", signupTitle: "अपना बिज़नेस सेट अप करें",
+      signupSubtitle: "शुरू करना मुफ़्त है, पहले दिन से असली Cloud API।", workspaceName: "बिज़नेस का नाम",
       signupButton: "वर्कस्पेस बनाएं", haveAccount: "पहले से खाता है?", logIn: "लॉग इन करें",
     },
     dashboard: {
@@ -200,8 +200,8 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     auth: {
       loginTitle: "लॉग इन करा", loginSubtitle: "पुन्हा स्वागत आहे.", whatsappNumber: "WhatsApp नंबर", password: "पासवर्ड",
-      loginButton: "लॉग इन करा", noAccount: "नवीन आहात? वर्कस्पेस तयार करा", signupTitle: "तुमचे वर्कस्पेस तयार करा",
-      signupSubtitle: "सुरुवात मोफत आहे, पहिल्या दिवसापासून खरे Cloud API.", workspaceName: "वर्कस्पेसचे नाव",
+      loginButton: "लॉग इन करा", noAccount: "नवीन आहात? तुमचा व्यवसाय तयार करा", signupTitle: "तुमचा व्यवसाय सेट करा",
+      signupSubtitle: "सुरुवात मोफत आहे, पहिल्या दिवसापासून खरे Cloud API.", workspaceName: "व्यवसायाचे नाव",
       signupButton: "वर्कस्पेस तयार करा", haveAccount: "आधीच खाते आहे?", logIn: "लॉग इन करा",
     },
     dashboard: {
@@ -261,8 +261,8 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     auth: {
       loginTitle: "உள்நுழையவும்", loginSubtitle: "மீண்டும் வருக.", whatsappNumber: "WhatsApp எண்", password: "கடவுச்சொல்",
-      loginButton: "உள்நுழையவும்", noAccount: "புதியவரா? வேலைத்தளம் உருவாக்கவும்", signupTitle: "உங்கள் வேலைத்தளத்தை உருவாக்கவும்",
-      signupSubtitle: "தொடங்குவது இலவசம், முதல் நாளிலிருந்தே உண்மையான Cloud API.", workspaceName: "வேலைத்தள பெயர்",
+      loginButton: "உள்நுழையவும்", noAccount: "புதியவரா? உங்கள் வணிகத்தை உருவாக்குங்கள்", signupTitle: "உங்கள் வணிகத்தை அமைக்கவும்",
+      signupSubtitle: "தொடங்குவது இலவசம், முதல் நாளிலிருந்தே உண்மையான Cloud API.", workspaceName: "வணிகத்தின் பெயர்",
       signupButton: "வேலைத்தளம் உருவாக்கவும்", haveAccount: "ஏற்கனவே கணக்கு உள்ளதா?", logIn: "உள்நுழையவும்",
     },
     dashboard: {
@@ -322,8 +322,8 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     auth: {
       loginTitle: "లాగిన్ చేయండి", loginSubtitle: "తిరిగి రావడం సంతోషం.", whatsappNumber: "WhatsApp నంబర్", password: "పాస్‌వర్డ్",
-      loginButton: "లాగిన్ చేయండి", noAccount: "కొత్తగా వచ్చారా? వర్క్‌స్పేస్ సృష్టించండి", signupTitle: "మీ వర్క్‌స్పేస్ సృష్టించండి",
-      signupSubtitle: "ప్రారంభించడం ఉచితం, మొదటి రోజు నుండే నిజమైన Cloud API.", workspaceName: "వర్క్‌స్పేస్ పేరు",
+      loginButton: "లాగిన్ చేయండి", noAccount: "కొత్తగా వచ్చారా? మీ వ్యాపారాన్ని సృష్టించండి", signupTitle: "మీ వ్యాపారాన్ని సెటప్ చేయండి",
+      signupSubtitle: "ప్రారంభించడం ఉచితం, మొదటి రోజు నుండే నిజమైన Cloud API.", workspaceName: "వ్యాపార పేరు",
       signupButton: "వర్క్‌స్పేస్ సృష్టించండి", haveAccount: "ఇప్పటికే ఖాతా ఉందా?", logIn: "లాగిన్ చేయండి",
     },
     dashboard: {
@@ -383,8 +383,8 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     auth: {
       loginTitle: "ಲಾಗಿನ್ ಮಾಡಿ", loginSubtitle: "ಮತ್ತೆ ಸ್ವಾಗತ.", whatsappNumber: "WhatsApp ಸಂಖ್ಯೆ", password: "ಪಾಸ್‌ವರ್ಡ್",
-      loginButton: "ಲಾಗಿನ್ ಮಾಡಿ", noAccount: "ಹೊಸಬರೇ? ವರ್ಕ್‌ಸ್ಪೇಸ್ ರಚಿಸಿ", signupTitle: "ನಿಮ್ಮ ವರ್ಕ್‌ಸ್ಪೇಸ್ ರಚಿಸಿ",
-      signupSubtitle: "ಪ್ರಾರಂಭಿಸಲು ಉಚಿತ, ಮೊದಲ ದಿನದಿಂದಲೇ ನಿಜವಾದ Cloud API.", workspaceName: "ವರ್ಕ್‌ಸ್ಪೇಸ್ ಹೆಸರು",
+      loginButton: "ಲಾಗಿನ್ ಮಾಡಿ", noAccount: "ಹೊಸಬರೇ? ನಿಮ್ಮ ವ್ಯಾಪಾರವನ್ನು ರಚಿಸಿ", signupTitle: "ನಿಮ್ಮ ವ್ಯಾಪಾರವನ್ನು ಹೊಂದಿಸಿ",
+      signupSubtitle: "ಪ್ರಾರಂಭಿಸಲು ಉಚಿತ, ಮೊದಲ ದಿನದಿಂದಲೇ ನಿಜವಾದ Cloud API.", workspaceName: "ವ್ಯಾಪಾರದ ಹೆಸರು",
       signupButton: "ವರ್ಕ್‌ಸ್ಪೇಸ್ ರಚಿಸಿ", haveAccount: "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ?", logIn: "ಲಾಗಿನ್ ಮಾಡಿ",
     },
     dashboard: {

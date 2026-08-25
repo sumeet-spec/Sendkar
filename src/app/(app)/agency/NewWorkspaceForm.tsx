@@ -8,13 +8,13 @@ export function NewWorkspaceForm() {
   const [open, setOpen] = useState(false);
 
   if (!open) {
-    return <button onClick={() => setOpen(true)} className="sk-btn sk-btn-primary">+ Add client workspace</button>;
+    return <button onClick={() => setOpen(true)} className="sk-btn sk-btn-primary">+ Add client</button>;
   }
 
   return (
     <form action={formAction} className="sk-card flex items-end gap-3 p-4">
       <div className="flex-1">
-        <label className="sk-label">Client / workspace name</label>
+        <label className="sk-label">Client name</label>
         <input name="name" className="sk-input" placeholder="Acme Retail" required />
       </div>
       <button type="submit" disabled={pending} className="sk-btn sk-btn-primary disabled:opacity-60">

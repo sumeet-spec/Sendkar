@@ -32,14 +32,14 @@ export default async function AgencyPage() {
         <h1 className="text-xl font-semibold tracking-tight">Agency</h1>
         <NewWorkspaceForm />
       </div>
-      <p className="mb-6 text-sm text-muted">Every workspace this login has access to. Switch into one from the sidebar, or add a new client here.</p>
+      <p className="mb-6 text-sm text-muted">Every client account this login has access to. Switch into one from the sidebar, or add a new client here.</p>
 
       <div className="sk-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                {["Workspace", "Plan", "Contacts", "Campaigns", "Messages", ""].map((h) => (
+                {["Client", "Plan", "Contacts", "Campaigns", "Messages", ""].map((h) => (
                   <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
                 ))}
               </tr>
@@ -60,7 +60,7 @@ export default async function AgencyPage() {
                 </tr>
               ))}
               {workspaces.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No workspaces yet.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No clients yet.</td></tr>
               )}
             </tbody>
           </table>
