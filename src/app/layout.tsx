@@ -14,8 +14,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sendkar — WhatsApp Business Platform",
-  description: "Campaigns, delivery tracking, and a shared inbox on the WhatsApp Business Platform.",
+  title: "Sendkar — WhatsApp Marketing Software for Indian Sellers",
+  description: "WhatsApp Marketing, bulk broadcasts, a shared team inbox, and revenue tracking — built on Meta's real Cloud API, not a reseller.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

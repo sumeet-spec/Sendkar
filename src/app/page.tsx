@@ -88,7 +88,7 @@ export default async function RootPage() {
 
         <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <div>
-            <div className="sk-eyebrow mb-6">WhatsApp Business Platform</div>
+            <div className="sk-eyebrow mb-6">WhatsApp Marketing Software</div>
             <h1 className="text-[46px] font-extrabold leading-[1.02] tracking-tight sm:text-[64px]">
               Send once.
               <br />
@@ -226,7 +226,7 @@ export default async function RootPage() {
       <section id="pricing" className="mx-auto max-w-5xl px-6 pb-24">
         <Reveal>
           <h2 className="mb-2 text-center text-2xl font-semibold tracking-tight">Pricing</h2>
-          <p className="mb-6 text-center text-[13px] text-faint">Roughly half of what comparable WhatsApp platforms charge for the same limits.</p>
+          <p className="mb-6 text-center text-[13px] text-faint">Roughly half of what comparable WhatsApp Marketing platforms charge for the same limits.</p>
         </Reveal>
         <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PLANS.map((p) => {
@@ -252,7 +252,7 @@ export default async function RootPage() {
       <section className="sk-cta-band relative px-6 py-20">
         <div className="relative z-10 mx-auto max-w-2xl text-center">
           <h2 className="text-[32px] font-semibold leading-tight tracking-tight sm:text-[40px]">
-            Your WhatsApp campaigns deserve better than a spreadsheet of phone numbers.
+            Your WhatsApp Marketing deserves better than a spreadsheet of phone numbers.
           </h2>
           <p className="mt-4 text-[15px] text-muted">Free to start, real Cloud API from day one, no card required.</p>
           <Link href="/signup" className="sk-btn sk-btn-primary mt-7 inline-flex px-6 py-3 text-[15px]">Get started free →</Link>
