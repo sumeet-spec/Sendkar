@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
+import { parseBranches } from "@/lib/flowBranching";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -42,43 +43,13 @@ export async function deleteFlow(id: string) {
   revalidatePath("/flows");
 }
 
-/**
- * Parses branch lines into branch objects — a plain-text format instead of a
- * drag-and-drop graph editor for v1. Two forms:
- *   "keyword => 3"            — matches the reply to THIS step (original behavior)
- *   "varName:keyword => 3"    — matches a variable an earlier step captured,
- *                                not the current reply — the "ask now, decide
- *                                later" pattern Wati's condition nodes support.
- */
-function parseBranches(raw: string): Array<{ keyword: string; matchType: "contains"; nextStepOrder: number; sourceVariable?: string }> {
-  return raw
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [left, stepStr] = line.split("=>").map((s) => s.trim());
-      const nextStepOrder = Number(stepStr);
-      if (!left || !Number.isInteger(nextStepOrder)) return null;
-
-      const colonIdx = left.indexOf(":");
-      if (colonIdx > 0) {
-        const sourceVariable = left.slice(0, colonIdx).trim();
-        const keyword = left.slice(colonIdx + 1).trim().toLowerCase();
-        if (!sourceVariable || !keyword) return null;
-        return { sourceVariable, keyword, matchType: "contains" as const, nextStepOrder };
-      }
-      return { keyword: left.toLowerCase(), matchType: "contains" as const, nextStepOrder };
-    })
-    .filter((b): b is { keyword: string; matchType: "contains"; nextStepOrder: number; sourceVariable?: string } => b !== null);
-}
-
 export async function addFlowStep(_prevState: unknown, formData: FormData) {
   const flowId = String(formData.get("flowId") ?? "");
   const messageBody = String(formData.get("messageBody") ?? "").trim();
   const branchesRaw = String(formData.get("branches") ?? "");
   const defaultNextStr = String(formData.get("defaultNextStepOrder") ?? "").trim();
   const messageType = String(formData.get("messageType") ?? "text");
-  const captureVariable = String(formData.get("captureVariable") ?? "").trim() || null;
+  const captureVariable = String(formData.get("captureVariable") ?? "").trim().toLowerCase() || null;
   if (!flowId || !messageBody) return { error: "A message body is required." };
 
   let interactivePayload: { buttons: Array<{ id: string; title: string }> } | null = null;

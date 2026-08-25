@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { matchFlowBranch, type FlowBranch } from "./flowBranching";
+import { matchFlowBranch, parseBranches, type FlowBranch } from "./flowBranching";
 
 describe("matchFlowBranch", () => {
   it("matches the current reply when no sourceVariable is set", () => {
@@ -34,5 +34,29 @@ describe("matchFlowBranch", () => {
   it("treats a missing variable as an empty string, not a crash", () => {
     const branches: FlowBranch[] = [{ keyword: "premium", matchType: "contains", nextStepOrder: 5, sourceVariable: "budget" }];
     expect(matchFlowBranch(branches, "premium", {})).toBeUndefined();
+  });
+});
+
+describe("parseBranches", () => {
+  it("parses a plain keyword branch", () => {
+    expect(parseBranches("pricing => 2")).toEqual([{ keyword: "pricing", matchType: "contains", nextStepOrder: 2 }]);
+  });
+
+  it("parses a variable-sourced branch", () => {
+    expect(parseBranches("budget:premium => 5")).toEqual([
+      { sourceVariable: "budget", keyword: "premium", matchType: "contains", nextStepOrder: 5 },
+    ]);
+  });
+
+  it("lowercases both the variable name and the keyword, so capture and branch always agree regardless of how the user typed them", () => {
+    expect(parseBranches("Budget:Premium => 5")).toEqual([
+      { sourceVariable: "budget", keyword: "premium", matchType: "contains", nextStepOrder: 5 },
+    ]);
+  });
+
+  it("skips malformed lines", () => {
+    expect(parseBranches("no arrow here\npricing => not-a-number\n\nsupport => 3")).toEqual([
+      { keyword: "support", matchType: "contains", nextStepOrder: 3 },
+    ]);
   });
 });

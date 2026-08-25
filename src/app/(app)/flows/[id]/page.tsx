@@ -28,7 +28,7 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
           <StepRow
             key={s.id}
             flowId={id}
-            step={{ ...s, branches: (s.branches as Array<{ keyword: string; matchType: string; nextStepOrder: number }>) ?? [] }}
+            step={{ ...s, branches: (s.branches as Array<{ keyword: string; matchType: string; nextStepOrder: number; sourceVariable?: string }>) ?? [] }}
           />
         ))}
         {(!steps || steps.length === 0) && <p className="py-4 text-center text-muted">No steps yet — add the first one below.</p>}
