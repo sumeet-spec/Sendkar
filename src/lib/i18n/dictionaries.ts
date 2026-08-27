@@ -56,7 +56,7 @@ export interface Dictionary {
     statChannels: string; statMcp: string; statPrice: string;
   };
   onboarding: {
-    title: string; introBefore: string; skipLabel: string; introAfter: string;
+    title: string; introBefore: string; skipLabel: string; introAfter: string; numberWarning: string;
     step1Title: string; step1Body: string; phoneIdPlaceholder: string; wabaIdPlaceholder: string;
     step2Title: string; step2Body: string; tokenPlaceholder: string;
     step3Title: string; step3Body: string;
@@ -114,6 +114,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       introBefore: "Three things from Meta Business Manager. Don't have a WhatsApp Business number yet?",
       skipLabel: "Skip this",
       introAfter: "— everything else in Sendkar already works, sending just stays off until this is filled in.",
+      numberWarning: "Use a WhatsApp number you don't already use in the regular WhatsApp app — connecting it here moves it to Sendkar and logs it out of the app (your chats stay on your phone, but you'll manage this number from Sendkar going forward).",
       step1Title: "Get your Phone Number ID and WABA ID",
       step1Body: "In your Meta App → WhatsApp → API Setup, you'll see a \"From\" phone number with its Phone number ID beneath it, and a WhatsApp Business Account ID field nearby.",
       phoneIdPlaceholder: "Phone number ID — e.g. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
@@ -175,6 +176,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       introBefore: "Meta Business Manager से तीन चीज़ें चाहिए। अभी तक WhatsApp Business नंबर नहीं है?",
       skipLabel: "इसे छोड़ें",
       introAfter: "— Sendkar में बाकी सब पहले से काम करता है, बस यह भरने तक मैसेज भेजना बंद रहेगा।",
+      numberWarning: "ऐसा WhatsApp नंबर इस्तेमाल करें जिसे आप सामान्य WhatsApp ऐप में पहले से इस्तेमाल नहीं कर रहे — इसे यहाँ जोड़ने पर यह Sendkar में चला जाता है और ऐप से लॉग आउट हो जाता है (आपकी चैट्स आपके फ़ोन में सुरक्षित रहती हैं, पर अब से यह नंबर आप Sendkar से ही चलाएंगे)।",
       step1Title: "अपना फ़ोन नंबर ID और WABA ID लें",
       step1Body: "अपने Meta App → WhatsApp → API Setup में, आपको एक \"From\" फ़ोन नंबर दिखेगा जिसके नीचे उसका Phone number ID होगा, और पास में एक WhatsApp Business Account ID फ़ील्ड होगी।",
       phoneIdPlaceholder: "फ़ोन नंबर ID — जैसे 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
@@ -236,6 +238,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       introBefore: "Meta Business Manager कडून तीन गोष्टी हव्यात. अजून WhatsApp Business नंबर नाही?",
       skipLabel: "हे वगळा",
       introAfter: "— Sendkar मधील बाकी सर्व आधीच काम करते, फक्त हे भरेपर्यंत मेसेज पाठवणे बंद राहील.",
+      numberWarning: "असा WhatsApp नंबर वापरा जो तुम्ही नेहमीच्या WhatsApp अ‍ॅपमध्ये आधीच वापरत नाही आहात — तो इथे जोडल्यास तो Sendkar कडे स्थलांतरित होतो आणि अ‍ॅपमधून लॉग आउट होतो (तुमचे चॅट्स तुमच्या फोनमध्ये सुरक्षित राहतात, पण यापुढे हा नंबर तुम्ही Sendkar मधूनच चालवाल).",
       step1Title: "तुमचा फोन नंबर ID आणि WABA ID मिळवा",
       step1Body: "तुमच्या Meta App → WhatsApp → API Setup मध्ये, तुम्हाला एक \"From\" फोन नंबर दिसेल ज्याच्या खाली त्याचा Phone number ID असेल, आणि जवळच एक WhatsApp Business Account ID फील्ड असेल.",
       phoneIdPlaceholder: "फोन नंबर ID — उदा. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
@@ -297,6 +300,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       introBefore: "Meta Business Manager-இலிருந்து மூன்று விஷயங்கள் தேவை. இன்னும் WhatsApp Business எண் இல்லையா?",
       skipLabel: "இதைத் தவிர்",
       introAfter: "— Sendkar-இல் மற்ற அனைத்தும் ஏற்கனவே வேலை செய்கிறது, இது நிரப்பப்படும் வரை மட்டும் அனுப்புவது நிறுத்தப்பட்டிருக்கும்.",
+      numberWarning: "நீங்கள் ஏற்கனவே வழக்கமான WhatsApp ஆப்பில் பயன்படுத்தாத ஒரு WhatsApp எண்ணைப் பயன்படுத்துங்கள் — இதை இங்கே இணைத்தால், அது Sendkar-க்கு மாற்றப்பட்டு ஆப்பிலிருந்து வெளியேறும் (உங்கள் அரட்டைகள் உங்கள் தொலைபேசியில் பாதுகாப்பாக இருக்கும், ஆனால் இனி இந்த எண்ணை நீங்கள் Sendkar மூலமாகவே பயன்படுத்த வேண்டும்).",
       step1Title: "உங்கள் Phone Number ID மற்றும் WABA ID-ஐப் பெறுங்கள்",
       step1Body: "உங்கள் Meta App → WhatsApp → API Setup-இல், ஒரு \"From\" ஃபோன் எண்ணையும் அதன் கீழ் Phone number ID-ஐயும், அருகில் ஒரு WhatsApp Business Account ID புலத்தையும் காண்பீர்கள்.",
       phoneIdPlaceholder: "Phone number ID — எ.கா. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
@@ -358,6 +362,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       introBefore: "Meta Business Manager నుండి మూడు విషయాలు కావాలి. ఇంకా WhatsApp Business నంబర్ లేదా?",
       skipLabel: "దీన్ని దాటవేయండి",
       introAfter: "— Sendkar లో మిగతా అన్నీ ఇప్పటికే పనిచేస్తాయి, ఇది నింపేవరకు మెసేజ్‌లు పంపడం మాత్రమే ఆఫ్‌లో ఉంటుంది.",
+      numberWarning: "మీరు సాధారణ WhatsApp యాప్‌లో ఇప్పటికే వాడని WhatsApp నంబర్‌ను వాడండి — దీన్ని ఇక్కడ కనెక్ట్ చేస్తే అది Sendkar‌కు మారిపోయి యాప్ నుండి లాగ్ అవుట్ అవుతుంది (మీ చాట్‌లు మీ ఫోన్‌లో సురక్షితంగా ఉంటాయి, కానీ ఇకపై ఈ నంబర్‌ను మీరు Sendkar నుండే నిర్వహించాలి).",
       step1Title: "మీ Phone Number ID మరియు WABA ID పొందండి",
       step1Body: "మీ Meta App → WhatsApp → API Setup లో, మీకు ఒక \"From\" ఫోన్ నంబర్ దాని కింద Phone number ID తో, మరియు దగ్గరలో WhatsApp Business Account ID ఫీల్డ్ కనిపిస్తుంది.",
       phoneIdPlaceholder: "Phone number ID — ఉదా. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
@@ -419,6 +424,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       introBefore: "Meta Business Manager ನಿಂದ ಮೂರು ವಿಷಯಗಳು ಬೇಕು. ಇನ್ನೂ WhatsApp Business ಸಂಖ್ಯೆ ಇಲ್ಲವೇ?",
       skipLabel: "ಇದನ್ನು ಬಿಟ್ಟುಬಿಡಿ",
       introAfter: "— Sendkar ನಲ್ಲಿ ಉಳಿದೆಲ್ಲವೂ ಈಗಾಗಲೇ ಕೆಲಸ ಮಾಡುತ್ತದೆ, ಇದನ್ನು ಭರ್ತಿ ಮಾಡುವವರೆಗೆ ಸಂದೇಶ ಕಳುಹಿಸುವುದು ಮಾತ್ರ ಆಫ್ ಆಗಿರುತ್ತದೆ.",
+      numberWarning: "ನೀವು ಸಾಮಾನ್ಯ WhatsApp ಆ್ಯಪ್‌ನಲ್ಲಿ ಈಗಾಗಲೇ ಬಳಸದ WhatsApp ಸಂಖ್ಯೆಯನ್ನು ಬಳಸಿ — ಇದನ್ನು ಇಲ್ಲಿ ಸಂಪರ್ಕಿಸಿದರೆ ಅದು Sendkar‌ಗೆ ಸ್ಥಳಾಂತರಗೊಂಡು ಆ್ಯಪ್‌ನಿಂದ ಲಾಗ್ ಔಟ್ ಆಗುತ್ತದೆ (ನಿಮ್ಮ ಚಾಟ್‌ಗಳು ನಿಮ್ಮ ಫೋನ್‌ನಲ್ಲಿ ಸುರಕ್ಷಿತವಾಗಿ ಉಳಿಯುತ್ತವೆ, ಆದರೆ ಇನ್ನು ಮುಂದೆ ಈ ಸಂಖ್ಯೆಯನ್ನು ನೀವು Sendkar ಮೂಲಕವೇ ನಿರ್ವಹಿಸಬೇಕಾಗುತ್ತದೆ).",
       step1Title: "ನಿಮ್ಮ Phone Number ID ಮತ್ತು WABA ID ಪಡೆಯಿರಿ",
       step1Body: "ನಿಮ್ಮ Meta App → WhatsApp → API Setup ನಲ್ಲಿ, ನಿಮಗೆ ಒಂದು \"From\" ಫೋನ್ ಸಂಖ್ಯೆ ಅದರ ಕೆಳಗೆ Phone number ID ಯೊಂದಿಗೆ, ಮತ್ತು ಹತ್ತಿರದಲ್ಲಿ WhatsApp Business Account ID ಕ್ಷೇತ್ರ ಕಾಣಿಸುತ್ತದೆ.",
       phoneIdPlaceholder: "Phone number ID — ಉದಾ. 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",

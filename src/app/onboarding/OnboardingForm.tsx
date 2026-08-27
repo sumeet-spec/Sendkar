@@ -38,6 +38,8 @@ export function OnboardingForm({ t }: { t: Dictionary["onboarding"] }) {
           {t.introAfter}
         </p>
 
+        <div className="mb-5 rounded-md border border-warn/30 bg-warn/5 p-3 text-[12.5px] text-foreground">{t.numberWarning}</div>
+
         <form action={formAction} className="flex flex-col gap-5">
           <div className="flex gap-3">
             <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-accent-dim text-[11px] text-accent">1</div>

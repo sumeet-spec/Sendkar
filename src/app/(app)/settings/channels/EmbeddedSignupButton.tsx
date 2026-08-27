@@ -102,6 +102,11 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
         The recommended path — no phone-number-id or access token to find and paste. Opens Meta&apos;s own signup
         flow in a popup.
       </p>
+      <p className="mb-3 rounded-md border border-warn/30 bg-warn/5 p-2.5 text-[12px] text-foreground">
+        Use a number you don&apos;t already use in the regular WhatsApp app — connecting it here moves it to Sendkar
+        and logs it out of the app. Your chats stay on your phone, but you&apos;ll manage this number from Sendkar
+        going forward.
+      </p>
       <button
         onClick={handleLogin}
         disabled={!sdkReady || pending}

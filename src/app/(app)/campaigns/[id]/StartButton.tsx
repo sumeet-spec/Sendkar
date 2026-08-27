@@ -23,6 +23,10 @@ export function CampaignControls({ campaignId, status }: { campaignId: string; s
         >
           {pending ? "Starting…" : "Start sending"}
         </button>
+        <p className="mt-1.5 text-[12px] text-faint">
+          Messages go out in the next daily sending window (once every 24h), not instantly — this keeps everyone
+          safely under Meta&apos;s per-number sending limits.
+        </p>
         {error && <p className="mt-1.5 text-[12px] text-danger">{error}</p>}
       </div>
     );
