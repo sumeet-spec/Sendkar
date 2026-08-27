@@ -16,9 +16,11 @@ export function InviteForm() {
         {pending ? "Sending…" : "Invite"}
       </button>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
-      {state?.success && (
+      {state?.success && state.emailSent && <p className="text-sm text-accent">Invite emailed.</p>}
+      {state?.success && !state.emailSent && (
         <p className="text-sm text-accent">
-          Invite created — share this link: <span className="font-mono">{state.inviteLink}</span>
+          Invite created, but the email didn&apos;t send{state.emailError ? ` (${state.emailError})` : ""} — share this
+          link instead: <span className="font-mono">{state.inviteLink}</span>
         </p>
       )}
     </form>

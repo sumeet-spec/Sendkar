@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePhone, phoneToAuthEmail } from "@/lib/auth";
+import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 import { redirect } from "next/navigation";
 
 export async function signup(_prevState: unknown, formData: FormData) {
@@ -12,6 +13,15 @@ export async function signup(_prevState: unknown, formData: FormData) {
 
   if (phone.length < 10) return { error: "Enter a valid WhatsApp number with country code." };
   if (!password || !workspaceName) return { error: "All fields are required." };
+
+  // createUser() below goes through the admin API, which bypasses Supabase
+  // Auth's own built-in throttling on the public signup endpoint — this is
+  // the one thing standing between this form and a script creating unlimited
+  // accounts.
+  const ip = await getClientIp();
+  if (await isRateLimited(`signup:${ip}`, 5, 3600)) {
+    return { error: "Too many signup attempts from this network. Try again in a bit." };
+  }
 
   const email = phoneToAuthEmail(phone);
   const admin = createAdminClient();

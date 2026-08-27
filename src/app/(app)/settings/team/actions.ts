@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
+import { sendEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
@@ -40,9 +41,21 @@ export async function inviteTeamMember(_prevState: unknown, formData: FormData) 
 
   const h = await headers();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `https://${h.get("host")}`;
+  const inviteLink = `${appUrl}/invite/${token}`;
+
+  const { error: emailError } = await sendEmail(
+    email,
+    `You've been invited to join ${workspace.name} on Sendkar`,
+    `<p>You've been invited to join <strong>${workspace.name}</strong> on Sendkar — a WhatsApp marketing platform.</p>
+     <p><a href="${inviteLink}">Accept the invite</a></p>
+     <p style="color:#888;font-size:12px">Or paste this link into your browser: ${inviteLink}</p>`,
+  );
 
   revalidatePath("/settings/team");
-  return { success: true, inviteLink: `${appUrl}/invite/${token}` };
+  // The invite row is already saved either way — email is best-effort, so a
+  // Resend outage or missing API key shouldn't block the invite itself, just
+  // fall back to the admin sharing the link by hand.
+  return { success: true, inviteLink, emailSent: !emailError, emailError };
 }
 
 export async function removeInvite(inviteId: string) {
