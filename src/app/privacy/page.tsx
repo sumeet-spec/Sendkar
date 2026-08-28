@@ -7,7 +7,7 @@ export default function PrivacyPage() {
     <div className="mx-auto max-w-2xl px-6 py-16">
       <Link href="/" className="text-[13px] text-faint hover:text-muted">← Sendkar</Link>
       <h1 className="mb-1 mt-6 text-2xl font-semibold tracking-tight">Privacy Policy</h1>
-      <p className="mb-8 text-[12.5px] text-faint">Last updated August 24, 2026</p>
+      <p className="mb-8 text-[12.5px] text-faint">Last updated August 27, 2026</p>
 
       <div className="space-y-6 text-[14px] leading-relaxed text-muted">
         <p>
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="mb-2 text-[15px] font-medium text-foreground">What we don&apos;t do</h2>
-          <p>We don&apos;t sell your data or your contacts&apos; data to third parties, and we don&apos;t run advertising trackers on this site — see our cookie notice for what little we do store.</p>
+          <p>We don&apos;t sell your data or your contacts&apos; data to third parties, and we don&apos;t run cross-site advertising trackers on this site. We do use basic, privacy-respecting analytics (page views, not ad targeting) to understand how visitors use this site — see our cookie notice.</p>
         </section>
 
         <section>
@@ -55,8 +55,21 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-[15px] font-medium text-foreground">Contact</h2>
-          <p>Questions about this policy or a data request: <a href="mailto:privacy@sendkar.com" className="text-accent hover:text-accent-hover">privacy@sendkar.com</a></p>
+          <h2 className="mb-2 text-[15px] font-medium text-foreground">Your rights under India&apos;s DPDP Act</h2>
+          <p>
+            If you&apos;re in India, the Digital Personal Data Protection Act, 2023 gives you the right to access,
+            correct, and erase your personal data, and to withdraw consent at any time. You can exercise any of
+            these by writing to the grievance contact below — we&apos;ll respond within the timelines the Act
+            requires.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-[15px] font-medium text-foreground">Contact / Grievance Officer</h2>
+          <p>
+            Questions about this policy, a data request, or a grievance under the DPDP Act:{" "}
+            <a href="mailto:hello@sendkar.shop" className="text-accent hover:text-accent-hover">hello@sendkar.shop</a>
+          </p>
         </section>
       </div>
     </div>

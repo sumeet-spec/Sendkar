@@ -21,7 +21,8 @@ export function CookieNotice() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-3 border-t border-border bg-surface/95 px-4 py-4 backdrop-blur sm:flex-row sm:justify-between sm:px-6">
       <p className="text-[12.5px] text-muted">
-        Sendkar uses only the cookies needed to keep you signed in — no ads, no third-party trackers. See our{" "}
+        Sendkar uses cookies to keep you signed in and basic analytics to understand how visitors use this site — no
+        ads, no cross-site ad tracking. See our{" "}
         <Link href="/privacy" className="text-accent hover:text-accent-hover">Privacy Policy</Link>.
       </p>
       <button

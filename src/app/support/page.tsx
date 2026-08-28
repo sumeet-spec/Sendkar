@@ -13,7 +13,7 @@ export default function SupportPage() {
 
       <div className="sk-card mb-6 p-5">
         <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">Email</div>
-        <a href="mailto:support@sendkar.com" className="text-[15px] text-accent hover:text-accent-hover">support@sendkar.com</a>
+        <a href="mailto:hello@sendkar.shop" className="text-[15px] text-accent hover:text-accent-hover">hello@sendkar.shop</a>
         <p className="mt-2 text-[13px] text-faint">We reply within a business day.</p>
       </div>
 

@@ -62,7 +62,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-[15px] font-medium text-foreground">Contact</h2>
-          <p><a href="mailto:legal@sendkar.com" className="text-accent hover:text-accent-hover">legal@sendkar.com</a></p>
+          <p><a href="mailto:hello@sendkar.shop" className="text-accent hover:text-accent-hover">hello@sendkar.shop</a></p>
         </section>
       </div>
     </div>
