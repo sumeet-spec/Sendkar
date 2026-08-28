@@ -34,7 +34,24 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // Every request through this middleware used to wait on this call with no
+  // timeout — during a real Supabase incident (elevated auth latency, seen
+  // live on 2026-08-28) that turned "Supabase is slow" into "the entire site
+  // 504s for every visitor". RLS still protects actual data at the DB layer
+  // regardless of what happens here, so on timeout/error we fail open (let
+  // the request through) rather than hang the whole response — worst case an
+  // anonymous visitor briefly sees a page shell whose own data calls then get
+  // correctly denied, instead of nothing loading at all.
+  let user: { id: string } | null = null;
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("auth check timed out")), 4000)),
+    ]);
+    user = result.data.user;
+  } catch {
+    return response;
+  }
 
   // Exact match for "/" — the marketing landing page for logged-out visitors —
   // since a startsWith("/") entry in PUBLIC_PATHS would match every route.
