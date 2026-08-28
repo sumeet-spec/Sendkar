@@ -67,6 +67,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="mb-2 text-[15px] font-medium text-foreground">Contact / Grievance Officer</h2>
           <p>
+            Grievance Officer: Sumeet, Founder.{" "}
             Questions about this policy, a data request, or a grievance under the DPDP Act:{" "}
             <a href="mailto:hello@sendkar.shop" className="text-accent hover:text-accent-hover">hello@sendkar.shop</a>
           </p>
