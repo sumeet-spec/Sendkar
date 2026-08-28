@@ -9,6 +9,10 @@ const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 if (dsn) {
   Sentry.init({
     dsn,
-    tracesSampleRate: 0.1,
+    // No tracesSampleRate: performance tracing hooks browser Performance
+    // APIs, and when an ad/tracker blocker (Brave Shields, uBlock, etc.)
+    // blocks Sentry's ingest domain, that instrumentation throws an
+    // UNCAUGHT error instead of failing silently — seen live blocking a
+    // real user's page. Error reporting alone doesn't have this problem.
   });
 }
