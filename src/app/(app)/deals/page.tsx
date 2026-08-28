@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { PipelineBoard } from "./PipelineBoard";
 import { NewDealForm } from "./NewDealForm";
-import type { DealStage } from "./actions";
+import type { DealStage } from "./constants";
 
 export default async function DealsPage() {
   const workspace = await getCurrentWorkspace();

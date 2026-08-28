@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { moveDealStage, deleteDeal, DEAL_STAGES, type DealStage } from "./actions";
+import { moveDealStage, deleteDeal } from "./actions";
+import { DEAL_STAGES, type DealStage } from "./constants";
 
 interface Deal {
   id: string;

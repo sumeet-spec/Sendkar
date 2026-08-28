@@ -3,9 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { revalidatePath } from "next/cache";
-
-export const DEAL_STAGES = ["new", "contacted", "negotiating", "won", "lost"] as const;
-export type DealStage = (typeof DEAL_STAGES)[number];
+import type { DealStage } from "./constants";
 
 export async function createDeal(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
