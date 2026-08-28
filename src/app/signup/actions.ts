@@ -7,11 +7,13 @@ import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 import { redirect } from "next/navigation";
 
 export async function signup(_prevState: unknown, formData: FormData) {
-  const phone = normalizePhone(String(formData.get("phone") ?? ""));
+  // The form only collects the 10-digit local number — India-only product,
+  // so +91 is fixed in the UI rather than something every signup has to type.
+  const phone = normalizePhone("91" + String(formData.get("phone") ?? ""));
   const password = String(formData.get("password") ?? "");
   const workspaceName = String(formData.get("workspaceName") ?? "").trim();
 
-  if (phone.length < 10) return { error: "Enter a valid WhatsApp number with country code." };
+  if (phone.length !== 12) return { error: "Enter a valid 10-digit WhatsApp number." };
   if (!password || !workspaceName) return { error: "All fields are required." };
 
   // createUser() below goes through the admin API, which bypasses Supabase

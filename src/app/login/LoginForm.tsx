@@ -27,7 +27,20 @@ export function LoginForm({ dict, lang }: { dict: Dictionary["auth"]; lang: Lang
         <form action={formAction} className="flex flex-col gap-4">
           <div>
             <label className="sk-label" htmlFor="phone">{dict.whatsappNumber}</label>
-            <input className="sk-input font-mono" id="phone" name="phone" type="tel" placeholder="919876543210" required />
+            <div className="flex items-center gap-2">
+              <span className="sk-input flex w-16 items-center justify-center font-mono text-faint">+91</span>
+              <input
+                className="sk-input font-mono"
+                id="phone"
+                name="phone"
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                maxLength={10}
+                placeholder="9876543210"
+                required
+              />
+            </div>
           </div>
           <div>
             <label className="sk-label" htmlFor="password">{dict.password}</label>
