@@ -64,6 +64,8 @@ export interface Workspace {
   payu_salt: string | null;
   whatsapp_last_send_error: string | null;
   whatsapp_last_send_error_at: string | null;
+  ai_agent_enabled: boolean;
+  ai_agent_knowledge: string | null;
   created_at: string;
 }
 

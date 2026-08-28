@@ -66,7 +66,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
         <div className="sk-card flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {(messages ?? []).map((m) => (
-              <MessageBubble key={m.id} contactId={contactId} message={{ id: m.id, direction: m.direction, body: m.body, reaction: m.reaction ?? null }} />
+              <MessageBubble key={m.id} contactId={contactId} message={{ id: m.id, direction: m.direction, body: m.body, reaction: m.reaction ?? null, sent_by_ai: m.sent_by_ai ?? false }} />
             ))}
             {(!messages || messages.length === 0) && <p className="text-center text-muted">No messages yet.</p>}
           </div>

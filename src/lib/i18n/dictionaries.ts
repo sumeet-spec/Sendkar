@@ -25,7 +25,7 @@ export interface Dictionary {
     inbox: string; analytics: string; chatbotFlows: string; forms: string; automations: string; segments: string;
     webhooks: string; linksWidget: string; agency: string; settings: string; billing: string; sequences: string;
     team: string; channels: string; cannedResponses: string; apiKeys: string; integrations: string;
-    businessHours: string; payments: string; calling: string; language: string;
+    businessHours: string; payments: string; calling: string; language: string; aiAgent: string;
     logout: string;
   };
   auth: {
@@ -73,7 +73,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "Inbox", analytics: "Analytics", chatbotFlows: "Chatbot flows", forms: "Forms", automations: "Automations", segments: "Segments",
       webhooks: "Webhooks", linksWidget: "Links & widget", agency: "Agency", settings: "Settings", billing: "Billing", sequences: "Sequences",
       team: "Team", channels: "Channels", cannedResponses: "Canned responses", apiKeys: "API keys", integrations: "Integrations",
-      businessHours: "Business hours", payments: "Payments", calling: "Calling", language: "Language",
+      businessHours: "Business hours", payments: "Payments", calling: "Calling", language: "Language", aiAgent: "AI agent",
       logout: "Log out",
     },
     auth: {
@@ -135,7 +135,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "इनबॉक्स", analytics: "एनालिटिक्स", chatbotFlows: "चैटबॉट फ्लो", forms: "फ़ॉर्म", automations: "ऑटोमेशन", segments: "सेगमेंट्स",
       webhooks: "वेबहुक", linksWidget: "लिंक और विजेट", agency: "एजेंसी", settings: "सेटिंग्स", billing: "बिलिंग", sequences: "सीक्वेंस",
       team: "टीम", channels: "चैनल", cannedResponses: "सेव्ड रिप्लाई", apiKeys: "API कीज़", integrations: "इंटीग्रेशन",
-      businessHours: "बिज़नेस समय", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा",
+      businessHours: "बिज़नेस समय", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा", aiAgent: "AI एजेंट",
       logout: "लॉग आउट",
     },
     auth: {
@@ -197,7 +197,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "इनबॉक्स", analytics: "अॅनालिटिक्स", chatbotFlows: "चॅटबॉट फ्लो", forms: "फॉर्म", automations: "ऑटोमेशन", segments: "सेगमेंट्स",
       webhooks: "वेबहुक", linksWidget: "लिंक आणि विजेट", agency: "एजन्सी", settings: "सेटिंग्ज", billing: "बिलिंग", sequences: "सीक्वेन्स",
       team: "टीम", channels: "चॅनेल्स", cannedResponses: "सेव्ह केलेली उत्तरे", apiKeys: "API कीज", integrations: "इंटिग्रेशन्स",
-      businessHours: "व्यवसाय वेळ", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा",
+      businessHours: "व्यवसाय वेळ", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा", aiAgent: "AI एजंट",
       logout: "लॉग आउट",
     },
     auth: {
@@ -259,7 +259,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "இன்பாக்ஸ்", analytics: "பகுப்பாய்வு", chatbotFlows: "சாட்பாட் ஃப்ளோ", forms: "படிவங்கள்", automations: "ஆட்டோமேஷன்", segments: "செக்மென்ட்கள்",
       webhooks: "வெப்ஹூக்குகள்", linksWidget: "இணைப்புகள் & விட்ஜெட்", agency: "ஏஜென்சி", settings: "அமைப்புகள்", billing: "பில்லிங்", sequences: "சீக்வென்ஸ்கள்",
       team: "குழு", channels: "சேனல்கள்", cannedResponses: "சேமித்த பதில்கள்", apiKeys: "API கீகள்", integrations: "இன்டகிரேஷன்கள்",
-      businessHours: "வணிக நேரம்", payments: "பணம் செலுத்துதல்", calling: "கால் செய்தல்", language: "மொழி",
+      businessHours: "வணிக நேரம்", payments: "பணம் செலுத்துதல்", calling: "கால் செய்தல்", language: "மொழி", aiAgent: "AI ஏஜென்ட்",
       logout: "வெளியேறு",
     },
     auth: {
@@ -321,7 +321,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "ఇన్‌బాక్స్", analytics: "అనలిటిక్స్", chatbotFlows: "చాట్‌బాట్ ఫ్లోలు", forms: "ఫారమ్‌లు", automations: "ఆటోమేషన్‌లు", segments: "సెగ్మెంట్‌లు",
       webhooks: "వెబ్‌హుక్‌లు", linksWidget: "లింక్‌లు & విడ్జెట్", agency: "ఏజెన్సీ", settings: "సెట్టింగ్‌లు", billing: "బిల్లింగ్", sequences: "సీక్వెన్స్‌లు",
       team: "టీమ్", channels: "ఛానెల్‌లు", cannedResponses: "సేవ్ చేసిన రిప్లైలు", apiKeys: "API కీలు", integrations: "ఇంటిగ్రేషన్‌లు",
-      businessHours: "వ్యాపార వేళలు", payments: "పేమెంట్స్", calling: "కాలింగ్", language: "భాష",
+      businessHours: "వ్యాపార వేళలు", payments: "పేమెంట్స్", calling: "కాలింగ్", language: "భాష", aiAgent: "AI ఏజెంట్",
       logout: "లాగ్ అవుట్",
     },
     auth: {
@@ -383,7 +383,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       inbox: "ಇನ್‌ಬಾಕ್ಸ್", analytics: "ಅನಾಲಿಟಿಕ್ಸ್", chatbotFlows: "ಚಾಟ್‌ಬಾಟ್ ಫ್ಲೋಗಳು", forms: "ಫಾರ್ಮ್‌ಗಳು", automations: "ಆಟೊಮೇಷನ್‌ಗಳು", segments: "ಸೆಗ್ಮೆಂಟ್‌ಗಳು",
       webhooks: "ವೆಬ್‌ಹುಕ್‌ಗಳು", linksWidget: "ಲಿಂಕ್‌ಗಳು ಮತ್ತು ವಿಡ್ಜೆಟ್", agency: "ಏಜೆನ್ಸಿ", settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು", billing: "ಬಿಲ್ಲಿಂಗ್", sequences: "ಸೀಕ್ವೆನ್ಸ್‌ಗಳು",
       team: "ತಂಡ", channels: "ಚಾನೆಲ್‌ಗಳು", cannedResponses: "ಉಳಿಸಿದ ಪ್ರತ್ಯುತ್ತರಗಳು", apiKeys: "API ಕೀಗಳು", integrations: "ಇಂಟಿಗ್ರೇಷನ್‌ಗಳು",
-      businessHours: "ವ್ಯಾಪಾರ ಸಮಯ", payments: "ಪೇಮೆಂಟ್‌ಗಳು", calling: "ಕಾಲಿಂಗ್", language: "ಭಾಷೆ",
+      businessHours: "ವ್ಯಾಪಾರ ಸಮಯ", payments: "ಪೇಮೆಂಟ್‌ಗಳು", calling: "ಕಾಲಿಂಗ್", language: "ಭಾಷೆ", aiAgent: "AI ಏಜೆಂಟ್",
       logout: "ಲಾಗ್ ಔಟ್",
     },
     auth: {

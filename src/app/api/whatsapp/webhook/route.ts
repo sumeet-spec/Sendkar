@@ -8,7 +8,7 @@ import {
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { syncKlaviyoProfile } from "@/lib/klaviyo";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
-import { classifyInboundMessage } from "@/lib/ai";
+import { classifyInboundMessage, generateAutoReply } from "@/lib/ai";
 import { isStatusRegression } from "@/lib/messageStatus";
 import { isWithinBusinessHours } from "@/lib/businessHours";
 import { pickAssignee } from "@/lib/assignment";
@@ -130,6 +130,7 @@ async function sendAndLog(
   to: string,
   body: string,
   numberId: string | null = null,
+  sentByAi = false,
 ): Promise<boolean> {
   const { data: ws } = await admin
     .from("workspaces")
@@ -147,6 +148,7 @@ async function sendAndLog(
       body,
       meta_message_id: metaMessageId,
       status: "sent",
+      sent_by_ai: sentByAi,
     });
     await clearSendFailure(admin, workspaceId);
     return true;
@@ -676,6 +678,39 @@ export async function POST(request: NextRequest) {
                   respondedToInbound = true; // an enrollment IS the response here, even though the message goes out later via cron
                 }
               }
+            }
+          }
+        }
+
+        // ── AI agent — a fully autonomous reply when nothing above (flow,
+        // keyword automation, sequence) already handled this message. Only
+        // runs if the workspace opted in, since every message here is a real
+        // LLM call with a real cost. Unlike the away-message below, this
+        // fires on ANY unanswered message, not just the start of a fresh
+        // conversation — the whole point is always having something
+        // intelligent to say, not just gating on "are we closed right now". ──
+        if (!respondedToInbound) {
+          const { data: wsAgent } = await admin
+            .from("workspaces")
+            .select("ai_agent_enabled, ai_agent_knowledge")
+            .eq("id", workspaceId)
+            .single();
+          if (wsAgent?.ai_agent_enabled) {
+            try {
+              const { data: recentMessages } = await admin
+                .from("messages")
+                .select("direction, body")
+                .eq("contact_id", contactId)
+                .order("created_at", { ascending: false })
+                .limit(10);
+              const { data: contactRow } = await admin.from("contacts").select("name").eq("id", contactId).maybeSingle();
+              const thread = (recentMessages ?? []).reverse().map((m) => ({ direction: m.direction as "inbound" | "outbound", body: m.body }));
+              const { reply } = await generateAutoReply(thread, contactRow?.name ?? null, wsAgent.ai_agent_knowledge ?? "");
+              const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, reply, matchedNumberId, true);
+              if (sent) respondedToInbound = true;
+            } catch {
+              // AI failing (bad key, malformed response, rate limit) should degrade
+              // to the away-message/silence below, not break webhook processing.
             }
           }
         }

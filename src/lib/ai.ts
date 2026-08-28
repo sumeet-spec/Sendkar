@@ -233,6 +233,37 @@ Respond with ONLY strict JSON, no markdown fences, no prose, in this exact shape
   };
 }
 
+/**
+ * Fully autonomous reply — unlike draftReply above (which a human reviews
+ * before sending), this is composed to be sent AS-IS by the AI agent
+ * feature. Grounded in the business's own knowledge base so it doesn't
+ * invent policies/pricing; told explicitly to hand off rather than guess
+ * when the knowledge doesn't cover the question, since a wrong autonomous
+ * answer is worse than "let me connect you with our team."
+ */
+export async function generateAutoReply(
+  thread: ThreadMessage[],
+  contactName: string | null,
+  businessKnowledge: string,
+): Promise<{ reply: string; shouldHandOff: boolean }> {
+  const transcript = thread
+    .slice(-10)
+    .map((m) => `${m.direction === "inbound" ? "Customer" : "Business"}: ${m.body ?? "[template message]"}`)
+    .join("\n");
+
+  const prompt = `You are the WhatsApp AI assistant for a business. Here is what you know about the business:\n\n${businessKnowledge || "(no information provided)"}\n\nConversation so far${contactName ? ` with ${contactName}` : ""}:\n${transcript}\n\nReply to the customer's latest message as the business, using ONLY the information given above. If answering requires something not covered above (pricing you don't have, an order lookup, anything you're not confident about), write a short reply saying a team member will follow up instead of guessing.\n\nRespond with ONLY strict JSON, no markdown fences, no prose:\n{"reply": "the WhatsApp message to send", "shouldHandOff": true | false (true if you said a team member will follow up)}`;
+
+  const raw = await callClaude(prompt, 350);
+  let parsed: { reply?: string; shouldHandOff?: boolean };
+  try {
+    parsed = JSON.parse(raw.trim().replace(/^```(json)?/i, "").replace(/```$/, "").trim());
+  } catch {
+    throw new Error("AI auto-reply response wasn't valid JSON.");
+  }
+  if (!parsed.reply) throw new Error("AI auto-reply was empty.");
+  return { reply: parsed.reply, shouldHandOff: Boolean(parsed.shouldHandOff) };
+}
+
 /** A quick "catch me up" summary of a thread — for an agent picking up a conversation cold, or a handoff between team members. */
 export async function summarizeThread(thread: ThreadMessage[], contactName: string | null): Promise<string> {
   const transcript = thread

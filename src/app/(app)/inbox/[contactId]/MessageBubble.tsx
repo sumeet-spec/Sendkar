@@ -10,6 +10,7 @@ interface Message {
   direction: string;
   body: string | null;
   reaction: string | null;
+  sent_by_ai?: boolean;
 }
 
 export function MessageBubble({ message, contactId }: { message: Message; contactId: string }) {
@@ -34,6 +35,11 @@ export function MessageBubble({ message, contactId }: { message: Message; contac
             outbound ? "bg-accent text-[#05130a]" : "bg-surface-2 border border-border"
           }`}
         >
+          {message.sent_by_ai && (
+            <div className="mb-1 flex items-center gap-1 text-[10.5px] font-medium uppercase tracking-wide text-[#05130a]/60">
+              <span>✨ AI agent</span>
+            </div>
+          )}
           {message.body ?? "[template message]"}
         </div>
 
