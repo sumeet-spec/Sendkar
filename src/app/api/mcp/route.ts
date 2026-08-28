@@ -174,6 +174,47 @@ const TOOLS = [
       required: ["to", "productRetailerId"],
     },
   },
+  {
+    name: "list_deals",
+    description: "List deals in the sales pipeline, optionally filtered by stage.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        stage: { type: "string", enum: ["new", "contacted", "negotiating", "won", "lost"], description: "Optional — omit to list every stage" },
+        limit: { type: "number" },
+      },
+    },
+  },
+  {
+    name: "create_deal",
+    description: "Add a deal to the sales pipeline, in the 'new' stage.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        value: { type: "number", description: "Deal value in the workspace's currency (INR by default)" },
+        contactPhone: { type: "string", description: "Optional — links the deal to an existing contact by phone number" },
+      },
+      required: ["title"],
+    },
+  },
+  {
+    name: "move_deal_stage",
+    description: "Move a deal to a different pipeline stage.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        dealId: { type: "string", description: "From list_deals" },
+        stage: { type: "string", enum: ["new", "contacted", "negotiating", "won", "lost"] },
+      },
+      required: ["dealId", "stage"],
+    },
+  },
+  {
+    name: "get_ai_agent_status",
+    description: "Check whether the autonomous AI agent (auto-replies to customers with no human involved) is enabled, and what knowledge base it's using.",
+    inputSchema: { type: "object", properties: {} },
+  },
 ];
 
 export async function GET() {
@@ -545,6 +586,55 @@ export async function POST(request: NextRequest) {
           status: "sent",
         });
         return textResult(id, JSON.stringify({ sent: true, metaMessageId }));
+      }
+
+      case "list_deals": {
+        let q = admin
+          .from("deals")
+          .select("id, title, value, stage, contacts(name, phone)")
+          .eq("workspace_id", workspaceId)
+          .order("created_at", { ascending: false })
+          .limit(Math.min(Number(args.limit) || 50, 200));
+        if (typeof args.stage === "string") q = q.eq("stage", args.stage);
+        const { data } = await q;
+        const mapped = (data ?? []).map((d) => {
+          const c = d.contacts as { name: string | null; phone: string } | { name: string | null; phone: string }[] | null;
+          const contact = Array.isArray(c) ? c[0] : c;
+          return { id: d.id, title: d.title, value: d.value, stage: d.stage, contact: contact?.name ?? contact?.phone ?? null };
+        });
+        return textResult(id, JSON.stringify(mapped));
+      }
+
+      case "create_deal": {
+        const title = String(args.title ?? "").trim();
+        if (!title) return textResult(id, "title is required.", true);
+        let contactId: string | null = null;
+        if (typeof args.contactPhone === "string" && args.contactPhone) {
+          const phone = args.contactPhone.replace(/[^\d]/g, "");
+          const { data: contact } = await admin.from("contacts").select("id").eq("workspace_id", workspaceId).eq("phone", phone).maybeSingle();
+          contactId = contact?.id ?? null;
+        }
+        const { data, error } = await admin
+          .from("deals")
+          .insert({ workspace_id: workspaceId, title, value: Number(args.value) || 0, contact_id: contactId })
+          .select("id")
+          .single();
+        if (error) return textResult(id, error.message, true);
+        return textResult(id, JSON.stringify({ dealId: data.id }));
+      }
+
+      case "move_deal_stage": {
+        const dealId = String(args.dealId ?? "");
+        const stage = String(args.stage ?? "");
+        if (!["new", "contacted", "negotiating", "won", "lost"].includes(stage)) return textResult(id, "stage must be one of new, contacted, negotiating, won, lost.", true);
+        const { error } = await admin.from("deals").update({ stage, updated_at: new Date().toISOString() }).eq("id", dealId).eq("workspace_id", workspaceId);
+        if (error) return textResult(id, error.message, true);
+        return textResult(id, JSON.stringify({ moved: true }));
+      }
+
+      case "get_ai_agent_status": {
+        const { data } = await admin.from("workspaces").select("ai_agent_enabled, ai_agent_knowledge").eq("id", workspaceId).single();
+        return textResult(id, JSON.stringify({ enabled: data?.ai_agent_enabled ?? false, knowledge: data?.ai_agent_knowledge ?? null }));
       }
 
       default:

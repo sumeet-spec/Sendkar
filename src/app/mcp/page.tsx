@@ -19,6 +19,10 @@ const TOOLS = [
   ["get_revenue_summary", "Total revenue tracked, broken down by which campaign drove it"],
   ["send_reaction", "React to a contact's message with an emoji"],
   ["send_buttons_message", "Send a message with up to 3 tappable reply buttons"],
+  ["list_deals", "List deals in the sales pipeline, optionally by stage"],
+  ["create_deal", "Add a deal to the pipeline"],
+  ["move_deal_stage", "Move a deal to a different pipeline stage"],
+  ["get_ai_agent_status", "Check if the autonomous AI agent is enabled and what it knows"],
 ];
 
 export default async function McpPage() {
