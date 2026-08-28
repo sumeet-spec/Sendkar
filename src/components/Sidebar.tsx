@@ -129,8 +129,8 @@ export function Sidebar({
         />
       )}
       <div
-        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-60 flex-shrink-0 -translate-x-full flex-col border-r border-border bg-surface p-3.5 transition-transform duration-200 md:static md:translate-x-0 ${
-          open ? "translate-x-0" : ""
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-60 flex-shrink-0 flex-col border-r border-border bg-surface p-3.5 transition-transform duration-200 md:static md:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
       <div className="mb-1 flex items-center gap-2.5 px-2 py-2">
