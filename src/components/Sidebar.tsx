@@ -29,6 +29,7 @@ const NAV_KEYS = [
   { href: "/automations", key: "automations", icon: "bolt" },
   { href: "/sequences", key: "sequences", icon: "flow" },
   { href: "/segments", key: "segments", icon: "users" },
+  { href: "/deals", key: "deals", icon: "deals" },
   { href: "/webhooks", key: "webhooks", icon: "webhook" },
   { href: "/settings/api-keys", key: "apiKeys", icon: "key" },
   { href: "/links", key: "linksWidget", icon: "link" },
@@ -80,6 +81,8 @@ function Icon({ name }: { name: string }) {
       return <svg {...common}><path d="M10 3.5v13" /><path d="M6.3 6.8a5.3 5.3 0 017.4 0M4.2 4.6a8.3 8.3 0 0111.6 0" /><circle cx="10" cy="16.2" r="1.1" fill="currentColor" stroke="none" /></svg>;
     case "key":
       return <svg {...common}><circle cx="6.2" cy="6.2" r="3.3" /><path d="M8.5 8.5L16.5 16.5M13 13l1.8 1.8M15.3 10.7l1.8 1.8" /></svg>;
+    case "deals":
+      return <svg {...common}><path d="M3 3.5h14L11.5 11v5l-3 1.5v-6.5z" /></svg>;
     default:
       return null;
   }
