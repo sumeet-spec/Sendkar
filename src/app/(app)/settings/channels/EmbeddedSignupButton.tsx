@@ -75,16 +75,21 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
     setPending(true);
     setStatus(null);
     window.FB.login(
-      async (response) => {
+      // Must be a plain (non-async) function — Facebook's own SDK rejects an
+      // async callback outright ("Expression is of type asyncfunction, not
+      // function"), so the async work below runs via .then() instead of
+      // making this callback itself async.
+      (response) => {
         const code = response.authResponse?.code;
         if (!code) {
           setStatus({ error: "Signup was cancelled or didn't complete." });
           setPending(false);
           return;
         }
-        const result = await completeEmbeddedSignup(workspaceId, code, signupData.wabaId, signupData.phoneNumberId);
-        setStatus(result);
-        setPending(false);
+        completeEmbeddedSignup(workspaceId, code, signupData.wabaId, signupData.phoneNumberId).then((result) => {
+          setStatus(result);
+          setPending(false);
+        });
       },
       {
         config_id: process.env.NEXT_PUBLIC_META_EMBEDDED_SIGNUP_CONFIG_ID,
