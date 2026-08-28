@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
@@ -101,9 +102,37 @@ export function Sidebar({
   lang: LanguageCode;
 }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Mobile top bar (a separate component, since it needs to render before
+  // this one in the layout) dispatches this instead of prop-drilling state
+  // through the server-rendered AppLayout — same pattern CommandPalette
+  // already uses for sk:open-command-palette.
+  useEffect(() => {
+    const onToggle = () => setOpen((v) => !v);
+    window.addEventListener("sk:toggle-sidebar", onToggle);
+    return () => window.removeEventListener("sk:toggle-sidebar", onToggle);
+  }, []);
+
+  // Close on navigation — otherwise the drawer stays open over the new page.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
-    <div className="flex h-screen w-60 flex-shrink-0 flex-col border-r border-border bg-surface p-3.5">
+    <>
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-60 flex-shrink-0 -translate-x-full flex-col border-r border-border bg-surface p-3.5 transition-transform duration-200 md:static md:translate-x-0 ${
+          open ? "translate-x-0" : ""
+        }`}
+      >
       <div className="mb-1 flex items-center gap-2.5 px-2 py-2">
         <Logo />
         <span className="text-[15px] font-semibold tracking-tight">Sendkar</span>
@@ -174,6 +203,7 @@ export function Sidebar({
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
