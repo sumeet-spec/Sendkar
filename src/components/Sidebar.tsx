@@ -107,6 +107,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(pathname);
 
   // Mobile top bar (a separate component, since it needs to render before
   // this one in the layout) dispatches this instead of prop-drilling state
@@ -119,9 +120,10 @@ export function Sidebar({
   }, []);
 
   // Close on navigation — otherwise the drawer stays open over the new page.
-  useEffect(() => {
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   return (
     <>

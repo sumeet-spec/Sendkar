@@ -1,15 +1,17 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { createDeal } from "./actions";
 
 export function NewDealForm({ contacts }: { contacts: Array<{ id: string; name: string | null; phone: string }> }) {
   const [state, formAction, pending] = useActionState(createDeal, null);
   const [open, setOpen] = useState(false);
+  const [prevState, setPrevState] = useState(state);
 
-  useEffect(() => {
+  if (state !== prevState) {
+    setPrevState(state);
     if (state?.success) setOpen(false);
-  }, [state]);
+  }
 
   if (!open) {
     return <button onClick={() => setOpen(true)} className="sk-btn sk-btn-primary">+ New deal</button>;

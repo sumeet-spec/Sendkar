@@ -31,14 +31,13 @@ declare global {
  */
 export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
   const configured = Boolean(process.env.NEXT_PUBLIC_META_APP_ID && process.env.NEXT_PUBLIC_META_EMBEDDED_SIGNUP_CONFIG_ID);
-  const [sdkReady, setSdkReady] = useState(false);
+  const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && Boolean(window.FB));
   const [status, setStatus] = useState<{ error?: string; success?: boolean } | null>(null);
   const [pending, setPending] = useState(false);
   const [signupData, setSignupData] = useState<{ wabaId: string | null; phoneNumberId: string | null }>({ wabaId: null, phoneNumberId: null });
 
   useEffect(() => {
     if (!configured || typeof window === "undefined" || window.FB) {
-      if (window.FB) setSdkReady(true);
       return;
     }
 
