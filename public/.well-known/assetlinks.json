@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "shop.sendkar.twa",
+      "sha256_cert_fingerprints": [
+        "C5:CE:28:62:39:4D:73:70:FD:EF:48:63:63:4B:2B:F2:57:FE:47:9F:C9:48:FA:41:A6:4A:07:DC:76:63:93:38"
+      ]
+    }
+  }
+]
