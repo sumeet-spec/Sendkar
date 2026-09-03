@@ -6,7 +6,7 @@ const PUBLIC_PATHS = [
   "/api/whatsapp/webhook", "/api/instagram/webhook", "/api/billing/webhook", "/api/cron",
   "/api/mcp", "/mcp",
   "/privacy", "/terms", "/support", "/changelog",
-  "/sitemap.xml", "/robots.txt", "/manifest.webmanifest",
+  "/sitemap.xml", "/robots.txt", "/manifest.webmanifest", "/.well-known",
   "/api/shopify/callback", "/api/shopify/webhook",
   "/api/woocommerce/webhook",
   "/api/v1/send",
