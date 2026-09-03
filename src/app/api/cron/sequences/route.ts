@@ -139,6 +139,35 @@ export async function GET(request: NextRequest) {
       } catch {
         // Payment-link generation failing (gateway not connected, API error) shouldn't block the message text itself.
       }
+    } else if (step.include_payment_link && !workspace.razorpay_key_id && workspace.payu_merchant_key) {
+      // PayU has no REST call that hands back a hosted link the way Razorpay
+      // does — the signed redirect is only built when the customer actually
+      // clicks through, at src/app/pay/[id]/page.tsx. Here we just reserve
+      // the row so that page has an amount/contact to build against.
+      try {
+        const amount = Number(context.amount ?? 0);
+        const { data: linkRow } = await admin
+          .from("payment_links")
+          .insert({
+            workspace_id: workspace.id,
+            contact_id: enrollment.contact_id,
+            cart_id: (context.cart_id as string | undefined) ?? null,
+            provider: "payu",
+            provider_ref: "pending",
+            amount,
+            url: "",
+          })
+          .select("id")
+          .single();
+
+        if (linkRow) {
+          const payUrl = `${request.nextUrl.origin}/pay/${linkRow.id}`;
+          await admin.from("payment_links").update({ provider_ref: linkRow.id, url: payUrl }).eq("id", linkRow.id);
+          body = `${body}\n${payUrl}`;
+        }
+      } catch {
+        // Same graceful degrade as the Razorpay branch above.
+      }
     }
 
     try {

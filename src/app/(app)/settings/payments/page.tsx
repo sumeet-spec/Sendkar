@@ -29,7 +29,7 @@ export default async function PaymentsPage() {
         />
         <PaymentGatewayCard
           title="PayU"
-          description="From PayU Dashboard → My Account → Merchant Key & Salt. Uses PayU's signed hosted-checkout redirect."
+          description="From PayU Dashboard → My Account → Merchant Key & Salt. Uses PayU's signed hosted-checkout redirect. New — send yourself a ₹1 test link before relying on it for real orders."
           configured={Boolean(workspace.payu_merchant_key)}
           fields={[
             { name: "merchantKey", placeholder: workspace.payu_merchant_key ? "•••••••• (set) — Merchant key" : "Merchant key" },

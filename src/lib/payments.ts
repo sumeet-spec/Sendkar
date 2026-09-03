@@ -86,11 +86,11 @@ export async function verifyRazorpayWebhookSignature(rawBody: string, signatureH
 
 // ── PayU ─────────────────────────────────────────────────────────────────
 // PayU's flow is a hash-signed redirect, not a REST call that hands back a
-// hosted link the way Razorpay's does — this builds that redirect URL
-// (Sendkar's own /pay/[txnid] page posts the signed form to PayU) rather
+// hosted link the way Razorpay's does — this builds that redirect (rendered
+// by src/app/pay/[id]/page.tsx, which posts the signed form to PayU) rather
 // than a raw payment_links API, which PayU only exposes to larger merchants.
-// NOTE: the hash formula below follows PayU's publicly documented spec
-// exactly, but hasn't been exercised against a real sandbox merchant account
+// NOTE: both hash functions below follow PayU's publicly documented spec
+// exactly, but haven't been exercised against a real sandbox merchant account
 // — verify one real payment end-to-end in PayU's test mode before relying on
 // this in production, same as any payment code should be before going live.
 
@@ -107,10 +107,11 @@ export async function buildPayuPaymentRequest(
   const firstname = "Customer";
   const email = "customer@sendkar.app"; // PayU requires a well-formed email even when we only have a phone number
 
-  // PayU's documented hash sequence: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
+  // PayU's documented hash sequence: key|txnid|amount|productinfo|firstname|email|udf1|udf2|...|udf10|SALT
+  // We don't use PayU's user-defined fields, so all 10 udf slots are empty.
   const hashString = [
     creds.payu_merchant_key, txnid, amount, productinfo, firstname, email,
-    "", "", "", "", "", "", "", "", "", "", // udf1-5 + 5 reserved empty fields, per spec
+    "", "", "", "", "", "", "", "", "", "", // udf1..udf10, all empty
     creds.payu_salt,
   ].join("|");
   const hash = crypto.createHash("sha512").update(hashString).digest("hex");
@@ -130,4 +131,31 @@ export async function buildPayuPaymentRequest(
       hash,
     },
   };
+}
+
+/**
+ * Verifies PayU's signed response on the surl/furl callback — the exact
+ * mirror of the request hash, with `status` inserted right after SALT and
+ * the field order reversed. Without this check, anyone could POST a fake
+ * "success" straight to our return route and get an order marked paid.
+ */
+export async function verifyPayuResponseHash(
+  fields: Record<string, string>,
+  salt: string,
+  merchantKey: string,
+): Promise<boolean> {
+  const crypto = await import("node:crypto");
+  const { status = "", email = "", firstname = "", productinfo = "", amount = "", txnid = "", hash = "" } = fields;
+  const udf = (n: number) => fields[`udf${n}`] ?? "";
+
+  const hashString = [
+    salt, status,
+    udf(10), udf(9), udf(8), udf(7), udf(6), udf(5), udf(4), udf(3), udf(2), udf(1),
+    email, firstname, productinfo, amount, txnid, merchantKey,
+  ].join("|");
+  const computed = crypto.createHash("sha512").update(hashString).digest("hex");
+
+  const a = Buffer.from(hash);
+  const b = Buffer.from(computed);
+  return a.length > 0 && a.length === b.length && crypto.timingSafeEqual(a, b);
 }

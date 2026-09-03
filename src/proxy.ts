@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/api/shopify/callback", "/api/shopify/webhook",
   "/api/woocommerce/webhook",
   "/api/v1/send",
+  "/pay", "/api/payu/return",
 ];
 
 // Short-lived cache so a burst of navigations/prefetches from one browser
