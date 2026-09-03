@@ -19,11 +19,16 @@ function htmlPage(title: string, message: string) {
  * the `status` field it sends. Public: PayU calls this directly, no session.
  */
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
   const fields: Record<string, string> = {};
-  formData.forEach((value, key) => {
-    fields[key] = String(value);
-  });
+  try {
+    const formData = await request.formData();
+    formData.forEach((value, key) => {
+      fields[key] = String(value);
+    });
+  } catch {
+    // A public endpoint gets scanner/bot traffic with no body at all —
+    // that's not a real PayU callback, just treat it as "not found" below.
+  }
 
   const admin = createAdminClient();
   const { data: link } = await admin
