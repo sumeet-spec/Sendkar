@@ -7,6 +7,7 @@ import { AssigneeSelect } from "./AssigneeSelect";
 import { NotesPanel } from "./NotesPanel";
 import { SummaryPanel } from "./SummaryPanel";
 import { OrdersPanel } from "./OrdersPanel";
+import { PaymentsPanel } from "./PaymentsPanel";
 import { RealtimeRefresher } from "./RealtimeRefresher";
 import { CallPermissionButton } from "./CallPermissionButton";
 
@@ -24,7 +25,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
     .maybeSingle();
   if (!contact) notFound();
 
-  const [{ data: recentMessages }, { data: cannedResponses }, { data: notes }, { data: products }, { data: orders }, { data: forms }, members] = await Promise.all([
+  const [{ data: recentMessages }, { data: cannedResponses }, { data: notes }, { data: products }, { data: orders }, { data: paymentLinks }, { data: forms }, members] = await Promise.all([
     // Most-recent-first with a cap, then reversed below — an active seller's
     // thread can run to thousands of messages, and rendering the whole
     // history on every open was blocking the page on fetching + serializing
@@ -34,6 +35,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
     supabase.from("contact_notes").select("id, body, created_at, author_id").eq("contact_id", contactId).order("created_at", { ascending: false }),
     supabase.from("products").select("id, name, price_label").eq("workspace_id", workspace.id).eq("is_active", true).order("name", { ascending: true }),
     supabase.from("orders").select("id, total_amount, currency, source, order_label, attributed_campaign_id, created_at").eq("contact_id", contactId).order("created_at", { ascending: false }),
+    supabase.from("payment_links").select("id, provider, amount, url, created_at, paid_at").eq("contact_id", contactId).order("created_at", { ascending: false }),
     supabase.from("wa_flows").select("id, name").eq("workspace_id", workspace.id).eq("status", "published").order("name", { ascending: true }),
     listWorkspaceMembers(workspace.id),
   ]);
@@ -87,6 +89,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
         {workspace.calling_enabled && <CallPermissionButton phone={contact.phone} />}
         <SummaryPanel contactId={contactId} />
         <OrdersPanel contactId={contactId} orders={orders ?? []} />
+        <PaymentsPanel links={paymentLinks ?? []} />
         <NotesPanel contactId={contactId} notes={notesWithAuthor} />
       </div>
     </div>
