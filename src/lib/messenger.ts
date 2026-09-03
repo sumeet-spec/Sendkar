@@ -49,7 +49,3 @@ export async function sendMessengerMessage(input: SendMessengerInput) {
   if (!json.message_id) throw new Error("Messenger API accepted the request but returned no message id.");
   return { metaMessageId: json.message_id };
 }
-
-export function isMessengerConfigured(ws: MessengerCreds): boolean {
-  return Boolean(ws.messenger_page_id && ws.messenger_access_token);
-}

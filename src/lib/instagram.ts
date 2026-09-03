@@ -55,7 +55,3 @@ export async function sendInstagramMessage(input: SendInstagramMessageInput) {
   if (!json.message_id) throw new Error("Instagram API accepted the request but returned no message id.");
   return { metaMessageId: json.message_id };
 }
-
-export function isInstagramConfigured(ws: InstagramCreds): boolean {
-  return Boolean(ws.instagram_page_id && ws.instagram_access_token);
-}
