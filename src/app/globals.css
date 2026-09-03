@@ -59,6 +59,21 @@ a {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 
+.sk-skeleton {
+  background: var(--surface-2);
+  border-radius: 8px;
+  animation: sk-skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes sk-skeleton-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-skeleton {
+    animation: none;
+  }
+}
+
 @keyframes sk-fade-in-up {
   from {
     opacity: 0;

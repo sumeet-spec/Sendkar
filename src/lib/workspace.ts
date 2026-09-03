@@ -78,7 +78,7 @@ export interface Workspace {
  * membership — the exact behavior this function had before agency mode
  * existed, so nothing about the single-workspace case changes.
  */
-export async function getCurrentWorkspace(): Promise<Workspace | null> {
+export const getCurrentWorkspace = cache(async (): Promise<Workspace | null> => {
   const resolved = await getAuthedClient();
   if (!resolved) return null;
   const { supabase, userId } = resolved;
@@ -115,7 +115,7 @@ export async function getCurrentWorkspace(): Promise<Workspace | null> {
     .maybeSingle();
 
   return workspace as Workspace | null;
-}
+});
 
 export interface UserWorkspace {
   id: string;
@@ -124,7 +124,7 @@ export interface UserWorkspace {
 }
 
 /** Every workspace this user belongs to — powers the agency workspace switcher. */
-export async function listUserWorkspaces(): Promise<UserWorkspace[]> {
+export const listUserWorkspaces = cache(async (): Promise<UserWorkspace[]> => {
   const resolved = await getAuthedClient();
   if (!resolved) return [];
   const { supabase, userId } = resolved;
@@ -140,7 +140,7 @@ export async function listUserWorkspaces(): Promise<UserWorkspace[]> {
       return ws?.id ? { id: ws.id, name: ws.name ?? "Untitled", role: row.role as string } : null;
     })
     .filter((w): w is UserWorkspace => w !== null);
-}
+});
 
 /**
  * The logged-in user's id, going through the same cached auth resolution as

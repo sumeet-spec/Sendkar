@@ -24,8 +24,12 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
     .maybeSingle();
   if (!contact) notFound();
 
-  const [{ data: messages }, { data: cannedResponses }, { data: notes }, { data: products }, { data: orders }, { data: forms }, members] = await Promise.all([
-    supabase.from("messages").select("*").eq("contact_id", contactId).order("created_at", { ascending: true }),
+  const [{ data: recentMessages }, { data: cannedResponses }, { data: notes }, { data: products }, { data: orders }, { data: forms }, members] = await Promise.all([
+    // Most-recent-first with a cap, then reversed below — an active seller's
+    // thread can run to thousands of messages, and rendering the whole
+    // history on every open was blocking the page on fetching + serializing
+    // all of it just to show the tail end.
+    supabase.from("messages").select("*").eq("contact_id", contactId).order("created_at", { ascending: false }).limit(100),
     supabase.from("canned_responses").select("id, shortcut, body").eq("workspace_id", workspace.id).order("shortcut", { ascending: true }),
     supabase.from("contact_notes").select("id, body, created_at, author_id").eq("contact_id", contactId).order("created_at", { ascending: false }),
     supabase.from("products").select("id, name, price_label").eq("workspace_id", workspace.id).eq("is_active", true).order("name", { ascending: true }),
@@ -34,6 +38,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
     listWorkspaceMembers(workspace.id),
   ]);
 
+  const messages = recentMessages ? [...recentMessages].reverse() : recentMessages;
   const emailByUserId = new Map(members.map((m) => [m.userId, m.email]));
   const notesWithAuthor = (notes ?? []).map((n) => ({ ...n, author_email: emailByUserId.get(n.author_id) ?? null }));
   const sessionOpen = Boolean(contact.session_expires_at && new Date(contact.session_expires_at) > new Date());
