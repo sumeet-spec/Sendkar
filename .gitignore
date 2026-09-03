@@ -42,3 +42,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Android TWA project — contains a real signing keystore + its plaintext
+# password (SIGNING_KEY_README.txt). This repo is public; never commit these.
+/android-app/
