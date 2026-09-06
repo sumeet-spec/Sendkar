@@ -53,7 +53,7 @@ const MORE_BUILT = [
   { tag: "Automation", title: "Chatbots that actually branch", body: "Multi-step flows that route by keyword — an actual conversation, not a single canned reply." },
   { tag: "Commerce", title: "Catalog, cart recovery, and payments", body: "Real WhatsApp catalog cards, an automatic nudge when a Shopify cart goes cold, and a Razorpay/PayU link — all in the same thread." },
   { tag: "Support", title: "One inbox, auto-assigned", body: "Every conversation in one place. A new chat goes to whoever's free right now, not whoever grabs their phone first." },
-  { tag: "Analytics", title: "Revenue traced to the ad, not just delivered", body: "WATI and Interakt stop at delivered/read. Sendkar links the sale back to the exact campaign that earned it." },
+  { tag: "Analytics", title: "Revenue traced to the ad, not just delivered", body: "Most WhatsApp tools stop at delivered/read. Sendkar links the sale back to the exact campaign that earned it." },
 ];
 
 const PLANS = [
@@ -73,16 +73,16 @@ export default async function RootPage() {
 
   return (
     <div className="flex-1 overflow-x-hidden">
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2.5">
+      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2.5">
           <Logo />
-          <span className="text-[15px] font-semibold tracking-tight">Sendkar</span>
+          <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight">Sendkar</span>
         </div>
-        <nav className="flex items-center gap-5">
-          <a href="#pricing" className="text-[13.5px] text-muted hover:text-foreground">{t.navPricing}</a>
-          <a href="/mcp" className="text-[13.5px] text-muted hover:text-foreground">{t.navMcp}</a>
-          <Link href="/login" className="text-[13.5px] text-muted hover:text-foreground">{t.navLogin}</Link>
-          <Link href="/signup" className="sk-btn sk-btn-primary text-[13.5px]">{t.navGetStarted}</Link>
+        <nav className="flex items-center gap-3 sm:gap-5">
+          <a href="#pricing" className="hidden text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navPricing}</a>
+          <a href="/mcp" className="hidden text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navMcp}</a>
+          <Link href="/login" className="hidden text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navLogin}</Link>
+          <Link href="/signup" className="sk-btn sk-btn-primary whitespace-nowrap text-[13.5px]">{t.navGetStarted}</Link>
           <LanguageSwitcher current={lang} compact />
         </nav>
       </header>
@@ -127,7 +127,7 @@ export default async function RootPage() {
                 <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statMcp}</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-accent">½</div>
+                <div className="text-2xl font-bold text-accent">6</div>
                 <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statPrice}</div>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default async function RootPage() {
             <div className="sk-eyebrow mb-4">Revenue, not just delivery</div>
             <h2 className="text-[28px] font-semibold leading-tight tracking-tight">See which campaign actually made you money.</h2>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
-              WATI and Interakt stop at delivered/read. Sendkar links Priya&apos;s sale — synced straight from
+              Most WhatsApp tools stop at delivered/read. Sendkar links Priya&apos;s sale — synced straight from
               Shopify — back to the exact Instagram ad that drove it, with a 7-day attribution window.
             </p>
           </div>
