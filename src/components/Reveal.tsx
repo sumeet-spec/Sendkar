@@ -1,33 +1,48 @@
 "use client";
 
-import { Children, isValidElement, useEffect, useRef, useState } from "react";
+import { Children, isValidElement, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-/**
- * Scroll-reveal wrapper. `stagger` cascades direct children in on a small
- * per-index delay (same technique as SignalPulse's marketing site) instead
- * of the whole block fading in as one flat unit — groups of 4 repeat the
- * offset so a long grid doesn't end up with one child waiting a full second.
- */
+// useLayoutEffect is a no-op on the server and Next.js warns about it in SSR.
+// Fall back to useEffect server-side; on the client it runs synchronously
+// before paint, which is what we need for the hide-before-seen trick.
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function Reveal({ children, className = "", stagger = false }: { children: React.ReactNode; className?: string; stagger?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  // Default visible — JS opts INTO hiding, never out.
+  // Elements already in the viewport on load never get hidden at all.
+  const [visible, setVisible] = useState(true);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  useIsoLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Only hide + observe elements that start entirely below the fold.
+    if (el.getBoundingClientRect().top >= window.innerHeight * 0.92) {
+      setVisible(false);
+      setShouldAnimate(true);
+    }
+  }, []);
 
   useEffect(() => {
+    if (!shouldAnimate) return;
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) { setVisible(true); observer.disconnect(); }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.08, rootMargin: "0px 0px 40px 0px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [shouldAnimate]);
+
+  const revealClass = shouldAnimate ? `sk-reveal ${visible ? "sk-reveal-in" : ""}` : "";
 
   if (!stagger) {
     return (
-      <div ref={ref} className={`sk-reveal ${visible ? "sk-reveal-in" : ""} ${className}`}>
+      <div ref={ref} className={`${revealClass} ${className}`}>
         {children}
       </div>
     );
@@ -39,7 +54,7 @@ export function Reveal({ children, className = "", stagger = false }: { children
         isValidElement(child) ? (
           <div
             key={i}
-            className={`sk-reveal ${visible ? "sk-reveal-in" : ""}`}
+            className={`${shouldAnimate ? "sk-reveal" : ""} ${visible ? "sk-reveal-in" : ""}`}
             style={{ transitionDelay: visible ? `${(i % 4) * 70}ms` : "0ms" }}
           >
             {child}

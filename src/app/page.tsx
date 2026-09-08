@@ -48,19 +48,91 @@ const STORY_MOMENTS: StoryMoment[] = [
 ];
 
 const MORE_BUILT = [
-  { tag: "Marketing", title: "Broadcast in every language, one click", body: "Group translated templates together — Sendkar auto-sends each contact their own-language version from a single broadcast." },
-  { tag: "AI Copilot", title: "Drafts templates, tags leads, on its own", body: "Claude drafts a template from a plain description and auto-tags every inbound message by intent and sentiment." },
-  { tag: "Automation", title: "Chatbots that actually branch", body: "Multi-step flows that route by keyword — an actual conversation, not a single canned reply." },
-  { tag: "Commerce", title: "Catalog, cart recovery, and payments", body: "Real WhatsApp catalog cards, an automatic nudge when a Shopify cart goes cold, and a Razorpay/PayU link — all in the same thread." },
-  { tag: "Support", title: "One inbox, auto-assigned", body: "Every conversation in one place. A new chat goes to whoever's free right now, not whoever grabs their phone first." },
-  { tag: "Analytics", title: "Revenue traced to the ad, not just delivered", body: "Most WhatsApp tools stop at delivered/read. Sendkar links the sale back to the exact campaign that earned it." },
+  {
+    tag: "Marketing",
+    title: "Broadcast in every language, one click",
+    body: "Group translated templates together — Sendkar auto-sends each contact their own-language version from a single broadcast.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    ),
+  },
+  {
+    tag: "AI Copilot",
+    title: "Drafts templates, tags leads, on its own",
+    body: "Claude drafts a template from a plain description and auto-tags every inbound message by intent and sentiment.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2l1.9 5.8L20 9.6l-6.1 4.4 2.3 7L12 17.3l-4.2 3.7 2.3-7L4 9.6l6.1-1.8L12 2z"/>
+      </svg>
+    ),
+  },
+  {
+    tag: "Automation",
+    title: "Chatbots that actually branch",
+    body: "Multi-step flows that route by keyword — an actual conversation, not a single canned reply.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+        <path d="M21 3v5h-5"/>
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+        <path d="M3 21v-5h5"/>
+      </svg>
+    ),
+  },
+  {
+    tag: "Commerce",
+    title: "Catalog, cart recovery, and payments",
+    body: "Real WhatsApp catalog cards, an automatic nudge when a Shopify cart goes cold, and a Razorpay/PayU link — all in the same thread.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+    ),
+  },
+  {
+    tag: "Support",
+    title: "One inbox, auto-assigned",
+    body: "Every conversation in one place. A new chat goes to whoever's free right now, not whoever grabs their phone first.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+        <path d="M21 18a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3v5z"/>
+        <path d="M3 18a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3v5z"/>
+      </svg>
+    ),
+  },
+  {
+    tag: "Analytics",
+    title: "Revenue traced to the ad, not just delivered",
+    body: "Most WhatsApp tools stop at delivered/read. Sendkar links the sale back to the exact campaign that earned it.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+    ),
+  },
 ];
 
+const PLAN_FEATURES: Record<string, string[]> = {
+  free:    ["1 WhatsApp number", "Unlimited contacts", "Real Meta Cloud API", "Basic broadcast campaigns"],
+  starter: ["Everything in Free", "Unlimited team seats", "Branching chatbot flows", "Multi-language broadcasts", "Keyword automations"],
+  growth:  ["Everything in Starter", "Instagram & Messenger", "WhatsApp Catalog + cart recovery", "AI copilot (Claude)", "Revenue attribution"],
+  scale:   ["Everything in Growth", "Higher message volume", "Outbound webhooks", "Priority support"],
+};
+
 const PLANS = [
-  { key: "free", name: "Free" as const, blurb: "One number, one seat — try it for real." },
+  { key: "free",    name: "Free"    as const, blurb: "One number, one seat — try it for real." },
   { key: "starter", name: "Starter" as const, blurb: "Automations + branching chatbot flows, unlimited seats." },
-  { key: "growth", name: "Growth" as const, blurb: "Catalog, Instagram, Messenger, webhooks, unlimited seats.", featured: true },
-  { key: "scale", name: "Scale" as const, blurb: "Everything, unlimited seats." },
+  { key: "growth",  name: "Growth"  as const, blurb: "Catalog, Instagram, Messenger, webhooks, unlimited seats.", featured: true },
+  { key: "scale",   name: "Scale"   as const, blurb: "Everything, unlimited seats." },
 ];
 
 export default async function RootPage() {
@@ -158,24 +230,40 @@ export default async function RootPage() {
             <div className="p-5">
               <div className="grid grid-cols-2 gap-3">
                 <div className="sk-card p-4">
-                  <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue this month</div>
+                  <div className="mb-1 text-[10.5px] font-medium uppercase tracking-wide text-faint">Revenue this month</div>
                   <div className="text-xl font-semibold">₹1,84,500</div>
+                  <div className="mt-1 text-[11px] text-accent">↑ 23% vs last month</div>
                 </div>
                 <div className="sk-card p-4">
-                  <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">From that Instagram ad</div>
-                  <div className="text-xl font-semibold text-accent">₹4,200</div>
+                  <div className="mb-1 text-[10.5px] font-medium uppercase tracking-wide text-faint">From Diwali IG ad</div>
+                  <div className="text-xl font-semibold text-accent">₹28,400</div>
+                  <div className="mt-1 text-[11px] text-faint">7-day attribution</div>
+                </div>
+              </div>
+              {/* Mini bar chart — revenue per campaign source */}
+              <div className="sk-card mt-3 px-4 pb-3 pt-2.5">
+                <div className="mb-1 text-[10.5px] font-medium uppercase tracking-wide text-faint">Revenue by campaign</div>
+                <div className="sk-bar-chart">
+                  <div className="sk-bar" style={{ height: "38%" }} title="Organic" />
+                  <div className="sk-bar" style={{ height: "62%" }} title="Navratri" />
+                  <div className="sk-bar highlight" style={{ height: "100%" }} title="Diwali IG" />
+                  <div className="sk-bar" style={{ height: "71%" }} title="Dhanteras" />
+                  <div className="sk-bar" style={{ height: "44%" }} title="Referral" />
+                </div>
+                <div className="mt-1.5 flex justify-between text-[9.5px] text-faint">
+                  <span>Organic</span><span>Navratri</span><span className="text-accent font-semibold">Diwali IG</span><span>Dhanteras</span><span>Referral</span>
                 </div>
               </div>
               <div className="sk-card mt-3 overflow-hidden">
-                <div className="border-b border-border px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">Recent orders</div>
+                <div className="border-b border-border px-4 py-2 text-[10.5px] font-medium uppercase tracking-wide text-faint">Recent orders</div>
                 {[
-                  ["919900...1122", "the order above", "Diwali IG ad", "₹4,200"],
-                  ["919900...1189", "Rohan Gupta", "organic", "₹3,200"],
-                  ["919900...1156", "Kavya Menon", "organic", "₹2,499"],
+                  ["Priya Textiles", "Diwali IG ad", "₹4,200"],
+                  ["Rohan Gupta", "organic", "₹3,200"],
+                  ["Kavya Menon", "Navratri campaign", "₹2,499"],
                 ].map((row) => (
-                  <div key={row[0]} className="flex items-center justify-between border-b border-border px-4 py-2 text-[12.5px] last:border-0">
-                    <span className="font-mono text-faint">{row[0]} <span className="text-muted">· {row[1]} · {row[2]}</span></span>
-                    <span className="text-accent">{row[3]}</span>
+                  <div key={row[0]} className="flex items-center justify-between border-b border-border px-4 py-2 text-[12px] last:border-0">
+                    <span className="font-medium">{row[0]} <span className="font-normal text-faint">· {row[1]}</span></span>
+                    <span className="font-semibold text-accent">{row[2]}</span>
                   </div>
                 ))}
               </div>
@@ -188,24 +276,47 @@ export default async function RootPage() {
             <div className="sk-window-bar">
               <div className="sk-window-dots"><span /><span /><span /></div>
               <div className="sk-window-url">sendkar.app/inbox</div>
+              <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-[#05130a]">Auto-assigned</span>
             </div>
-            <div className="flex h-64">
-              <div className="w-2/5 border-r border-border p-2">
+            <div className="flex h-72">
+              <div className="w-[42%] border-r border-border p-1.5 flex flex-col gap-0.5">
                 {[
-                  ["Meena Reddy", "Perfect, sending payment now"],
-                  ["Ravi Kumar", "Can I get this in blue?"],
-                  ["Ananya Iyer", "Order arrived, thank you! 🙏"],
-                ].map(([n, preview], i) => (
-                  <div key={n} className={`rounded-md px-2.5 py-2 text-[12px] ${i === 0 ? "bg-surface-2" : ""}`}>
-                    <div className="font-medium text-foreground">{n}</div>
-                    <div className="text-faint">{preview}</div>
+                  { name: "Meena Reddy", preview: "Perfect, sending payment now", initials: "MR", color: "#f97316", active: true, unread: 0 },
+                  { name: "Ravi Kumar",  preview: "Can I get this in blue?",       initials: "RK", color: "#3b82f6", active: false, unread: 2 },
+                  { name: "Ananya Iyer", preview: "Order arrived, thank you! 🙏",  initials: "AI", color: "#a855f7", active: false, unread: 0 },
+                ].map(({ name, preview, initials, color, active, unread }) => (
+                  <div key={name} className={`flex items-center gap-2 rounded-md px-2 py-2 text-[11.5px] ${active ? "bg-surface-2" : ""}`}>
+                    <div className="relative flex-shrink-0">
+                      <div className="sk-avatar" style={{ background: color + "22", color }}>{initials}</div>
+                      {active && <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-surface bg-accent" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium text-foreground">{name}</div>
+                      <div className="truncate text-faint">{preview}</div>
+                    </div>
+                    {unread > 0 && (
+                      <div className="flex-shrink-0 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-[#05130a]">{unread}</div>
+                    )}
                   </div>
                 ))}
               </div>
-              <div className="flex flex-1 flex-col gap-2 p-3">
-                <div className="max-w-[80%] self-start rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-[12px]">Hi! Is the Diwali set still available?</div>
-                <div className="max-w-[80%] self-end rounded-lg bg-accent px-3 py-1.5 text-[12px] text-[#05130a]">Yes — ₹1,899, ships tomorrow 🎉</div>
-                <div className="max-w-[80%] self-start rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-[12px]">Perfect, sending payment now</div>
+              <div className="flex flex-1 flex-col">
+                <div className="flex items-center gap-2 border-b border-border px-3 py-1.5">
+                  <div className="sk-avatar" style={{ background: "#f9731622", color: "#f97316" }}>MR</div>
+                  <div className="text-[11.5px]">
+                    <div className="font-medium">Meena Reddy</div>
+                    <div className="text-[10px] text-accent">● Active now</div>
+                  </div>
+                  <div className="ml-auto text-[10px] text-faint">Assigned: You</div>
+                </div>
+                <div className="flex flex-1 flex-col gap-2 overflow-hidden p-3">
+                  <div className="max-w-[80%] self-start rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-[11.5px]">Hi! Is the Diwali set still available?</div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <div className="max-w-[80%] rounded-lg bg-accent px-3 py-1.5 text-[11.5px] text-[#05130a]">Yes — ₹1,899, ships tomorrow 🎉</div>
+                    <div className="text-[9.5px] text-faint">✓✓ Read</div>
+                  </div>
+                  <div className="max-w-[80%] self-start rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-[11.5px]">Perfect, sending payment now</div>
+                </div>
               </div>
             </div>
           </div>
@@ -227,6 +338,7 @@ export default async function RootPage() {
           <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {MORE_BUILT.map((f) => (
               <div key={f.title} className="sk-card p-5">
+                <div className="sk-feat-icon">{f.icon}</div>
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accent">{f.tag}</div>
                 <div className="mb-1.5 font-medium leading-snug">{f.title}</div>
                 <p className="text-[13px] leading-relaxed text-muted">{f.body}</p>
@@ -247,15 +359,35 @@ export default async function RootPage() {
             return (
               <div
                 key={p.name}
-                className="sk-card p-5"
-                style={p.featured ? { borderColor: "var(--accent-dim)", boxShadow: "0 0 0 1px var(--accent-dim)" } : undefined}
+                className="sk-card flex flex-col p-5"
+                style={p.featured ? { borderColor: "var(--accent-dim)", boxShadow: "0 0 0 1px var(--accent-dim), 0 0 28px -4px var(--accent-glow)" } : undefined}
               >
-                <div className="mb-1 font-medium">{p.name}</div>
+                {p.featured && (
+                  <div className="mb-3 -mt-0.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-[#05130a]">
+                      Most popular
+                    </span>
+                  </div>
+                )}
+                <div className="mb-0.5 font-semibold">{p.name}</div>
                 <div className="mb-2 text-2xl font-semibold">
                   {limits.priceInr === 0 ? "₹0" : `₹${limits.priceInr.toLocaleString("en-IN")}`}
                   <span className="text-[13px] font-normal text-faint">/mo</span>
                 </div>
-                <p className="text-[12.5px] text-muted">{p.blurb}</p>
+                <p className="text-[12px] leading-relaxed text-muted">{p.blurb}</p>
+                <ul className="sk-check-list">
+                  {PLAN_FEATURES[p.key].map((feat) => (
+                    <li key={feat} className="sk-check-item">{feat}</li>
+                  ))}
+                </ul>
+                <div className="mt-auto pt-5">
+                  <Link
+                    href="/signup"
+                    className={`sk-btn w-full text-[13px] ${p.featured ? "sk-btn-primary" : "sk-btn-ghost"}`}
+                  >
+                    {p.key === "free" ? "Start free" : "Get started"}
+                  </Link>
+                </div>
               </div>
             );
           })}
