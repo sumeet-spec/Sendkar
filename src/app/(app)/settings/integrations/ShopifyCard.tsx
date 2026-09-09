@@ -27,13 +27,15 @@ export function ShopifyCard({ connected, shopDomain, configured }: { connected: 
         <p className="mb-2 font-mono text-[12.5px] text-faint">{shopDomain}</p>
         <button
           disabled={disconnectPending}
-          onClick={() =>
-            startDisconnect(async () => {
-              setDisconnectError(null);
-              const result = await disconnectShopify();
-              if (result.error) setDisconnectError(result.error);
-            })
-          }
+          onClick={() => {
+            if (confirm(`Disconnect Shopify (${shopDomain})? Order confirmations will stop sending.`)) {
+              startDisconnect(async () => {
+                setDisconnectError(null);
+                const result = await disconnectShopify();
+                if (result.error) setDisconnectError(result.error);
+              });
+            }
+          }}
           className="text-xs text-faint hover:text-danger"
         >
           Disconnect

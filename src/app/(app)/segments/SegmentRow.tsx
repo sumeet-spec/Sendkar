@@ -26,7 +26,11 @@ export function SegmentRow({
       </div>
       <button
         disabled={pending}
-        onClick={() => startTransition(() => deleteSegment(segment.id))}
+        onClick={() => {
+          if (confirm(`Delete segment "${segment.name}"? This cannot be undone.`)) {
+            startTransition(async () => { await deleteSegment(segment.id); });
+          }
+        }}
         className="ml-4 text-[12.5px] text-faint hover:text-danger disabled:opacity-50"
       >
         Delete

@@ -358,15 +358,22 @@ export function NewTemplateForm({ canSubmitToMeta, workspaceId }: { canSubmitToM
           </div>
 
           <div className="rounded-md border border-border p-3">
-            <label className="flex items-center gap-2 text-[13px]">
-              <input type="checkbox" name="isCarousel" checked={isCarousel} onChange={(e) => setIsCarousel(e.target.checked)} />
-              Make this a carousel — 2–10 scrollable cards
-            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsCarousel((v) => !v)}
+                className={`relative h-5 w-9 rounded-full transition-colors ${isCarousel ? "bg-accent" : "bg-border"}`}
+              >
+                <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style={{ left: isCarousel ? "18px" : "2px" }} />
+              </button>
+              <input type="hidden" name="isCarousel" value={isCarousel ? "on" : ""} />
+              <span className="text-[13px]">Make this a carousel — 2–10 scrollable cards</span>
+            </div>
             {isCarousel && (
               <div className="mt-2">
                 <label className="sk-label">One card per line: media handle | body text | button1, button2</label>
                 <textarea name="carouselCards" className="sk-input font-mono text-[12px]" rows={4}
-                  placeholder={"4::abc123handle | The Diwali Kurta Set — ₹1,899 | Buy now, More colors\n4::def456handle | The Festive Saree — ₹2,499 | Buy now"} />
+                  placeholder={"4::abc123handle | The Diwali Kurta Set — 1,899 | Buy now, More colors\n4::def456handle | The Festive Saree — 2,499 | Buy now"} />
                 <p className="mt-1 text-[11.5px] text-faint">Media handles come from Meta&apos;s Resumable Upload API.</p>
               </div>
             )}

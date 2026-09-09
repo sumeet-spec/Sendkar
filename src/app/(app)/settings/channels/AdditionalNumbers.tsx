@@ -46,7 +46,15 @@ function NumberRow({ number }: { number: WhatsAppNumber }) {
         <div className="text-[13px] font-medium">{number.label}</div>
         <div className="font-mono text-[11.5px] text-faint">{number.display_number ?? number.phone_number_id}</div>
       </div>
-      <button disabled={pending} onClick={() => startTransition(() => deleteWhatsAppNumber(number.id))} className="text-xs text-faint hover:text-danger">
+      <button
+        disabled={pending}
+        onClick={() => {
+          if (confirm(`Remove number "${number.label}"? Traffic routing to it will stop immediately.`)) {
+            startTransition(async () => { await deleteWhatsAppNumber(number.id); });
+          }
+        }}
+        className="text-xs text-faint hover:text-danger"
+      >
         Remove
       </button>
     </div>

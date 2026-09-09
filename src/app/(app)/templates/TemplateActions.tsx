@@ -58,7 +58,7 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
       <div className="flex gap-2">
         <button
           disabled={dupPending}
-          onClick={() => startDup(() => duplicateTemplate(id))}
+          onClick={() => startDup(async () => { await duplicateTemplate(id); })}
           className="sk-btn sk-btn-ghost flex-1 text-[12.5px] disabled:opacity-60"
         >
           {dupPending ? "Duplicating…" : "Duplicate"}
@@ -68,7 +68,7 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
           <>
             <button
               disabled={delPending}
-              onClick={() => startDel(() => deleteTemplate(id))}
+              onClick={() => startDel(async () => { await deleteTemplate(id); })}
               className="flex-1 rounded-md border border-danger px-3 py-1.5 text-[12.5px] font-medium text-danger hover:bg-danger/10 disabled:opacity-60"
             >
               {delPending ? "Deleting…" : "Confirm delete"}

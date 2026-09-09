@@ -71,7 +71,7 @@ export function AiAgentForm({
           value={knowledge}
           onChange={(e) => setKnowledge(e.target.value.slice(0, MAX_KNOWLEDGE))}
           disabled={!planAllowed}
-          placeholder={`Describe your business, prices, policies and FAQs.\n\nExample:\nWe are Priya Textiles, a saree and fabric shop in Surat. We ship all over India in 3–5 days. Returns accepted within 7 days if unworn. No international shipping yet. Cash on delivery available for orders under ₹2,000.`}
+          placeholder={`Describe your business, prices, policies and FAQs.\n\nExample:\nWe are Priya Textiles, a saree and fabric shop in Surat. We ship all over India in 3–5 days. Returns accepted within 7 days if unworn. No international shipping yet. Cash on delivery available for orders under 2,000.`}
           className="sk-input font-mono text-[12.5px] leading-relaxed disabled:opacity-50"
         />
         <p className="mt-1 text-[11px] text-faint">

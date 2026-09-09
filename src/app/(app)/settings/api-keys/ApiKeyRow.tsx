@@ -22,7 +22,15 @@ export function ApiKeyRow({ apiKey }: { apiKey: Key }) {
           {apiKey.last_used_at ? `Last used ${new Date(apiKey.last_used_at).toLocaleString()}` : "Never used"}
         </div>
       </div>
-      <button disabled={pending} onClick={() => startTransition(() => revokeApiKey(apiKey.id))} className="text-xs text-faint hover:text-danger">
+      <button
+        disabled={pending}
+        onClick={() => {
+          if (confirm(`Revoke API key "${apiKey.name}"? Any integration using it will stop working immediately.`)) {
+            startTransition(async () => { await revokeApiKey(apiKey.id); });
+          }
+        }}
+        className="text-xs text-faint hover:text-danger"
+      >
         Revoke
       </button>
     </div>

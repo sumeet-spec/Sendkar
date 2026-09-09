@@ -87,7 +87,7 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
         )}
         <button
           disabled={pending}
-          onClick={() => startTransition(() => pauseCampaign(campaignId))}
+          onClick={() => startTransition(async () => { await pauseCampaign(campaignId); })}
           className="sk-btn sk-btn-ghost disabled:opacity-60"
         >
           Pause
@@ -100,7 +100,7 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
     return (
       <button
         disabled={pending}
-        onClick={() => startTransition(() => resumeCampaign(campaignId))}
+        onClick={() => startTransition(async () => { await resumeCampaign(campaignId); })}
         className="sk-btn sk-btn-primary disabled:opacity-60"
       >
         Resume

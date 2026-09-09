@@ -15,7 +15,7 @@ export function AssigneeSelect({ contactId, members, assigneeId }: { contactId: 
     <select
       defaultValue={assigneeId ?? ""}
       disabled={pending}
-      onChange={(e) => startTransition(() => assignContact(contactId, e.target.value || null))}
+      onChange={(e) => { const val = e.target.value || null; startTransition(async () => { await assignContact(contactId, val); }); }}
       className="sk-input w-auto text-[12.5px] disabled:opacity-60"
     >
       <option value="">Unassigned</option>

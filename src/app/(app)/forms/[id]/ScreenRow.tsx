@@ -19,7 +19,15 @@ export function ScreenRow({ waFlowId, screen, isLast, locked }: { waFlowId: stri
       <div className="mb-2 flex items-center justify-between">
         <span className="sk-pill border-accent text-accent">{screen.id}</span>
         {!locked && (
-          <button disabled={pending} onClick={() => startTransition(() => deleteWaFlowScreen(waFlowId, screen.id))} className="text-xs text-faint hover:text-danger">
+          <button
+            disabled={pending}
+            onClick={() => {
+              if (confirm(`Delete screen "${screen.title}"?`)) {
+                startTransition(async () => { await deleteWaFlowScreen(waFlowId, screen.id); });
+              }
+            }}
+            className="text-xs text-faint hover:text-danger"
+          >
             Delete
           </button>
         )}

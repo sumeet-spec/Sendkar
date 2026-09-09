@@ -24,7 +24,7 @@ export function NewDealForm({ contacts }: { contacts: Array<{ id: string; name: 
         <input name="title" className="sk-input" placeholder="e.g. Bulk saree order" required />
       </div>
       <div className="w-32">
-        <label className="sk-label">Value (₹)</label>
+        <label className="sk-label">Value</label>
         <input name="value" type="number" min={0} className="sk-input" placeholder="0" />
       </div>
       <div className="min-w-[160px] flex-1">

@@ -23,7 +23,15 @@ export function StepRow({ step, sequenceId }: { step: Step; sequenceId: string }
         <p className="mt-1 text-sm">{step.message_body}</p>
         {step.include_payment_link && <span className="sk-pill mt-2 border-accent text-accent">+ payment link</span>}
       </div>
-      <button disabled={pending} onClick={() => startTransition(() => deleteSequenceStep(step.id, sequenceId))} className="text-xs text-faint hover:text-danger">
+      <button
+        disabled={pending}
+        onClick={() => {
+          if (confirm(`Delete step ${step.step_order}?`)) {
+            startTransition(async () => { await deleteSequenceStep(step.id, sequenceId); });
+          }
+        }}
+        className="text-xs text-faint hover:text-danger"
+      >
         Delete
       </button>
     </div>

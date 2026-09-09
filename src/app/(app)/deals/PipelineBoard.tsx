@@ -27,7 +27,7 @@ export function PipelineBoard({ deals, currency = "USD" }: { deals: Deal[]; curr
   const [, startTransition] = useTransition();
 
   function drop(stage: DealStage) {
-    if (dragging) startTransition(() => moveDealStage(dragging, stage));
+    if (dragging) startTransition(async () => { await moveDealStage(dragging, stage); });
     setDragging(null);
     setDragOverStage(null);
   }
@@ -75,7 +75,7 @@ export function PipelineBoard({ deals, currency = "USD" }: { deals: Deal[]; curr
                     <span className="font-medium">{deal.title}</span>
                     <button
                       type="button"
-                      onClick={() => startTransition(() => deleteDeal(deal.id))}
+                      onClick={() => { if (confirm(`Delete "${deal.title}"?`)) startTransition(async () => { await deleteDeal(deal.id); }); }}
                       className="shrink-0 text-[11px] text-faint hover:text-danger"
                     >
                       ✕

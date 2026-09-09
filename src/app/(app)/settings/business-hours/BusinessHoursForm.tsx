@@ -32,14 +32,29 @@ export function BusinessHoursForm({
   hours: HourRow[];
 }) {
   const [state, formAction, pending] = useActionState(saveBusinessHours, null);
+  const [awayEnabled, setAwayEnabled] = useState(enabled);
   const byDay = new Map(hours.map((h) => [h.day_of_week, h]));
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
-      <label className="sk-card flex items-center gap-3 p-4">
-        <input type="checkbox" name="enabled" defaultChecked={enabled} className="h-4 w-4 accent-[var(--accent)]" />
-        <span className="text-sm">Send an away message outside business hours</span>
-      </label>
+      {/* Global away-message toggle */}
+      <div className="sk-card flex items-start justify-between gap-4 p-4">
+        <div>
+          <div className="text-sm font-medium">Send away message outside business hours</div>
+          <p className="mt-0.5 text-[12.5px] text-faint">Auto-replies when a message arrives outside the schedule below.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setAwayEnabled((v) => !v)}
+          className={`relative mt-0.5 h-6 w-11 flex-shrink-0 rounded-full transition-colors ${awayEnabled ? "bg-accent" : "bg-border"}`}
+        >
+          <span
+            className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
+            style={{ left: awayEnabled ? "22px" : "2px" }}
+          />
+        </button>
+      </div>
+      <input type="hidden" name="enabled" value={awayEnabled ? "on" : ""} />
 
       <div>
         <label className="sk-label">Timezone</label>

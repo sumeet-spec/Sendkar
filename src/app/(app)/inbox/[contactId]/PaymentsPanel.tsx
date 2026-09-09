@@ -10,7 +10,14 @@ interface PaymentLink {
 }
 
 export function PaymentsPanel({ links, currency = "USD" }: { links: PaymentLink[]; currency?: string }) {
-  if (links.length === 0) return null;
+  if (links.length === 0) {
+    return (
+      <div className="sk-card p-4">
+        <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">Payment links</div>
+        <p className="text-[12.5px] text-faint">No payment links yet — send one from the reply box below.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="sk-card flex flex-col gap-3 p-4">

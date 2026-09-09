@@ -28,7 +28,15 @@ export function StepRow({ step, flowId }: { step: Step; flowId: string }) {
     <div className="sk-card p-4">
       <div className="mb-2 flex items-center justify-between">
         <span className="sk-pill border-accent text-accent">Step {step.step_order}</span>
-        <button disabled={pending} onClick={() => startTransition(() => deleteFlowStep(step.id, flowId))} className="text-xs text-faint hover:text-danger">
+        <button
+          disabled={pending}
+          onClick={() => {
+            if (confirm(`Delete step ${step.step_order}?`)) {
+              startTransition(async () => { await deleteFlowStep(step.id, flowId); });
+            }
+          }}
+          className="text-xs text-faint hover:text-danger"
+        >
           Delete
         </button>
       </div>

@@ -18,7 +18,7 @@ export function LinkBuilder({ displayNumber }: { displayNumber: string }) {
   }, [waLink]);
 
   function copy(label: string, value: string) {
-    navigator.clipboard.writeText(value);
+    navigator.clipboard.writeText(value).catch(() => {});
     setCopied(label);
     setTimeout(() => setCopied(null), 1500);
   }
