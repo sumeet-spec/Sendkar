@@ -2,35 +2,15 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage, type WorkspaceCreds } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
+import { sendEmail } from "@/lib/email";
 
-/**
- * Vercel Cron hits this on a schedule (see vercel.json). No BullMQ/Redis —
- * at this scale (a few thousand contacts, and Meta's own 250/24h tier cap
- * on a fresh number regardless), a cron-triggered batch is enough and a
- * queue worker would be over-engineering.
- *
- * Runs ONCE A DAY, not every few minutes: the Hobby plan Vercel account
- * this deploys to rejects any cron expression that fires more than once
- * per 24h (a real deploy-time error, not a guess) — Pro lifts that, but
- * isn't worth paying for yet. One run/day still clears the FULL daily tier
- * allowance in that single invocation (not a small slice of it), it just
- * means all of a given day's sends land in one window each morning rather
- * than trickling through the day. MAX_PER_RUN exists only to keep that one
- * invocation inside Vercel's function-duration limit, not as pacing.
- */
-const MAX_PER_RUN = 100; // ~100 sequential Graph API calls comfortably fits maxDuration below
-const DELAY_BETWEEN_SENDS_MS = 250; // avoids bursting Meta's per-second send-rate limit
+const MAX_PER_RUN = 100;
+const DELAY_BETWEEN_SENDS_MS = 250;
+const AUTO_PAUSE_THRESHOLD = 0.20; // pause if >20% of concluded sends fail
+const AUTO_PAUSE_MIN_SAMPLE = 10; // don't auto-pause until at least 10 sends concluded
 
-export const maxDuration = 60; // seconds — Hobby plan's ceiling for a Serverless Function
+export const maxDuration = 60;
 
-/**
- * Every workspace's default number tracks its own daily tier in the
- * `workspaces` row; a secondary registered number tracks its own in
- * `whatsapp_numbers` instead — this resolves which table/row a given
- * campaign's sends should be metered and credentialed against, so adding
- * a second number doesn't silently share (or corrupt) the default
- * number's daily count.
- */
 async function resolveSender(
   admin: ReturnType<typeof createAdminClient>,
   workspace: { id: string; whatsapp_phone_number_id: string | null; whatsapp_access_token: string | null; messaging_tier: number; daily_send_count: number; daily_reset_at: string },
@@ -59,6 +39,25 @@ async function resolveSender(
   };
 }
 
+async function getWorkspaceOwnerEmail(admin: ReturnType<typeof createAdminClient>, workspaceId: string): Promise<string | null> {
+  const { data: member } = await admin
+    .from("workspace_members")
+    .select("user_id")
+    .eq("workspace_id", workspaceId)
+    .eq("role", "owner")
+    .maybeSingle();
+  if (!member) return null;
+  const { data: { user } } = await admin.auth.admin.getUserById(member.user_id);
+  return user?.email ?? null;
+}
+
+function resolveParam(field: string, contact: { name?: string | null; phone?: string; email?: string | null }): string {
+  if (field === "name") return contact.name || "there";
+  if (field === "phone") return contact.phone || "";
+  if (field === "email") return contact.email || "";
+  return contact.name || "there";
+}
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -68,10 +67,12 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const now = new Date();
 
+  // Only process campaigns whose scheduled time has arrived (or has no schedule)
   const { data: campaigns } = await admin
     .from("campaigns")
     .select("*, workspaces(*)")
-    .eq("status", "sending");
+    .eq("status", "sending")
+    .or(`scheduled_at.is.null,scheduled_at.lte.${now.toISOString()}`);
 
   const results: Record<string, unknown> = {};
 
@@ -83,7 +84,6 @@ export async function GET(request: NextRequest) {
 
     const sender = await resolveSender(admin, workspace, campaign.whatsapp_number_id);
 
-    // Roll the daily counter over if we've crossed into a new day.
     let dailySendCount = sender.dailySendCount;
     if (now >= new Date(sender.dailyResetAt)) {
       dailySendCount = 0;
@@ -101,18 +101,63 @@ export async function GET(request: NextRequest) {
 
     const { data: recipients } = await admin
       .from("campaign_recipients")
-      .select("id, contact_id, contacts(phone, name, opted_out, language)")
+      .select("id, contact_id, contacts(phone, name, email, opted_out, language)")
       .eq("campaign_id", campaign.id)
       .eq("status", "queued")
       .limit(Math.min(MAX_PER_RUN, remainingToday));
 
     if (!recipients || recipients.length === 0) {
-      // Nothing left queued — the campaign is done.
+      // Check auto-pause threshold before marking complete
+      const { data: allStats } = await admin
+        .from("campaign_recipients")
+        .select("status")
+        .eq("campaign_id", campaign.id)
+        .neq("status", "queued");
+      const concluded = allStats?.length ?? 0;
+      const failedCount = allStats?.filter((r) => r.status === "failed").length ?? 0;
+
+      if (concluded >= AUTO_PAUSE_MIN_SAMPLE && failedCount / concluded > AUTO_PAUSE_THRESHOLD) {
+        await admin.from("campaigns").update({ status: "paused" }).eq("id", campaign.id);
+        after(async () => {
+          const email = await getWorkspaceOwnerEmail(admin, workspace.id);
+          if (email) {
+            await sendEmail(email, `Campaign auto-paused: ${campaign.name}`, `
+              <h2 style="margin:0 0 8px">Campaign auto-paused</h2>
+              <p><strong>${campaign.name}</strong> was automatically paused because <strong>${Math.round(failedCount / concluded * 100)}%</strong> of sends failed (${failedCount} of ${concluded}).</p>
+              <p>High failure rates hurt your WhatsApp sender reputation. Review the errors, retry fixed contacts, and resume when ready.</p>
+              <p><a href="https://app.sendkar.shop/campaigns/${campaign.id}">View campaign →</a></p>
+            `);
+          }
+        });
+        results[campaign.id] = `auto-paused — ${Math.round(failedCount / concluded * 100)}% failure rate`;
+        continue;
+      }
+
       await admin
         .from("campaigns")
         .update({ status: "completed", completed_at: now.toISOString() })
         .eq("id", campaign.id);
-      after(() => dispatchOutboundWebhooks(workspace.id, "campaign.completed", { campaignId: campaign.id }));
+
+      after(async () => {
+        dispatchOutboundWebhooks(workspace.id, "campaign.completed", { campaignId: campaign.id });
+
+        const delivered = allStats?.filter((r) => r.status === "delivered" || r.status === "read").length ?? 0;
+        const deliveryRate = concluded > 0 ? Math.round((delivered / concluded) * 100) : 0;
+        const email = await getWorkspaceOwnerEmail(admin, workspace.id);
+        if (email) {
+          await sendEmail(email, `Campaign completed: ${campaign.name}`, `
+            <h2 style="margin:0 0 8px">Campaign completed ✓</h2>
+            <p><strong>${campaign.name}</strong> has finished sending.</p>
+            <table style="border-collapse:collapse;margin:12px 0">
+              <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Sent</td><td style="font-weight:600">${concluded.toLocaleString()}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Delivery rate</td><td style="font-weight:600;color:#22c55e">${deliveryRate}%</td></tr>
+              ${failedCount > 0 ? `<tr><td style="padding:4px 16px 4px 0;color:#6b7280">Failed</td><td style="font-weight:600;color:#ef4444">${failedCount}</td></tr>` : ""}
+            </table>
+            <p><a href="https://app.sendkar.shop/campaigns/${campaign.id}">View full report →</a></p>
+          `);
+        }
+      });
+
       results[campaign.id] = "completed";
       continue;
     }
@@ -123,9 +168,6 @@ export async function GET(request: NextRequest) {
       .eq("id", campaign.template_id)
       .single();
 
-    // Multi-language campaign: every group member is a candidate, resolved
-    // per recipient by their own language — not one fixed template for
-    // everyone regardless of what language they actually read.
     let templatesByLanguage = new Map<string, { meta_template_name: string; language: string; body_text: string | null }>();
     if (campaign.template_group) {
       const { data: groupTemplates } = await admin
@@ -136,14 +178,15 @@ export async function GET(request: NextRequest) {
       templatesByLanguage = new Map((groupTemplates ?? []).map((t) => [t.language, t]));
     }
 
+    const variableMapping = (campaign.variable_mapping ?? {}) as Record<string, string>;
+
     let sentCount = 0;
     for (const recipient of recipients) {
-      const contactRow = recipient.contacts as { phone?: string; name?: string | null; opted_out?: boolean; language?: string } | null;
+      const contactRow = recipient.contacts as { phone?: string; name?: string | null; email?: string | null; opted_out?: boolean; language?: string } | null;
       const phone = contactRow?.phone;
       const template = (contactRow?.language && templatesByLanguage.get(contactRow.language)) || primaryTemplate;
       if (!phone || !template) continue;
 
-      // Opted out after being queued (e.g. they replied STOP mid-campaign) — skip, don't fail it.
       if (contactRow?.opted_out) {
         await admin.from("campaign_recipients").update({ status: "failed", error: "Contact opted out" }).eq("id", recipient.id);
         continue;
@@ -151,15 +194,12 @@ export async function GET(request: NextRequest) {
 
       if (sentCount > 0) await new Promise((r) => setTimeout(r, DELAY_BETWEEN_SENDS_MS));
 
-      // Meta rejects a send whose param count doesn't exactly match what the
-      // template was approved with — a template with {{1}} and {{2}} sent
-      // only one param 400s for every recipient, not just a cosmetic gap.
       const placeholderCount = (template.body_text?.match(/\{\{\d+\}\}/g) ?? []).length;
-      // Sendkar has no per-contact custom-field system yet, so only slot
-      // {{1}} (the contact's name) carries real data — any further slots
-      // repeat it rather than send an empty string, which Meta also rejects.
       const bodyParams = placeholderCount > 0
-        ? Array.from({ length: placeholderCount }, () => contactRow?.name || "there")
+        ? Array.from({ length: placeholderCount }, (_, i) => {
+            const field = variableMapping[String(i + 1)];
+            return field ? resolveParam(field, { name: contactRow?.name, phone: contactRow?.phone, email: contactRow?.email }) : (contactRow?.name || "there");
+          })
         : undefined;
 
       try {
@@ -195,6 +235,31 @@ export async function GET(request: NextRequest) {
 
     if (sentCount > 0) {
       await admin.from(sender.table).update({ daily_send_count: dailySendCount + sentCount }).eq("id", sender.id);
+    }
+
+    // Auto-pause check after this batch
+    const { data: batchStats } = await admin
+      .from("campaign_recipients")
+      .select("status")
+      .eq("campaign_id", campaign.id)
+      .neq("status", "queued");
+    const batchConcluded = batchStats?.length ?? 0;
+    const batchFailed = batchStats?.filter((r) => r.status === "failed").length ?? 0;
+    if (batchConcluded >= AUTO_PAUSE_MIN_SAMPLE && batchFailed / batchConcluded > AUTO_PAUSE_THRESHOLD) {
+      await admin.from("campaigns").update({ status: "paused" }).eq("id", campaign.id);
+      after(async () => {
+        const email = await getWorkspaceOwnerEmail(admin, workspace.id);
+        if (email) {
+          await sendEmail(email, `Campaign auto-paused: ${campaign.name}`, `
+            <h2 style="margin:0 0 8px">Campaign auto-paused</h2>
+            <p><strong>${campaign.name}</strong> was automatically paused because <strong>${Math.round(batchFailed / batchConcluded * 100)}%</strong> of sends failed (${batchFailed} of ${batchConcluded}).</p>
+            <p>High failure rates hurt your WhatsApp sender reputation. Review the errors, retry fixed contacts, and resume when ready.</p>
+            <p><a href="https://app.sendkar.shop/campaigns/${campaign.id}">Review and retry →</a></p>
+          `);
+        }
+      });
+      results[campaign.id] = `sent ${sentCount}/${recipients.length} | auto-paused (${Math.round(batchFailed / batchConcluded * 100)}% failure rate)`;
+      continue;
     }
 
     results[campaign.id] = `sent ${sentCount}/${recipients.length}`;

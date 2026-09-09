@@ -2,9 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { NewCampaignForm } from "./NewCampaignForm";
 import { AiStrategistPanel } from "./AiStrategistPanel";
+import { CampaignFilters } from "./CampaignFilters";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
+import { Suspense } from "react";
 
 const STATUS_STYLE: Record<string, string> = {
   sending: "border-accent text-accent",
@@ -13,26 +15,35 @@ const STATUS_STYLE: Record<string, string> = {
   draft: "",
 };
 
-export default async function CampaignsPage() {
+export default async function CampaignsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
+  const { q = "", status = "" } = await searchParams;
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
   const dict = getDictionary(await getCurrentLanguage()).campaigns;
 
   const [
-    { data: campaigns },
+    { data: allCampaigns },
     { data: templates },
     { data: numbers },
     { data: segments },
     { data: allRecipients },
     { data: tagRows },
   ] = await Promise.all([
-    supabase
-      .from("campaigns")
-      .select("id, name, status, created_at, templates(name, language)")
-      .eq("workspace_id", workspace.id)
-      .order("created_at", { ascending: false }),
-    // Only show approved templates — picking a rejected/pending one would fail at send time
+    (() => {
+      let query = supabase
+        .from("campaigns")
+        .select("id, name, status, created_at, scheduled_at, templates(name, language)")
+        .eq("workspace_id", workspace.id)
+        .order("created_at", { ascending: false });
+      if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
+      if (status && status !== "all") query = query.eq("status", status);
+      return query;
+    })(),
     supabase
       .from("templates")
       .select("id, name, language, status, body_preview")
@@ -61,7 +72,8 @@ export default async function CampaignsPage() {
       .limit(500),
   ]);
 
-  // Per-campaign delivery stats (for list cards)
+  const campaigns = allCampaigns ?? [];
+
   const recipientsByCampaign = new Map<string, { total: number; delivered: number; failed: number; concluded: number }>();
   for (const r of allRecipients ?? []) {
     const cid = r.campaign_id as string;
@@ -73,7 +85,6 @@ export default async function CampaignsPage() {
     recipientsByCampaign.set(cid, bucket);
   }
 
-  // Available tags for segment autocomplete
   const availableTags = [
     ...new Set((tagRows ?? []).flatMap((r) => (r.tags as string[] | null) ?? [])),
   ].sort();
@@ -101,12 +112,17 @@ export default async function CampaignsPage() {
 
       <AiStrategistPanel />
 
+      <Suspense>
+        <CampaignFilters q={q} status={status} />
+      </Suspense>
+
       <div className="flex flex-col gap-3">
-        {(campaigns ?? []).map((c) => {
+        {campaigns.map((c) => {
           const template = c.templates as { name?: string; language?: string } | null;
           const stats = recipientsByCampaign.get(c.id);
           const deliveryRate =
             stats && stats.concluded > 0 ? Math.round((stats.delivered / stats.concluded) * 100) : null;
+          const isScheduled = c.scheduled_at && new Date(c.scheduled_at) > new Date() && c.status === "sending";
 
           return (
             <Link
@@ -118,11 +134,12 @@ export default async function CampaignsPage() {
                 <div className="truncate font-medium">{c.name}</div>
                 <div className="mt-0.5 text-[12.5px] text-faint">
                   {template?.name} · {template?.language} ·{" "}
-                  {new Date(c.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {isScheduled && (
+                    <span className="ml-2 text-accent">
+                      · Scheduled {new Date(c.scheduled_at!).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -139,11 +156,7 @@ export default async function CampaignsPage() {
                     className="font-mono text-[13px] font-semibold tabular-nums"
                     style={{
                       color:
-                        deliveryRate >= 85
-                          ? "var(--accent)"
-                          : deliveryRate >= 70
-                            ? "var(--foreground)"
-                            : "var(--danger)",
+                        deliveryRate >= 85 ? "var(--accent)" : deliveryRate >= 70 ? "var(--foreground)" : "var(--danger)",
                     }}
                   >
                     {deliveryRate}%
@@ -159,12 +172,24 @@ export default async function CampaignsPage() {
                 </div>
               )}
 
-              <span className={`sk-pill flex-shrink-0 ${STATUS_STYLE[c.status] ?? ""}`}>{c.status}</span>
+              <span className={`sk-pill flex-shrink-0 ${STATUS_STYLE[c.status] ?? ""}`}>
+                {isScheduled ? "scheduled" : c.status}
+              </span>
             </Link>
           );
         })}
-        {(!campaigns || campaigns.length === 0) && (
-          <p className="py-10 text-center text-muted">{dict.noCampaigns}</p>
+
+        {campaigns.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="text-muted">
+              {q || status ? "No campaigns match this filter." : dict.noCampaigns}
+            </p>
+            {(q || status) && (
+              <Link href="/campaigns" className="mt-2 block text-[13px] text-accent hover:text-accent-hover">
+                Clear filters
+              </Link>
+            )}
+          </div>
         )}
       </div>
     </div>

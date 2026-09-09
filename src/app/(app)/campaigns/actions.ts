@@ -211,6 +211,67 @@ export async function getAudienceCount(
   return { count: count ?? 0 };
 }
 
+export async function scheduleCampaign(campaignId: string, scheduledAt: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("id, workspace_id, template_id, status, segment_tag, segment_id, template_group, templates(language)")
+    .eq("id", campaignId)
+    .single();
+  if (!campaign || campaign.status !== "draft") return { error: "Campaign not found or not a draft." };
+
+  // Snapshot recipients at schedule time — same logic as startCampaign
+  let query = supabase.from("contacts").select("id").eq("workspace_id", campaign.workspace_id).eq("opted_out", false);
+  if (campaign.template_group) {
+    const { data: groupTemplates } = await supabase
+      .from("templates")
+      .select("language")
+      .eq("workspace_id", campaign.workspace_id)
+      .eq("template_group", campaign.template_group);
+    const languages = [...new Set((groupTemplates ?? []).map((t) => t.language))];
+    query = query.in("language", languages);
+  } else {
+    const language = (campaign.templates as { language?: string } | null)?.language;
+    query = query.eq("language", language);
+  }
+  if (campaign.segment_tag) query = query.contains("tags", [campaign.segment_tag]);
+  if (campaign.segment_id) {
+    const { data: segment } = await supabase.from("segments").select("conditions").eq("id", campaign.segment_id).maybeSingle();
+    if (segment?.conditions) query = applySegmentConditions(query, segment.conditions as SegmentCondition[]);
+  }
+  const { data: contacts } = await query;
+
+  if (contacts && contacts.length > 0) {
+    const { error: recipientsError } = await supabase.from("campaign_recipients").insert(
+      contacts.map((c) => ({ campaign_id: campaign.id, contact_id: c.id, status: "queued" as const })),
+    );
+    if (recipientsError) return { error: `Couldn't snapshot audience: ${recipientsError.message}` };
+  }
+
+  await supabase
+    .from("campaigns")
+    .update({ status: "sending", scheduled_at: scheduledAt, started_at: new Date().toISOString() })
+    .eq("id", campaign.id);
+
+  revalidatePath(`/campaigns/${campaignId}`);
+  return {};
+}
+
+export async function saveVariableMapping(campaignId: string, mapping: Record<string, string>): Promise<{ error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("campaigns")
+    .update({ variable_mapping: mapping })
+    .eq("id", campaignId)
+    .eq("workspace_id", workspace.id);
+  if (error) return { error: error.message };
+  revalidatePath(`/campaigns/${campaignId}`);
+  return {};
+}
+
 export async function retryFailedRecipients(campaignId: string): Promise<{ error?: string }> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace." };

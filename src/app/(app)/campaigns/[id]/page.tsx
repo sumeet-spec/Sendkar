@@ -3,17 +3,11 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { CampaignControls } from "./StartButton";
 import { TestSendForm } from "./TestSendForm";
 import { CampaignActions } from "./CampaignActions";
+import { RecipientTable } from "./RecipientTable";
+import { VariableMappingForm } from "./VariableMappingForm";
 import { notFound } from "next/navigation";
 import { estimateCampaignCostInr, type TemplateCategory } from "@/lib/metaRates";
 import { formatCurrency } from "@/lib/dashboardMetrics";
-
-const RECIPIENT_STATUS_STYLE: Record<string, string> = {
-  delivered: "border-accent text-accent",
-  read: "bg-accent text-[#05130a] border-accent",
-  sent: "",
-  queued: "text-faint",
-  failed: "border-danger text-danger",
-};
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,7 +18,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("*, templates(name, language, meta_template_name, category)")
+    .select("*, templates(name, language, meta_template_name, category, body_text)")
     .eq("id", id)
     .eq("workspace_id", workspace.id)
     .maybeSingle();
@@ -43,7 +37,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   const [{ data: recipients }, { data: orders }] = await Promise.all([
     supabase
       .from("campaign_recipients")
-      .select("id, status, error, sent_at, contacts(phone, name)")
+      .select("id, contact_id, status, error, sent_at, contacts(phone, name)")
       .eq("campaign_id", id)
       .order("sent_at", { ascending: false, nullsFirst: false })
       .limit(200),
@@ -51,7 +45,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   ]);
   const revenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
 
-  const template = campaign.templates as { name?: string; language?: string; meta_template_name?: string; category?: string } | null;
+  const template = campaign.templates as {
+    name?: string; language?: string; meta_template_name?: string; category?: string; body_text?: string;
+  } | null;
+
   const counts = (recipients ?? []).reduce<Record<string, number>>((acc, r) => {
     acc[r.status] = (acc[r.status] ?? 0) + 1;
     return acc;
@@ -61,11 +58,6 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   const deliveredOrRead = (counts.delivered ?? 0) + (counts.read ?? 0);
   const deliveryRate = concluded > 0 ? Math.round((deliveredOrRead / concluded) * 100) : null;
 
-  // ── Cost transparency — an estimate before sending (draft), or actual
-  // spend so far (once it's snapshotted real recipients). Neither Wati nor
-  // Interakt show this inline on a campaign; it's shown here specifically
-  // because Meta starts charging for service messages Oct 1, 2026 and
-  // marketing/utility/authentication rates already apply today. ──────────
   const { data: rateRows } = await supabase.from("meta_rate_card").select("category, price_inr").eq("country_code", "IN");
   let audienceCount = 0;
   if (campaign.status === "draft") {
@@ -81,14 +73,19 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   } else {
     audienceCount = recipients?.length ?? 0;
   }
+
   const estimatedCost = template?.category
     ? estimateCampaignCostInr(audienceCount, template.category as TemplateCategory, rateRows ?? [])
     : 0;
 
+  const isScheduled = campaign.scheduled_at && new Date(campaign.scheduled_at) > new Date();
+  const variableMapping = (campaign.variable_mapping ?? {}) as Record<string, string>;
+
   return (
     <div className="max-w-4xl">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+      {/* ── Header ── */}
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight">{campaign.name}</h1>
           <div className="mt-1 text-[13px] text-faint">
             {template?.name} · {template?.language} · <span className="font-mono">{template?.meta_template_name}</span>
@@ -98,18 +95,35 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
               Multi-language — auto-sends the right version to each contact ({groupLanguages.join(", ")})
             </div>
           )}
+          {isScheduled && (
+            <div className="mt-1.5 text-[12px]" style={{ color: "var(--accent)" }}>
+              Scheduled for{" "}
+              {new Date(campaign.scheduled_at).toLocaleString(undefined, {
+                weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+              })}
+            </div>
+          )}
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
           <CampaignActions
             campaignId={campaign.id}
             failedCount={counts.failed ?? 0}
             status={campaign.status}
           />
           {campaign.status === "draft" && <TestSendForm campaignId={campaign.id} />}
-          <CampaignControls campaignId={campaign.id} status={campaign.status} />
+          <CampaignControls campaignId={campaign.id} status={campaign.status} scheduledAt={campaign.scheduled_at} />
         </div>
       </div>
 
+      {/* ── Variable mapping (draft or already sending) ── */}
+      <VariableMappingForm
+        campaignId={campaign.id}
+        bodyText={template?.body_text}
+        currentMapping={variableMapping}
+        disabled={campaign.status !== "draft"}
+      />
+
+      {/* ── Meta cost estimate ── */}
       {audienceCount > 0 && (
         <div className="sk-card mb-6 flex items-center justify-between p-4">
           <div>
@@ -125,6 +139,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </div>
       )}
 
+      {/* ── Status grid ── */}
       <div className="mb-6 grid grid-cols-6 gap-3">
         {["queued", "sent", "delivered", "read", "failed"].map((s) => (
           <div key={s} className="sk-card p-4">
@@ -143,13 +158,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             className="text-xl font-semibold"
             style={{
               color:
-                deliveryRate === null
-                  ? "var(--faint)"
-                  : deliveryRate >= 85
-                    ? "var(--accent)"
-                    : deliveryRate >= 70
-                      ? "var(--foreground)"
-                      : "var(--danger)",
+                deliveryRate === null ? "var(--faint)"
+                : deliveryRate >= 85 ? "var(--accent)"
+                : deliveryRate >= 70 ? "var(--foreground)"
+                : "var(--danger)",
             }}
           >
             {deliveryRate !== null ? `${deliveryRate}%` : "—"}
@@ -157,6 +169,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </div>
       </div>
 
+      {/* ── Revenue ── */}
       {revenue > 0 && (
         <div className="sk-card mb-6 p-4">
           <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue attributed to this campaign</div>
@@ -165,36 +178,18 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </div>
       )}
 
-      <div className="sk-card overflow-hidden">
-        <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left">
-              {["Phone", "Name", "Status", "Sent", "Error"].map((h) => (
-                <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {(recipients ?? []).map((r) => {
-              const contact = r.contacts as { phone?: string; name?: string } | null;
-              return (
-                <tr key={r.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-2.5 font-mono text-[13px]">{contact?.phone}</td>
-                  <td className="px-4 py-2.5 text-muted">{contact?.name ?? "—"}</td>
-                  <td className="px-4 py-2.5"><span className={`sk-pill ${RECIPIENT_STATUS_STYLE[r.status] ?? ""}`}>{r.status}</span></td>
-                  <td className="px-4 py-2.5 text-faint">{r.sent_at ? new Date(r.sent_at).toLocaleString() : "—"}</td>
-                  <td className="px-4 py-2.5 text-danger text-[12px]">{r.error ?? ""}</td>
-                </tr>
-              );
-            })}
-            {(!recipients || recipients.length === 0) && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">No recipients yet — start the campaign to snapshot the audience.</td></tr>
-            )}
-          </tbody>
-        </table>
-        </div>
-      </div>
+      {/* ── Recipients ── */}
+      <RecipientTable
+        campaignId={campaign.id}
+        recipients={(recipients ?? []).map((r) => ({
+          id: r.id,
+          contact_id: r.contact_id as string | null,
+          status: r.status,
+          error: r.error as string | null,
+          sent_at: r.sent_at as string | null,
+          contacts: r.contacts as { phone?: string; name?: string } | null,
+        }))}
+      />
     </div>
   );
 }
