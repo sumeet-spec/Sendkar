@@ -118,6 +118,126 @@ export function initial(name: string | null): string | null {
   return (name?.trim()?.[0] ?? "").toUpperCase() || null;
 }
 
+// ── Campaign performance ──────────────────────────────────────────────────────
+
+export interface CampaignInfoRow {
+  id: string;
+  name: string;
+  created_at: string;
+  status: string;
+}
+
+export interface CampaignRecipientRow {
+  campaign_id: string;
+  status: string;
+}
+
+export interface CampaignPerfRow {
+  id: string;
+  name: string;
+  createdAt: string;
+  status: string;
+  sent: number;
+  delivered: number;
+  failed: number;
+  deliveryRate: number | null;
+}
+
+export function computeCampaignPerformance(
+  campaigns: CampaignInfoRow[],
+  recipients: CampaignRecipientRow[],
+): CampaignPerfRow[] {
+  const byId = new Map<string, { sent: number; delivered: number; failed: number; concluded: number }>();
+  for (const r of recipients) {
+    if (!r.campaign_id) continue;
+    const curr = byId.get(r.campaign_id) ?? { sent: 0, delivered: 0, failed: 0, concluded: 0 };
+    curr.sent++;
+    if (r.status === "delivered" || r.status === "read") curr.delivered++;
+    if (r.status === "failed") curr.failed++;
+    if (r.status !== "queued") curr.concluded++;
+    byId.set(r.campaign_id, curr);
+  }
+  return campaigns.map((c) => {
+    const s = byId.get(c.id) ?? { sent: 0, delivered: 0, failed: 0, concluded: 0 };
+    return {
+      id: c.id,
+      name: c.name,
+      createdAt: c.created_at,
+      status: c.status,
+      sent: s.sent,
+      delivered: s.delivered,
+      failed: s.failed,
+      deliveryRate: s.concluded > 0 ? Math.round((s.delivered / s.concluded) * 100) : null,
+    };
+  });
+}
+
+// ── Template health ───────────────────────────────────────────────────────────
+
+export interface TemplateHealthRow {
+  status: string;
+}
+
+export interface TemplateHealth {
+  approved: number;
+  pending: number;
+  rejected: number;
+}
+
+export function computeTemplateHealth(templates: TemplateHealthRow[]): TemplateHealth {
+  return {
+    approved: templates.filter((t) => t.status === "approved").length,
+    pending: templates.filter((t) => t.status === "pending").length,
+    rejected: templates.filter((t) => t.status === "rejected").length,
+  };
+}
+
+// ── Formatting helpers ────────────────────────────────────────────────────────
+
+export function formatCurrency(amount: number, currency = "USD"): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+/** Compact count: "1.2k" for 1200, plain string for smaller. */
+export function fmtCount(n: number): string {
+  if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${+(n / 1_000).toFixed(1)}k`;
+  return String(n);
+}
+
+// ── Area chart path builder ───────────────────────────────────────────────────
+
+export function areaChartPaths(
+  values: number[],
+  W: number,
+  H: number,
+  PL: number,
+  PR: number,
+  PT: number,
+  PB: number,
+): { line: string; area: string; pts: { x: number; y: number }[] } {
+  const n = values.length;
+  const max = Math.max(...values, 1);
+  const plotW = W - PL - PR;
+  const plotH = H - PT - PB;
+  const bottom = PT + plotH;
+
+  const pts = values.map((v, i) => ({
+    x: PL + (n > 1 ? (i / (n - 1)) * plotW : plotW / 2),
+    y: PT + (1 - v / max) * plotH,
+  }));
+
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const area = `${line} L ${pts[n - 1].x.toFixed(1)},${bottom.toFixed(1)} L ${pts[0].x.toFixed(1)},${bottom.toFixed(1)} Z`;
+
+  return { line, area, pts };
+}
+
 /** How full today's messaging-tier cap is, 0–100. */
 export function messagingTierFillPct(dailySendCount: number, tier: number): number {
   return Math.min(100, Math.round((dailySendCount / Math.max(1, tier)) * 100));
