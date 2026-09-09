@@ -28,6 +28,7 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
   const category = String(formData.get("category") ?? "MARKETING") as "MARKETING" | "UTILITY" | "AUTHENTICATION";
   const headerType = String(formData.get("headerType") ?? "none") as "none" | "text" | "image";
   const headerText = String(formData.get("headerText") ?? "").trim() || undefined;
+  const headerImageUrl = String(formData.get("headerImageUrl") ?? "").trim() || null;
   const bodyText = String(formData.get("bodyText") ?? "").trim();
   const footerText = String(formData.get("footerText") ?? "").trim() || undefined;
   const quickReplies = String(formData.get("quickReplies") ?? "")
@@ -80,6 +81,7 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
     category,
     header_type: headerType,
     header_text: headerText ?? null,
+    header_image_url: headerImageUrl,
     body_text: bodyText,
     body_preview: bodyText,
     footer_text: footerText ?? null,

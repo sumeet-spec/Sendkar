@@ -29,7 +29,7 @@ export default async function TemplatesPage() {
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Templates</h1>
-        <NewTemplateForm canSubmitToMeta={canSubmitToMeta} />
+        <NewTemplateForm canSubmitToMeta={canSubmitToMeta} workspaceId={workspace.id} />
       </div>
 
       <p className="mb-5 text-sm text-muted">

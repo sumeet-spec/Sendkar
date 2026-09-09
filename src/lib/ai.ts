@@ -264,6 +264,30 @@ export async function generateAutoReply(
   return { reply: parsed.reply, shouldHandOff: Boolean(parsed.shouldHandOff) };
 }
 
+/**
+ * Rewrites a vague business description into a DALL-E 3 optimised image prompt.
+ * A short business description ("Diwali sale, silk sarees") becomes a specific
+ * visual directive with style, mood, composition and technical constraints.
+ */
+export async function enhanceImagePrompt(description: string): Promise<string> {
+  const prompt = `Convert this WhatsApp marketing campaign description into a concise DALL-E 3 image generation prompt. The image will be used as a WhatsApp message header (1:1 square or 16:9 wide).
+
+Business description: "${description}"
+
+Rules:
+- Write a single descriptive paragraph (2-4 sentences), no bullet points
+- Describe the visual scene, colors, mood and composition
+- Specify "clean, professional, minimal text overlay" style
+- Avoid faces if possible (generation quality is inconsistent)
+- Make it look like a real marketing banner, not AI art
+- Do NOT include any text/words to appear in the image
+- End with: photorealistic, high quality, marketing photography style
+
+Output ONLY the optimised prompt, nothing else.`;
+
+  return callClaude(prompt, 300);
+}
+
 /** A quick "catch me up" summary of a thread — for an agent picking up a conversation cold, or a handoff between team members. */
 export async function summarizeThread(thread: ThreadMessage[], contactName: string | null): Promise<string> {
   const transcript = thread

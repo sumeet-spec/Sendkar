@@ -12,12 +12,13 @@ const LANGUAGES = [
   { value: "en", label: "English" },
 ];
 
-export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean }) {
+export function NewTemplateForm({ canSubmitToMeta, workspaceId }: { canSubmitToMeta: boolean; workspaceId: string }) {
   const [state, formAction, pending] = useActionState(createTemplate, null);
   const [open, setOpen] = useState(false);
   const [language, setLanguage] = useState("");
   const [headerType, setHeaderType] = useState("none");
   const [headerText, setHeaderText] = useState("");
+  const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [bodyText, setBodyText] = useState("");
   const [footerText, setFooterText] = useState("");
   const [quickReplies, setQuickReplies] = useState("");
@@ -26,6 +27,32 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
   const [aiDescription, setAiDescription] = useState("");
   const [aiPending, startAiTransition] = useTransition();
   const [aiError, setAiError] = useState<string | null>(null);
+
+  const [imgDescription, setImgDescription] = useState("");
+  const [imgPending, setImgPending] = useState(false);
+  const [imgError, setImgError] = useState<string | null>(null);
+  const [imgPreview, setImgPreview] = useState<string | null>(null);
+
+  async function generateImage() {
+    if (!imgDescription.trim()) { setImgError("Describe what the image should show."); return; }
+    setImgError(null);
+    setImgPending(true);
+    try {
+      const res = await fetch("/api/ai/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: imgDescription, workspaceId }),
+      });
+      const data = await res.json() as { url?: string; error?: string };
+      if (!res.ok || data.error) { setImgError(data.error ?? "Generation failed."); return; }
+      setImgPreview(data.url!);
+      setHeaderImageUrl(data.url!);
+    } catch {
+      setImgError("Generation failed — check your connection.");
+    } finally {
+      setImgPending(false);
+    }
+  }
 
   function generateWithAi() {
     if (!language) {
@@ -121,7 +148,7 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
       <div>
         <label className="sk-label">Header</label>
         <div className="flex gap-2">
-          <select name="headerType" className="sk-input w-40" value={headerType} onChange={(e) => setHeaderType(e.target.value)}>
+          <select name="headerType" className="sk-input w-40" value={headerType} onChange={(e) => { setHeaderType(e.target.value); setHeaderImageUrl(""); setImgPreview(null); }}>
             <option value="none">None</option>
             <option value="text">Text</option>
             <option value="image">Image</option>
@@ -130,6 +157,51 @@ export function NewTemplateForm({ canSubmitToMeta }: { canSubmitToMeta: boolean 
             <input name="headerText" value={headerText} onChange={(e) => setHeaderText(e.target.value)} className="sk-input flex-1" placeholder="Header text" />
           )}
         </div>
+        {headerType === "image" && (
+          <div className="mt-2 rounded-md border border-border p-3 flex flex-col gap-2">
+            <label className="sk-label mb-0">✦ Generate header image with AI</label>
+            <div className="flex gap-2">
+              <input
+                value={imgDescription}
+                onChange={(e) => setImgDescription(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); generateImage(); } }}
+                className="sk-input flex-1 text-sm"
+                placeholder="Diwali sale, festive red and gold, silk textiles, celebratory mood"
+              />
+              <button type="button" onClick={generateImage} disabled={imgPending} className="sk-btn sk-btn-ghost text-[12.5px] disabled:opacity-60 whitespace-nowrap">
+                {imgPending ? "Generating…" : imgPreview ? "Regenerate" : "Generate"}
+              </button>
+            </div>
+            {imgError && <p className="text-[12px] text-danger">{imgError}</p>}
+            {imgPending && (
+              <div className="flex items-center gap-2 text-[12px] text-muted">
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-border">
+                  <div className="h-full w-1/3 animate-[sk-skeleton-pulse_1.5s_ease-in-out_infinite] rounded-full bg-accent-dim" />
+                </div>
+                AI is painting your image…
+              </div>
+            )}
+            {imgPreview && (
+              <div className="flex flex-col gap-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imgPreview} alt="AI-generated header" className="w-full rounded-md border border-border object-cover" style={{ maxHeight: 200 }} />
+                <p className="text-[11px] text-accent">✓ Image ready — will be used as the template header when sending.</p>
+              </div>
+            )}
+            {!imgPreview && (
+              <div className="mt-1 text-[11.5px] text-faint">
+                Or paste an existing image URL:
+                <input
+                  value={headerImageUrl}
+                  onChange={(e) => { setHeaderImageUrl(e.target.value); setImgPreview(e.target.value || null); }}
+                  className="sk-input mt-1 text-sm"
+                  placeholder="https://…"
+                />
+              </div>
+            )}
+            <input type="hidden" name="headerImageUrl" value={headerImageUrl} />
+          </div>
+        )}
       </div>
 
       <div>
