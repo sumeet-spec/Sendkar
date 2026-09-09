@@ -26,7 +26,7 @@ export function NewProductForm() {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="sk-label">Price label</label>
-          <input name="priceLabel" className="sk-input" placeholder="₹899" />
+          <input name="priceLabel" className="sk-input" placeholder="$29.99" />
         </div>
         <div>
           <label className="sk-label">Image URL</label>
