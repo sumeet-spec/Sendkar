@@ -4,6 +4,7 @@ import { CampaignControls } from "./StartButton";
 import { TestSendForm } from "./TestSendForm";
 import { notFound } from "next/navigation";
 import { estimateCampaignCostInr, type TemplateCategory } from "@/lib/metaRates";
+import { formatCurrency } from "@/lib/dashboardMetrics";
 
 const RECIPIENT_STATUS_STYLE: Record<string, string> = {
   delivered: "border-accent text-accent",
@@ -17,6 +18,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
+  const currency = workspace.currency ?? "USD";
   const supabase = await createClient();
 
   const { data: campaign } = await supabase
@@ -53,6 +55,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     acc[r.status] = (acc[r.status] ?? 0) + 1;
     return acc;
   }, {});
+
+  const concluded = (counts.sent ?? 0) + (counts.delivered ?? 0) + (counts.read ?? 0) + (counts.failed ?? 0);
+  const deliveredOrRead = (counts.delivered ?? 0) + (counts.read ?? 0);
+  const deliveryRate = concluded > 0 ? Math.round((deliveredOrRead / concluded) * 100) : null;
 
   // ── Cost transparency — an estimate before sending (draft), or actual
   // spend so far (once it's snapshotted real recipients). Neither Wati nor
@@ -113,19 +119,42 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-5 gap-3">
+      <div className="mb-6 grid grid-cols-6 gap-3">
         {["queued", "sent", "delivered", "read", "failed"].map((s) => (
           <div key={s} className="sk-card p-4">
             <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">{s}</div>
-            <div className="text-xl font-semibold">{counts[s] ?? 0}</div>
+            <div
+              className="text-xl font-semibold"
+              style={s === "failed" && (counts[s] ?? 0) > 0 ? { color: "var(--danger)" } : undefined}
+            >
+              {counts[s] ?? 0}
+            </div>
           </div>
         ))}
+        <div className="sk-card p-4">
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">delivery</div>
+          <div
+            className="text-xl font-semibold"
+            style={{
+              color:
+                deliveryRate === null
+                  ? "var(--faint)"
+                  : deliveryRate >= 85
+                    ? "var(--accent)"
+                    : deliveryRate >= 70
+                      ? "var(--foreground)"
+                      : "var(--danger)",
+            }}
+          >
+            {deliveryRate !== null ? `${deliveryRate}%` : "—"}
+          </div>
+        </div>
       </div>
 
       {revenue > 0 && (
         <div className="sk-card mb-6 p-4">
           <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue attributed to this campaign</div>
-          <div className="text-xl font-semibold text-accent">₹{revenue.toLocaleString("en-IN")}</div>
+          <div className="text-xl font-semibold text-accent">{formatCurrency(revenue, currency)}</div>
           <p className="mt-1 text-[12px] text-faint">Sales logged or synced within 7 days of a contact receiving this campaign.</p>
         </div>
       )}
