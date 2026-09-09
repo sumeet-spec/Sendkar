@@ -135,7 +135,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
               checked against Interakt&apos;s published card. Not your Sendkar subscription fee, this is what Meta itself charges.
             </p>
           </div>
-          <div className="text-xl font-semibold text-accent">₹{estimatedCost.toLocaleString("en-IN")}</div>
+          <div className="text-xl font-semibold text-accent">{formatCurrency(estimatedCost, currency)}</div>
         </div>
       )}
 

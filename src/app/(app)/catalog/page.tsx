@@ -17,10 +17,15 @@ export default async function CatalogPage() {
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false });
 
+  const productCount = products?.length ?? 0;
+
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Catalog</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold tracking-tight">Catalog</h1>
+          {productCount > 0 && <span className="sk-pill text-faint">{productCount} product{productCount === 1 ? "" : "s"}</span>}
+        </div>
         <NewProductForm />
       </div>
 
@@ -45,7 +50,12 @@ export default async function CatalogPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {(products ?? []).map((p) => <ProductCard key={p.id} product={p} />)}
-        {(!products || products.length === 0) && <p className="col-span-3 py-8 text-center text-muted">No products yet.</p>}
+        {productCount === 0 && (
+          <div className="col-span-3 rounded-lg border border-border py-10 text-center">
+            <p className="text-muted">No products yet.</p>
+            <p className="mt-1 text-[12.5px] text-faint">Add one above — each entry must match a product already in Meta Commerce Manager.</p>
+          </div>
+        )}
       </div>
     </div>
   );

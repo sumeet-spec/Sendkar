@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { notFound } from "next/navigation";
 import { StepRow } from "./StepRow";
 import { AddStepForm } from "./AddStepForm";
+import Link from "next/link";
 
 export default async function FlowDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,10 +19,19 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-1 text-xl font-semibold tracking-tight">{flow.name}</h1>
-      <p className="mb-6 text-[13px] text-faint">
-        Triggers on <span className="font-mono text-accent">{flow.trigger_keyword}</span> ({flow.match_type})
-      </p>
+      <Link href="/flows" className="mb-4 inline-block text-[13px] text-muted hover:text-foreground">← Chatbot flows</Link>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">{flow.name}</h1>
+          <p className="mt-1 text-[13px] text-faint">
+            Triggers on <span className="font-mono text-accent">{flow.trigger_keyword}</span>
+            <span className="ml-1.5 sk-pill text-faint">{flow.match_type}</span>
+          </p>
+        </div>
+        <span className={`sk-pill flex-shrink-0 mt-1 ${flow.is_active ? "border-accent text-accent" : "text-faint"}`}>
+          {flow.is_active ? "Active" : "Inactive"}
+        </span>
+      </div>
 
       <div className="flex flex-col gap-3">
         {(steps ?? []).map((s) => (

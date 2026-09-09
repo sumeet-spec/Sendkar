@@ -27,11 +27,28 @@ export default async function SequenceDetailPage({ params }: { params: Promise<{
   return (
     <div className="max-w-2xl">
       <Link href="/sequences" className="mb-4 inline-block text-[13px] text-muted hover:text-foreground">← Sequences</Link>
-      <h1 className="mb-6 text-xl font-semibold tracking-tight">{sequence.name}</h1>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">{sequence.name}</h1>
+          <p className="mt-1 text-[13px] text-faint">
+            Trigger: <span className="font-mono text-accent">{sequence.trigger_type}</span>
+            {sequence.trigger_keyword && (
+              <> · keyword <span className="font-mono text-accent">{sequence.trigger_keyword}</span></>
+            )}
+          </p>
+        </div>
+        <span className="sk-pill flex-shrink-0 mt-1 text-faint">
+          {(steps ?? []).length} step{(steps ?? []).length === 1 ? "" : "s"}
+        </span>
+      </div>
 
       <div className="mb-5 flex flex-col gap-3">
         {(steps ?? []).map((s) => <StepRow key={s.id} step={s} sequenceId={id} />)}
-        {(!steps || steps.length === 0) && <p className="py-6 text-center text-muted">No steps yet — this sequence won&apos;t send anything until you add one.</p>}
+        {(!steps || steps.length === 0) && (
+          <div className="rounded-lg border border-border py-8 text-center text-muted">
+            No steps yet — this sequence won&apos;t send anything until you add one below.
+          </div>
+        )}
       </div>
 
       <AddStepForm sequenceId={id} />

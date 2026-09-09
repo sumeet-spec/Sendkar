@@ -14,17 +14,29 @@ export default async function CannedResponsesPage() {
     .eq("workspace_id", workspace.id)
     .order("shortcut", { ascending: true });
 
+  const count = responses?.length ?? 0;
+
   return (
     <div className="max-w-2xl">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Canned responses</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold tracking-tight">Canned responses</h1>
+          {count > 0 && <span className="sk-pill text-faint">{count}</span>}
+        </div>
         <NewCannedResponseForm />
       </div>
-      <p className="mb-5 text-sm text-muted">Quick-insert replies available in every inbox thread.</p>
+      <p className="mb-5 text-[13px] text-muted">
+        Type <span className="font-mono text-accent">/shortcut</span> in any inbox thread to insert a saved reply instantly.
+      </p>
 
       <div className="flex flex-col gap-3">
         {(responses ?? []).map((r) => <CannedResponseRow key={r.id} response={r} />)}
-        {(!responses || responses.length === 0) && <p className="py-8 text-center text-muted">No canned responses yet.</p>}
+        {count === 0 && (
+          <div className="rounded-lg border border-border py-10 text-center">
+            <p className="text-muted">No canned responses yet.</p>
+            <p className="mt-1 text-[12.5px] text-faint">Add one above — each shortcut becomes available in every inbox thread.</p>
+          </div>
+        )}
       </div>
     </div>
   );
