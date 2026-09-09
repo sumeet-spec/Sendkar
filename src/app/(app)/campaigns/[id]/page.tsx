@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { CampaignControls } from "./StartButton";
 import { TestSendForm } from "./TestSendForm";
+import { CampaignActions } from "./CampaignActions";
 import { notFound } from "next/navigation";
 import { estimateCampaignCostInr, type TemplateCategory } from "@/lib/metaRates";
 import { formatCurrency } from "@/lib/dashboardMetrics";
@@ -98,7 +99,12 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             </div>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <CampaignActions
+            campaignId={campaign.id}
+            failedCount={counts.failed ?? 0}
+            status={campaign.status}
+          />
           {campaign.status === "draft" && <TestSendForm campaignId={campaign.id} />}
           <CampaignControls campaignId={campaign.id} status={campaign.status} />
         </div>

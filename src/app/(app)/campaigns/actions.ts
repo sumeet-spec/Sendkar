@@ -161,6 +161,120 @@ export async function sendTestMessage(_prevState: unknown, formData: FormData) {
   return { success: true };
 }
 
+export async function getAudienceCount(
+  templateId: string,
+  segmentTag: string,
+  segmentId: string,
+): Promise<{ count: number; error?: string }> {
+  if (!templateId) return { count: 0 };
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { count: 0 };
+  const supabase = await createClient();
+
+  const { data: template } = await supabase
+    .from("templates")
+    .select("language, template_group")
+    .eq("id", templateId)
+    .maybeSingle();
+  if (!template) return { count: 0 };
+
+  let query = supabase
+    .from("contacts")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id)
+    .eq("opted_out", false);
+
+  if (template.template_group) {
+    const { data: groupTemplates } = await supabase
+      .from("templates")
+      .select("language")
+      .eq("workspace_id", workspace.id)
+      .eq("template_group", template.template_group);
+    const languages = [...new Set((groupTemplates ?? []).map((t) => t.language))];
+    if (languages.length > 0) query = query.in("language", languages);
+  } else if (template.language) {
+    query = query.eq("language", template.language);
+  }
+
+  if (segmentTag.trim()) query = query.contains("tags", [segmentTag.trim()]);
+  if (segmentId) {
+    const { data: segment } = await supabase
+      .from("segments")
+      .select("conditions")
+      .eq("id", segmentId)
+      .maybeSingle();
+    if (segment?.conditions) query = applySegmentConditions(query, segment.conditions as SegmentCondition[]);
+  }
+
+  const { count, error } = await query;
+  if (error) return { count: 0, error: error.message };
+  return { count: count ?? 0 };
+}
+
+export async function retryFailedRecipients(campaignId: string): Promise<{ error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace." };
+  const supabase = await createClient();
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("id, status")
+    .eq("id", campaignId)
+    .eq("workspace_id", workspace.id)
+    .maybeSingle();
+  if (!campaign) return { error: "Campaign not found." };
+  if (campaign.status === "draft") return { error: "Campaign hasn't been sent yet." };
+
+  const { error } = await supabase
+    .from("campaign_recipients")
+    .update({ status: "queued", error: null })
+    .eq("campaign_id", campaignId)
+    .eq("status", "failed");
+  if (error) return { error: error.message };
+
+  // Flip to sending so the cron picks it up — only if currently paused/completed
+  await supabase
+    .from("campaigns")
+    .update({ status: "sending" })
+    .eq("id", campaignId)
+    .in("status", ["paused", "completed"]);
+
+  revalidatePath(`/campaigns/${campaignId}`);
+  return {};
+}
+
+export async function cloneCampaign(campaignId: string): Promise<{ error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace." };
+  const supabase = await createClient();
+
+  const { data: original } = await supabase
+    .from("campaigns")
+    .select("name, template_id, template_group, segment_tag, segment_id, whatsapp_number_id")
+    .eq("id", campaignId)
+    .eq("workspace_id", workspace.id)
+    .maybeSingle();
+  if (!original) return { error: "Campaign not found." };
+
+  const { data: clone, error } = await supabase
+    .from("campaigns")
+    .insert({
+      workspace_id: workspace.id,
+      name: `Copy of ${original.name}`,
+      template_id: original.template_id,
+      template_group: original.template_group ?? null,
+      segment_tag: original.segment_tag ?? null,
+      segment_id: original.segment_id ?? null,
+      whatsapp_number_id: original.whatsapp_number_id ?? null,
+      status: "draft",
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message };
+  redirect(`/campaigns/${clone.id}`);
+}
+
 export async function pauseCampaign(campaignId: string) {
   const supabase = await createClient();
   await supabase.from("campaigns").update({ status: "paused" }).eq("id", campaignId);

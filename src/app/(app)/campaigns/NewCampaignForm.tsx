@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { createCampaign } from "./actions";
+import { useActionState, useEffect, useState } from "react";
+import { createCampaign, getAudienceCount } from "./actions";
 
 interface Template {
   id: string;
@@ -36,8 +36,22 @@ export function NewCampaignForm({
   const [open, setOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [segmentTag, setSegmentTag] = useState("");
+  const [selectedSegmentId, setSelectedSegmentId] = useState("");
+  const [audienceCount, setAudienceCount] = useState<number | null>(null);
+  const [countLoading, setCountLoading] = useState(false);
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) ?? null;
+
+  useEffect(() => {
+    if (!selectedTemplateId) { setAudienceCount(null); return; }
+    setCountLoading(true);
+    const timeout = setTimeout(async () => {
+      const result = await getAudienceCount(selectedTemplateId, segmentTag, selectedSegmentId);
+      setAudienceCount(result.count);
+      setCountLoading(false);
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [selectedTemplateId, segmentTag, selectedSegmentId]);
 
   if (!open) {
     return (
@@ -118,7 +132,7 @@ export function NewCampaignForm({
               <button
                 key={tag}
                 type="button"
-                onClick={() => setSegmentTag(tag)}
+                onClick={() => setSegmentTag((prev) => (prev === tag ? "" : tag))}
                 className="sk-pill cursor-pointer text-[11px] hover:border-accent hover:text-accent"
                 style={segmentTag === tag ? { borderColor: "var(--accent)", color: "var(--accent)" } : undefined}
               >
@@ -127,12 +141,39 @@ export function NewCampaignForm({
             ))}
           </div>
         )}
+
+        {/* Audience size preview */}
+        {selectedTemplateId && (
+          <div className="mt-2 flex items-center gap-1.5 text-[12px]">
+            {countLoading ? (
+              <span className="text-faint">Counting…</span>
+            ) : audienceCount !== null ? (
+              <>
+                <span
+                  className="font-mono font-semibold tabular-nums"
+                  style={{ color: audienceCount === 0 ? "var(--danger)" : "var(--accent)" }}
+                >
+                  {audienceCount.toLocaleString()}
+                </span>
+                <span className="text-faint">
+                  contact{audienceCount === 1 ? "" : "s"} will receive this
+                  {audienceCount === 0 ? " — check the tag or template language" : ""}
+                </span>
+              </>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {segments.length > 0 && (
         <div>
           <label className="sk-label">Or a saved segment (optional)</label>
-          <select name="segmentId" className="sk-input" defaultValue="">
+          <select
+            name="segmentId"
+            className="sk-input"
+            value={selectedSegmentId}
+            onChange={(e) => setSelectedSegmentId(e.target.value)}
+          >
             <option value="">None</option>
             {segments.map((s) => (
               <option key={s.id} value={s.id}>
