@@ -45,11 +45,14 @@ export default async function IntegrationsPage() {
         <SheetsImportForm />
 
         <div className="sk-card p-4">
-          <div className="mb-1 font-medium">Salesforce, HubSpot, Zoho CRM/Flow</div>
+          <div className="mb-1 flex items-center gap-2 font-medium">
+            Salesforce, HubSpot, Zoho CRM
+            <span className="sk-pill text-faint">Coming soon</span>
+          </div>
           <p className="text-[12.5px] text-faint">
-            Not built yet — these need a registered OAuth app on each platform (a Salesforce Connected App, a HubSpot
-            developer app, a Zoho API console app), same as WhatsApp needed a Meta app. Tell me when you have
-            developer credentials for one of these and I&apos;ll wire it up the same way as Shopify.
+            Native CRM sync is on the roadmap. In the meantime, use{" "}
+            <a href="/webhooks" className="text-accent hover:text-accent-hover">outbound webhooks</a> with a Zapier or Make automation to push
+            contacts and order events to any CRM.
           </p>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { moveDealStage, deleteDeal } from "./actions";
 import { DEAL_STAGES, type DealStage } from "./constants";
+import { formatCurrency } from "@/lib/dashboardMetrics";
 
 interface Deal {
   id: string;
@@ -20,7 +21,7 @@ const STAGE_LABELS: Record<DealStage, string> = {
   lost: "Lost",
 };
 
-export function PipelineBoard({ deals }: { deals: Deal[] }) {
+export function PipelineBoard({ deals, currency = "USD" }: { deals: Deal[]; currency?: string }) {
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<DealStage | null>(null);
   const [, startTransition] = useTransition();
@@ -54,7 +55,7 @@ export function PipelineBoard({ deals }: { deals: Deal[] }) {
           <div className="mb-2.5 flex items-center justify-between px-1">
             <span className="text-[12.5px] font-medium text-muted">{STAGE_LABELS[stage]}</span>
             <span className="text-[11px] text-faint">
-              {deals.filter((d) => d.stage === stage).length} · ₹{totalByStage[stage].toLocaleString("en-IN")}
+              {deals.filter((d) => d.stage === stage).length} · {formatCurrency(totalByStage[stage], currency)}
             </span>
           </div>
           <div className="flex flex-col gap-2">
@@ -81,7 +82,7 @@ export function PipelineBoard({ deals }: { deals: Deal[] }) {
                     </button>
                   </div>
                   {deal.contactName && <div className="text-[11.5px] text-faint">{deal.contactName}</div>}
-                  {deal.value > 0 && <div className="mt-1 text-[12px] text-accent">₹{deal.value.toLocaleString("en-IN")}</div>}
+                  {deal.value > 0 && <div className="mt-1 text-[12px] text-accent">{formatCurrency(deal.value, currency)}</div>}
                 </div>
               ))}
             {deals.filter((d) => d.stage === stage).length === 0 && (

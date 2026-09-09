@@ -24,6 +24,8 @@ export default async function DealsPage() {
     return { id: d.id, title: d.title, value: Number(d.value), stage: d.stage as DealStage, contactName: contact?.name ?? contact?.phone ?? null };
   });
 
+  const currency = workspace.currency ?? "USD";
+
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
@@ -33,7 +35,7 @@ export default async function DealsPage() {
         </div>
         <NewDealForm contacts={contacts ?? []} />
       </div>
-      <PipelineBoard deals={boardDeals} />
+      <PipelineBoard deals={boardDeals} currency={currency} />
     </div>
   );
 }
