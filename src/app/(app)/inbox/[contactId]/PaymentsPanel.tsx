@@ -1,3 +1,5 @@
+import { formatCurrency } from "@/lib/dashboardMetrics";
+
 interface PaymentLink {
   id: string;
   provider: string;
@@ -7,7 +9,7 @@ interface PaymentLink {
   paid_at: string | null;
 }
 
-export function PaymentsPanel({ links }: { links: PaymentLink[] }) {
+export function PaymentsPanel({ links, currency = "USD" }: { links: PaymentLink[]; currency?: string }) {
   if (links.length === 0) return null;
 
   return (
@@ -17,13 +19,15 @@ export function PaymentsPanel({ links }: { links: PaymentLink[] }) {
         {links.map((l) => (
           <div key={l.id} className="flex items-center justify-between rounded-md bg-surface-2 p-2.5 text-[12.5px]">
             <div>
-              <span className="font-medium">₹{Number(l.amount).toLocaleString("en-IN")}</span>
+              <span className="font-medium">{formatCurrency(Number(l.amount), currency)}</span>
               <span className="ml-1.5 text-faint capitalize">{l.provider}</span>
             </div>
             {l.paid_at ? (
               <span className="sk-pill border-accent text-accent">Paid</span>
             ) : (
-              <span className="sk-pill text-faint">Pending</span>
+              <a href={l.url} target="_blank" rel="noreferrer" className="sk-pill text-faint hover:text-accent">
+                Pending ↗
+              </a>
             )}
           </div>
         ))}

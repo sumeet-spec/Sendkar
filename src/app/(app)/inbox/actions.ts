@@ -262,6 +262,21 @@ export async function logOrder(_prevState: unknown, formData: FormData) {
   return { success: true };
 }
 
+export async function updateContact(contactId: string, fields: { name?: string; email?: string; opted_out?: boolean }): Promise<{ error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("contacts")
+    .update(fields)
+    .eq("id", contactId)
+    .eq("workspace_id", workspace.id);
+  if (error) return { error: error.message };
+  revalidatePath(`/inbox/${contactId}`);
+  revalidatePath("/contacts");
+  return {};
+}
+
 export async function addContactNote(_prevState: unknown, formData: FormData) {
   const contactId = String(formData.get("contactId") ?? "");
   const body = String(formData.get("body") ?? "").trim();

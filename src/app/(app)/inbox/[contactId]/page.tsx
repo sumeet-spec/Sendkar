@@ -8,6 +8,7 @@ import { NotesPanel } from "./NotesPanel";
 import { SummaryPanel } from "./SummaryPanel";
 import { OrdersPanel } from "./OrdersPanel";
 import { PaymentsPanel } from "./PaymentsPanel";
+import { ContactInfoPanel } from "./ContactInfoPanel";
 import { RealtimeRefresher } from "./RealtimeRefresher";
 import { CallPermissionButton } from "./CallPermissionButton";
 
@@ -44,6 +45,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
   const emailByUserId = new Map(members.map((m) => [m.userId, m.email]));
   const notesWithAuthor = (notes ?? []).map((n) => ({ ...n, author_email: emailByUserId.get(n.author_id) ?? null }));
   const sessionOpen = Boolean(contact.session_expires_at && new Date(contact.session_expires_at) > new Date());
+  const currency = workspace.currency ?? "USD";
 
   return (
     <div className="flex h-[calc(100vh-4rem)] max-w-5xl gap-5">
@@ -73,7 +75,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
         <div className="sk-card flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {(messages ?? []).map((m) => (
-              <MessageBubble key={m.id} contactId={contactId} message={{ id: m.id, direction: m.direction, body: m.body, reaction: m.reaction ?? null, sent_by_ai: m.sent_by_ai ?? false }} />
+              <MessageBubble key={m.id} contactId={contactId} message={{ id: m.id, direction: m.direction, body: m.body, reaction: m.reaction ?? null, sent_by_ai: m.sent_by_ai ?? false, created_at: m.created_at }} />
             ))}
             {(!messages || messages.length === 0) && <p className="text-center text-muted">No messages yet.</p>}
           </div>
@@ -81,15 +83,25 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
         </div>
       </div>
 
-      <div className="flex w-72 flex-shrink-0 flex-col gap-4 pt-[52px]">
+      <div className="flex w-72 flex-shrink-0 flex-col gap-4 overflow-y-auto pt-[52px] pb-4">
         <div className="sk-card p-4">
           <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">Assigned to</div>
           <AssigneeSelect contactId={contactId} members={members} assigneeId={contact.assignee_id} />
         </div>
+        <ContactInfoPanel
+          contactId={contactId}
+          name={contact.name ?? null}
+          email={contact.email ?? null}
+          language={contact.language ?? null}
+          source={contact.source ?? null}
+          adHeadline={contact.ad_headline ?? null}
+          optedOut={Boolean(contact.opted_out)}
+          createdAt={contact.created_at}
+        />
         {workspace.calling_enabled && <CallPermissionButton phone={contact.phone} />}
         <SummaryPanel contactId={contactId} />
-        <OrdersPanel contactId={contactId} orders={orders ?? []} />
-        <PaymentsPanel links={paymentLinks ?? []} />
+        <OrdersPanel contactId={contactId} orders={orders ?? []} currency={currency} />
+        <PaymentsPanel links={paymentLinks ?? []} currency={currency} />
         <NotesPanel contactId={contactId} notes={notesWithAuthor} />
       </div>
     </div>

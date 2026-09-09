@@ -47,6 +47,7 @@ export function ReplyBox({
   const [buttonsPending, startButtonsTransition] = useTransition();
   const [buttonsError, setButtonsError] = useState<string | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const typingFiredRef = useRef(false);
 
   useEffect(() => {
@@ -56,6 +57,11 @@ export function ReplyBox({
     typingFiredRef.current = true;
     sendTypingIndicator(contactId);
   }, [contactId, sessionOpen]);
+
+  function autoResize(el: HTMLTextAreaElement) {
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
+  }
 
   function sendForm(waFlowId: string) {
     setFormError(null);
@@ -108,7 +114,7 @@ export function ReplyBox({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-2 border-t border-border p-4">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-2 border-t border-border p-4">
       <input type="hidden" name="contactId" value={contactId} />
       {!sessionOpen && (
         <p className="text-[12.5px] text-warn">
@@ -120,9 +126,17 @@ export function ReplyBox({
         ref={textRef}
         name="body"
         rows={2}
-        placeholder="Reply — only deliverable within 24h of their last message"
-        className="sk-input resize-none"
+        placeholder="Reply — Cmd+Enter to send"
+        className="sk-input resize-none overflow-hidden"
+        style={{ minHeight: "60px", maxHeight: "180px" }}
         required
+        onChange={(e) => autoResize(e.currentTarget)}
+        onKeyDown={(e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && sessionOpen && !pending) {
+            e.preventDefault();
+            formRef.current?.requestSubmit();
+          }
+        }}
       />
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       {aiError && <p className="text-sm text-danger">{aiError}</p>}
