@@ -58,7 +58,7 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
     email: c.email,
     tags: c.tags,
     language,
-    source: "apify_scrape",
+    source: "csv_import",
   }));
 
   if (contacts.length === 0) return { error: "No valid phone numbers found in that file." };
@@ -88,6 +88,41 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
 
   revalidatePath("/contacts");
   return { success: true, imported, updated };
+}
+
+export async function bulkTagContacts(
+  contactIds: string[],
+  tag: string,
+  action: "add" | "remove",
+): Promise<{ error?: string }> {
+  if (contactIds.length === 0 || !tag.trim()) return { error: "Nothing to update." };
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace." };
+  const supabase = await createClient();
+
+  const { data: rows } = await supabase
+    .from("contacts")
+    .select("id, tags")
+    .eq("workspace_id", workspace.id)
+    .in("id", contactIds);
+
+  if (!rows || rows.length === 0) return { error: "No contacts found." };
+
+  const updates = rows.map((c) => {
+    const existing = (c.tags as string[]) ?? [];
+    const next =
+      action === "add"
+        ? [...new Set([...existing, tag.trim()])]
+        : existing.filter((t) => t !== tag.trim());
+    return { id: c.id, tags: next };
+  });
+
+  for (const u of updates) {
+    await supabase.from("contacts").update({ tags: u.tags }).eq("id", u.id);
+  }
+
+  revalidatePath("/contacts");
+  return {};
 }
 
 export async function deleteContact(contactId: string) {

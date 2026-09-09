@@ -103,6 +103,82 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
   return { success: true };
 }
 
+export async function duplicateTemplate(templateId: string) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return;
+  const supabase = await createClient();
+  const { data: t } = await supabase.from("templates").select("*").eq("id", templateId).maybeSingle();
+  if (!t) return;
+  await supabase.from("templates").insert({
+    workspace_id: workspace.id,
+    name: `Copy of ${t.name}`,
+    language: t.language,
+    meta_template_name: `${t.meta_template_name}_copy`,
+    category: t.category,
+    header_type: t.header_type,
+    header_text: t.header_text,
+    header_image_url: t.header_image_url,
+    body_text: t.body_text,
+    body_preview: t.body_preview,
+    footer_text: t.footer_text,
+    buttons: t.buttons,
+    carousel_cards: t.carousel_cards,
+    template_group: t.template_group,
+    status: "pending",
+  });
+  revalidatePath("/templates");
+}
+
+export async function resubmitTemplate(templateId: string, newBodyText: string): Promise<{ error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace." };
+  if (!newBodyText.trim()) return { error: "Body text is required." };
+
+  const supabase = await createClient();
+  const { data: t } = await supabase.from("templates").select("*").eq("id", templateId).eq("workspace_id", workspace.id).maybeSingle();
+  if (!t) return { error: "Template not found." };
+
+  const canSubmit = Boolean(workspace.whatsapp_waba_id && workspace.whatsapp_access_token);
+  let status = "pending";
+  let metaResponse: unknown = null;
+  let submitError: string | null = null;
+
+  if (canSubmit) {
+    try {
+      metaResponse = await submitTemplateToMeta({
+        wabaId: workspace.whatsapp_waba_id!,
+        token: workspace.whatsapp_access_token!,
+        name: t.meta_template_name,
+        language: t.language,
+        category: t.category,
+        components: {
+          headerType: t.header_type ?? "none",
+          headerText: t.header_text ?? undefined,
+          bodyText: newBodyText,
+          footerText: t.footer_text ?? undefined,
+          buttons: t.buttons ?? undefined,
+          carouselCards: t.carousel_cards ?? undefined,
+        },
+      });
+    } catch (err) {
+      submitError = err instanceof Error ? err.message : "Meta rejected the submission.";
+      status = "rejected";
+    }
+  }
+
+  await supabase.from("templates").update({
+    body_text: newBodyText,
+    body_preview: newBodyText,
+    status,
+    meta_response: metaResponse,
+    rejection_reason: submitError,
+  }).eq("id", templateId);
+
+  revalidatePath("/templates");
+  if (submitError) return { error: submitError };
+  return {};
+}
+
 export async function deleteTemplate(templateId: string) {
   const supabase = await createClient();
   await supabase.from("templates").delete().eq("id", templateId);
