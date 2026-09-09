@@ -63,7 +63,7 @@ const MORE_BUILT = [
   {
     tag: "AI Copilot",
     title: "Drafts templates, tags leads, on its own",
-    body: "Claude drafts a template from a plain description and auto-tags every inbound message by intent and sentiment.",
+    body: "AI drafts a template from a plain description and auto-tags every inbound message by intent and sentiment — no prompt engineering needed.",
     icon: (
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2l1.9 5.8L20 9.6l-6.1 4.4 2.3 7L12 17.3l-4.2 3.7 2.3-7L4 9.6l6.1-1.8L12 2z"/>
@@ -124,7 +124,7 @@ const MORE_BUILT = [
 const PLAN_FEATURES: Record<string, string[]> = {
   free:    ["1 WhatsApp number", "Unlimited contacts", "Real Meta Cloud API", "Basic broadcast campaigns"],
   starter: ["Everything in Free", "Unlimited team seats", "Branching chatbot flows", "Multi-language broadcasts", "Keyword automations"],
-  growth:  ["Everything in Starter", "Instagram & Messenger", "WhatsApp Catalog + cart recovery", "AI copilot (Claude)", "Revenue attribution"],
+  growth:  ["Everything in Starter", "Instagram & Messenger", "WhatsApp Catalog + cart recovery", "AI copilot", "Revenue attribution"],
   scale:   ["Everything in Growth", "Higher message volume", "Outbound webhooks", "Priority support"],
 };
 
@@ -219,8 +219,8 @@ export default async function RootPage() {
         </div>
         <div className="sk-trust-div" />
         <div className="sk-trust-item">
-          <div className="sk-trust-num accent">Claude AI</div>
-          <div className="sk-trust-label">Copilot inside</div>
+          <div className="sk-trust-num accent">AI</div>
+          <div className="sk-trust-label">Copilot built in</div>
         </div>
         <div className="sk-trust-div" />
         <div className="sk-trust-item">
@@ -431,7 +431,7 @@ export default async function RootPage() {
         <div className="relative z-10 mx-auto max-w-2xl text-center">
           <div className="sk-ai-badge mb-6 mx-auto w-fit">
             <span className="sk-ai-badge-dot" />
-            Claude AI inside
+            AI-powered
           </div>
           <h2 className="text-[34px] font-bold leading-tight tracking-tight sm:text-[44px]" style={{ letterSpacing: "-0.03em" }}>
             Your customers message on WhatsApp.<br />

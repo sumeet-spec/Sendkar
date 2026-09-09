@@ -107,7 +107,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       heroSubhead: "This is Priya Textiles' actual order, start to finish — an Instagram ad, a reply in her customer's own language, a payment collected without leaving WhatsApp, and revenue traced back to the ad that earned it.",
       badgeReseller: "⚡ Meta's official Cloud API — not a reseller", badgeFree: "🆓 Free plan, forever — not a 14-day trial",
       ctaGetStarted: "Get started free →", ctaSeePricing: "See pricing",
-      statChannels: "Channels", statMcp: "MCP tools for Claude", statPrice: "Languages built in",
+      statChannels: "Channels", statMcp: "AI automation tools", statPrice: "Languages built in",
     },
     onboarding: {
       title: "Connect WhatsApp",
