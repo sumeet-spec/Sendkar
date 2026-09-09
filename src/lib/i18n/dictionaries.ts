@@ -103,11 +103,11 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     landing: {
       navPricing: "Pricing", navMcp: "MCP", navLogin: "Log in", navGetStarted: "Get started",
-      heroEyebrow: "WhatsApp Marketing Software", heroLine1: "Send once.", heroLine2: "Every language,", heroLine3: "every customer.",
+      heroEyebrow: "AI-Powered WhatsApp Marketing", heroLine1: "Send once.", heroLine2: "Every language,", heroLine3: "every customer.",
       heroSubhead: "This is Priya Textiles' actual order, start to finish — an Instagram ad, a reply in her customer's own language, a payment collected without leaving WhatsApp, and revenue traced back to the ad that earned it.",
       badgeReseller: "⚡ Meta's official Cloud API — not a reseller", badgeFree: "🆓 Free plan, forever — not a 14-day trial",
       ctaGetStarted: "Get started free →", ctaSeePricing: "See pricing",
-      statChannels: "Channels", statMcp: "MCP tools for Claude", statPrice: "Indian languages",
+      statChannels: "Channels", statMcp: "MCP tools for Claude", statPrice: "Languages built in",
     },
     onboarding: {
       title: "Connect WhatsApp",

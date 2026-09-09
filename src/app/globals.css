@@ -658,15 +658,189 @@ a {
   gap: 6px;
 }
 .sk-window-dots span {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--border);
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.3);
 }
+.sk-window-dots span:nth-child(1) { background: #ff5f57; }
+.sk-window-dots span:nth-child(2) { background: #ffbd2e; }
+.sk-window-dots span:nth-child(3) { background: #28c840; }
 .sk-window-url {
   flex: 1;
   text-align: center;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--faint);
+}
+
+/* ── AI-native pulse badge ──────────────────────────────────────────────── */
+.sk-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.06);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.sk-ai-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: sk-ai-pulse 2s ease-in-out infinite;
+}
+@keyframes sk-ai-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--accent); }
+  50% { opacity: 0.5; box-shadow: 0 0 12px var(--accent); }
+}
+
+/* ── Trust strip (social proof bar) ────────────────────────────────────── */
+.sk-trust-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, transparent, rgba(34,197,94,0.03), transparent);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sk-trust-strip::-webkit-scrollbar { display: none; }
+.sk-trust-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sk-trust-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.sk-trust-num.accent { color: var(--accent); }
+.sk-trust-label {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--faint);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.sk-trust-div {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Shimmer gradient border on card (featured/hover) ──────────────────── */
+.sk-card-glow {
+  position: relative;
+}
+.sk-card-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--accent-dim), transparent 50%, var(--accent-dim));
+  opacity: 0.6;
+  z-index: 0;
+  pointer-events: none;
+}
+.sk-card-glow > * { position: relative; z-index: 1; }
+
+/* ── Enhanced feat icon with glow ──────────────────────────────────────── */
+.sk-feat-icon-ai {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.04));
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Gradient card for featured pricing ─────────────────────────────────── */
+.sk-pricing-featured {
+  background: linear-gradient(160deg, rgba(34,197,94,0.08), rgba(34,197,94,0.02) 60%, var(--surface));
+  border-color: var(--accent-dim) !important;
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 0 40px -8px rgba(34,197,94,0.25), 0 20px 60px rgba(0,0,0,0.4) !important;
+}
+
+/* ── Section gradient divider ────────────────────────────────────────────── */
+.sk-section-fade-in {
+  background: linear-gradient(to bottom, transparent, var(--surface-2) 30%, transparent);
+}
+
+/* ── Hero stats — bolder ─────────────────────────────────────────────────── */
+.sk-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sk-hero-stat-num {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--foreground);
+}
+.sk-hero-stat-num.accent { color: var(--accent); }
+.sk-hero-stat-label {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ── Enhanced card hover ─────────────────────────────────────────────────── */
+.sk-card:hover {
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(34, 197, 94, 0.08);
+  transform: translateY(-2px);
+}
+
+/* ── Shimmer animation for CTA band ─────────────────────────────────────── */
+.sk-cta-band {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(34,197,94,0.14), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 50% 0%, rgba(34,197,94,0.08), transparent 60%),
+    var(--surface);
+  border-top: 1px solid rgba(34,197,94,0.15);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Glow enhancement ───────────────────────────────────────────────────── */
+.sk-glow {
+  width: 1100px !important;
+  height: 800px !important;
+  top: -380px !important;
+  background: radial-gradient(closest-side, rgba(34,197,94,0.12), transparent 70%) !important;
+  filter: blur(12px) !important;
+}
+.sk-glow-core {
+  width: 500px !important;
+  height: 360px !important;
+  top: -180px !important;
+  background: radial-gradient(closest-side, rgba(74, 222, 128, 0.28), transparent 75%) !important;
 }

@@ -190,17 +190,17 @@ export default async function RootPage() {
             </div>
 
             <div className="mt-12 grid grid-cols-3 gap-6 border-t border-border pt-6">
-              <div>
-                <div className="text-2xl font-bold">3</div>
-                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statChannels}</div>
+              <div className="sk-hero-stat">
+                <div className="sk-hero-stat-num">3</div>
+                <div className="sk-hero-stat-label">{t.statChannels}</div>
               </div>
-              <div>
-                <div className="text-2xl font-bold">15</div>
-                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statMcp}</div>
+              <div className="sk-hero-stat">
+                <div className="sk-hero-stat-num">15</div>
+                <div className="sk-hero-stat-label">{t.statMcp}</div>
               </div>
-              <div>
-                <div className="text-2xl font-bold text-accent">6</div>
-                <div className="mt-0.5 text-[11.5px] uppercase tracking-wide text-faint">{t.statPrice}</div>
+              <div className="sk-hero-stat">
+                <div className="sk-hero-stat-num accent">₹0</div>
+                <div className="sk-hero-stat-label">{t.statPrice}</div>
               </div>
             </div>
           </div>
@@ -211,6 +211,33 @@ export default async function RootPage() {
           </div>
         </div>
       </section>
+
+      <div className="sk-trust-strip">
+        <div className="sk-trust-item">
+          <div className="sk-trust-num">Real</div>
+          <div className="sk-trust-label">Meta Cloud API</div>
+        </div>
+        <div className="sk-trust-div" />
+        <div className="sk-trust-item">
+          <div className="sk-trust-num accent">Claude AI</div>
+          <div className="sk-trust-label">Copilot inside</div>
+        </div>
+        <div className="sk-trust-div" />
+        <div className="sk-trust-item">
+          <div className="sk-trust-num">₹0</div>
+          <div className="sk-trust-label">To start</div>
+        </div>
+        <div className="sk-trust-div" />
+        <div className="sk-trust-item">
+          <div className="sk-trust-num">7-day</div>
+          <div className="sk-trust-label">Revenue attribution</div>
+        </div>
+        <div className="sk-trust-div" />
+        <div className="sk-trust-item">
+          <div className="sk-trust-num">3</div>
+          <div className="sk-trust-label">Channels in one inbox</div>
+        </div>
+      </div>
 
       <section className="mx-auto max-w-6xl px-6 pb-16">
         <Reveal className="grid grid-cols-1 items-center gap-12 py-16 lg:grid-cols-2">
@@ -337,9 +364,16 @@ export default async function RootPage() {
           </Reveal>
           <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {MORE_BUILT.map((f) => (
-              <div key={f.title} className="sk-card p-5">
-                <div className="sk-feat-icon">{f.icon}</div>
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accent">{f.tag}</div>
+              <div key={f.title} className={`sk-card p-5 ${f.tag === "AI Copilot" ? "sk-pricing-featured" : ""}`}>
+                <div className={f.tag === "AI Copilot" ? "sk-feat-icon-ai" : "sk-feat-icon"}>{f.icon}</div>
+                {f.tag === "AI Copilot" ? (
+                  <div className="sk-ai-badge mb-2">
+                    <span className="sk-ai-badge-dot" />
+                    {f.tag}
+                  </div>
+                ) : (
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accent">{f.tag}</div>
+                )}
                 <div className="mb-1.5 font-medium leading-snug">{f.title}</div>
                 <p className="text-[13px] leading-relaxed text-muted">{f.body}</p>
               </div>
@@ -359,8 +393,7 @@ export default async function RootPage() {
             return (
               <div
                 key={p.name}
-                className="sk-card flex flex-col p-5"
-                style={p.featured ? { borderColor: "var(--accent-dim)", boxShadow: "0 0 0 1px var(--accent-dim), 0 0 28px -4px var(--accent-glow)" } : undefined}
+                className={`sk-card flex flex-col p-5 ${p.featured ? "sk-pricing-featured" : ""}`}
               >
                 {p.featured && (
                   <div className="mb-3 -mt-0.5">
@@ -394,19 +427,27 @@ export default async function RootPage() {
         </Reveal>
       </section>
 
-      <section className="sk-cta-band relative px-6 py-20">
+      <section className="sk-cta-band relative px-6 py-24">
         <div className="relative z-10 mx-auto max-w-2xl text-center">
-          <h2 className="text-[32px] font-semibold leading-tight tracking-tight sm:text-[40px]">
-            Your WhatsApp Marketing deserves better than a spreadsheet of phone numbers.
+          <div className="sk-ai-badge mb-6 mx-auto w-fit">
+            <span className="sk-ai-badge-dot" />
+            Claude AI inside
+          </div>
+          <h2 className="text-[34px] font-bold leading-tight tracking-tight sm:text-[44px]" style={{ letterSpacing: "-0.03em" }}>
+            Your customers message on WhatsApp.<br />
+            <span className="text-accent">Your business should answer automatically.</span>
           </h2>
-          <p className="mt-4 text-[15px] text-muted">Free to start, real Cloud API from day one, no card required.</p>
-          <Link href="/signup" className="sk-btn sk-btn-primary mt-7 inline-flex px-6 py-3 text-[15px]">Get started free →</Link>
+          <p className="mt-5 text-[15px] leading-relaxed text-muted max-w-lg mx-auto">Free to start, real Meta Cloud API from day one, AI copilot included. No card required.</p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/signup" className="sk-btn sk-btn-primary px-7 py-3 text-[15px]">Get started free →</Link>
+            <a href="#pricing" className="sk-btn sk-btn-ghost px-7 py-3 text-[15px]">See pricing</a>
+          </div>
         </div>
       </section>
 
       <footer className="mx-auto max-w-6xl px-6 py-8">
         <div className="flex flex-col items-center gap-3 border-t border-border pt-6 text-[12.5px] text-faint sm:flex-row sm:justify-between">
-          <span>© {new Date().getFullYear()} Signalpulse Technologies LLC — Sendkar is built on the WhatsApp Business Platform (Meta Cloud API), not a reseller.</span>
+          <span>© {new Date().getFullYear()} Signalpulse Technologies LLC — Sendkar runs on Meta&apos;s official WhatsApp Cloud API, not a reseller or BSP layer.</span>
           <div className="flex gap-4">
             <Link href="/changelog" className="hover:text-muted">Changelog</Link>
             <Link href="/privacy" className="hover:text-muted">Privacy</Link>
