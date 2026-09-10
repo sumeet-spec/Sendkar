@@ -43,7 +43,10 @@ export function LoginForm({ dict, lang }: { dict: Dictionary["auth"]; lang: Lang
             </div>
           </div>
           <div>
-            <label className="sk-label" htmlFor="password">{dict.password}</label>
+            <div className="flex items-center justify-between">
+              <label className="sk-label" htmlFor="password">{dict.password}</label>
+              <Link href="/forgot-password" className="text-[12.5px] text-accent hover:text-accent-hover">Forgot password?</Link>
+            </div>
             <input className="sk-input" id="password" name="password" type="password" required />
           </div>
 

@@ -77,10 +77,21 @@ export interface SendTemplateInput {
   templateName: string;
   language: string; // Meta locale code, e.g. 'hi', 'en_US'
   bodyParams?: string[]; // positional {{1}}, {{2}}... values, if the template has any
+  // AUTHENTICATION-category templates with an OTP "Copy code" button need the
+  // code again here, as a button component parameter — separate from (and in
+  // addition to) the body parameter Meta auto-fills into its generated text.
+  otpCode?: string;
 }
 
 export async function sendTemplateMessage(input: SendTemplateInput) {
   const { phoneNumberId, token } = requireCreds(input.workspace);
+  const components: Array<Record<string, unknown>> = [];
+  if (input.bodyParams?.length) {
+    components.push({ type: "body", parameters: input.bodyParams.map((text) => ({ type: "text", text })) });
+  }
+  if (input.otpCode) {
+    components.push({ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: input.otpCode }] });
+  }
   return graphPost(phoneNumberId, token, {
     messaging_product: "whatsapp",
     to: input.to,
@@ -88,9 +99,7 @@ export async function sendTemplateMessage(input: SendTemplateInput) {
     template: {
       name: input.templateName,
       language: { code: input.language },
-      ...(input.bodyParams?.length
-        ? { components: [{ type: "body", parameters: input.bodyParams.map((text) => ({ type: "text", text })) }] }
-        : {}),
+      ...(components.length ? { components } : {}),
     },
   });
 }
