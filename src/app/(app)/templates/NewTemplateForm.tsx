@@ -104,7 +104,7 @@ function WhatsAppPreview({
   );
 }
 
-export function NewTemplateForm({ canSubmitToMeta, workspaceId }: { canSubmitToMeta: boolean; workspaceId: string }) {
+export function NewTemplateForm({ canSubmitToMeta, workspaceId, aiImageEnabled }: { canSubmitToMeta: boolean; workspaceId: string; aiImageEnabled: boolean }) {
   const [state, formAction, pending] = useActionState(createTemplate, null);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -283,15 +283,19 @@ export function NewTemplateForm({ canSubmitToMeta, workspaceId }: { canSubmitToM
             {headerType === "image" && (
               <div className="mt-2 rounded-md border border-border p-3 flex flex-col gap-2">
                 <label className="sk-label mb-0">✦ Generate with AI</label>
+                {!aiImageEnabled && (
+                  <p className="text-[12px] text-faint">AI image generation isn&apos;t available on this deployment yet — paste an image URL below instead.</p>
+                )}
                 <div className="flex gap-2">
                   <input
                     value={imgDescription}
                     onChange={(e) => setImgDescription(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); generateImage(); } }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && aiImageEnabled) { e.preventDefault(); generateImage(); } }}
                     className="sk-input flex-1 text-sm"
                     placeholder="Festive Diwali, warm gold tones, silk textiles"
+                    disabled={!aiImageEnabled}
                   />
-                  <button type="button" onClick={generateImage} disabled={imgPending} className="sk-btn sk-btn-ghost text-[12.5px] disabled:opacity-60 whitespace-nowrap">
+                  <button type="button" onClick={generateImage} disabled={imgPending || !aiImageEnabled} className="sk-btn sk-btn-ghost text-[12.5px] disabled:opacity-60 whitespace-nowrap">
                     {imgPending ? "Generating…" : imgPreview ? "Regenerate" : "Generate"}
                   </button>
                 </div>

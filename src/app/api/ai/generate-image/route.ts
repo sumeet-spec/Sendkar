@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
 
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
-    return NextResponse.json({ error: "Image generation isn't configured — set OPENAI_API_KEY in your environment." }, { status: 503 });
+    // User-facing message — never leak the env var name to someone who can't act on it.
+    return NextResponse.json({ error: "AI image generation isn't available on this deployment yet." }, { status: 503 });
   }
 
   const { description, workspaceId } = (await req.json()) as { description?: string; workspaceId?: string };
