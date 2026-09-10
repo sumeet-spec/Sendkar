@@ -151,9 +151,9 @@ export default async function RootPage() {
           <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight">Sendkar</span>
         </div>
         <nav className="flex items-center gap-3 sm:gap-5">
-          <a href="#pricing" className="hidden text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navPricing}</a>
-          <a href="/mcp" className="hidden text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navMcp}</a>
-          <Link href="/login" className="hidden text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navLogin}</Link>
+          <a href="#pricing" className="hidden whitespace-nowrap text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navPricing}</a>
+          <a href="/mcp" className="hidden whitespace-nowrap text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navMcp}</a>
+          <Link href="/login" className="hidden whitespace-nowrap text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navLogin}</Link>
           <Link href="/signup" className="sk-btn sk-btn-primary whitespace-nowrap text-[13.5px]">{t.navGetStarted}</Link>
           <LanguageSwitcher current={lang} compact />
         </nav>
