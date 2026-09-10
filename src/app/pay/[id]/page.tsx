@@ -16,8 +16,18 @@ function StatusShell({ title, message }: { title: string; message: string }) {
  * Public — a customer reaches this straight from a WhatsApp message, before
  * ever creating a Sendkar account. Reads the pending payment_links row with
  * the service-role client since there's no user session to key an RLS policy
- * off, builds PayU's signed redirect fields fresh (nothing sensitive is
- * stored ahead of time), and auto-submits to PayU's hosted checkout.
+ * off, and builds PayU's signed redirect fields fresh (nothing sensitive is
+ * stored ahead of time).
+ *
+ * Deliberately NOT an auto-submitting form — this used to fire the POST via
+ * an inline <script> the instant the page loaded, with no user interaction.
+ * That's the exact signature automated phishing scanners look for (a hidden
+ * form silently carrying phone/email/amount to a different domain with zero
+ * interaction), and got sendkar.shop flagged "Dangerous / Phishing" by
+ * Kaspersky's threat portal within weeks of the domain going live — clean on
+ * Google Safe Browsing, McAfee, ESET, PhishTank, Yandex, and Opera, so this
+ * was almost certainly the trigger. A real click before the cross-domain
+ * POST fixes the behavior pattern regardless of whether it clears the flag.
  */
 export default async function PayPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -62,20 +72,14 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
 
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center px-6 text-center">
-      <h1 className="mb-2 text-xl font-semibold tracking-tight">Redirecting to PayU…</h1>
-      <p className="mb-6 text-[14px] text-muted">Paying {workspace.name} — ₹{Number(link.amount).toFixed(2)}</p>
-      <form method="POST" action={action} id="payu-form">
+      <h1 className="mb-2 text-xl font-semibold tracking-tight">Pay {workspace.name}</h1>
+      <p className="mb-6 text-[14px] text-muted">₹{Number(link.amount).toFixed(2)} — you&apos;ll complete this securely on PayU&apos;s own page.</p>
+      <form method="POST" action={action}>
         {Object.entries(fields).map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
         ))}
-        <noscript>
-          <button type="submit" className="sk-btn sk-btn-primary">Continue to PayU</button>
-        </noscript>
+        <button type="submit" className="sk-btn sk-btn-primary">Continue to PayU →</button>
       </form>
-      <script
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: `document.getElementById("payu-form").submit();` }}
-      />
     </div>
   );
 }
