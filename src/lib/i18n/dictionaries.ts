@@ -103,7 +103,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     landing: {
       navPricing: "Pricing", navMcp: "MCP", navLogin: "Log in", navGetStarted: "Get started",
-      heroEyebrow: "AI-Powered WhatsApp Marketing", heroLine1: "Send once.", heroLine2: "Every language,", heroLine3: "every customer.",
+      heroEyebrow: "AI-Powered WhatsApp Marketing", heroLine1: "One message.", heroLine2: "Every customer gets it", heroLine3: "in their own language.",
       heroSubhead: "This is Priya Textiles' actual order, start to finish — an Instagram ad, a reply in her customer's own language, a payment collected without leaving WhatsApp, and revenue traced back to the ad that earned it.",
       badgeReseller: "⚡ Meta's official Cloud API — not a reseller", badgeFree: "🆓 Free plan, forever — not a 14-day trial",
       ctaGetStarted: "Get started free →", ctaSeePricing: "See pricing",
@@ -165,7 +165,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     landing: {
       navPricing: "प्राइसिंग", navMcp: "MCP", navLogin: "लॉग इन", navGetStarted: "शुरू करें",
-      heroEyebrow: "व्हाट्सएप मार्केटिंग सॉफ्टवेयर", heroLine1: "एक बार भेजें।", heroLine2: "हर भाषा में,", heroLine3: "हर ग्राहक तक।",
+      heroEyebrow: "व्हाट्सएप मार्केटिंग सॉफ्टवेयर", heroLine1: "एक मैसेज।", heroLine2: "हर ग्राहक तक पहुंचे", heroLine3: "उसकी अपनी भाषा में।",
       heroSubhead: "यह प्रिया टेक्सटाइल्स का असली ऑर्डर है, शुरू से आखिर तक — एक इंस्टाग्राम विज्ञापन, ग्राहक की अपनी भाषा में जवाब, व्हाट्सएप छोड़े बिना लिया गया पेमेंट, और उस बिक्री तक वापस जोड़ा गया रेवेन्यू जिसने इसे दिलाया।",
       badgeReseller: "⚡ Meta का असली Cloud API — रीसेलर नहीं", badgeFree: "🆓 हमेशा के लिए फ्री प्लान — 14-दिन का ट्रायल नहीं",
       ctaGetStarted: "मुफ़्त में शुरू करें →", ctaSeePricing: "प्राइसिंग देखें",
@@ -227,7 +227,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     landing: {
       navPricing: "किंमत", navMcp: "MCP", navLogin: "लॉग इन", navGetStarted: "सुरू करा",
-      heroEyebrow: "व्हॉट्सअ‍ॅप मार्केटिंग सॉफ्टवेअर", heroLine1: "एकदा पाठवा.", heroLine2: "प्रत्येक भाषेत,", heroLine3: "प्रत्येक ग्राहकापर्यंत.",
+      heroEyebrow: "व्हॉट्सअ‍ॅप मार्केटिंग सॉफ्टवेअर", heroLine1: "एक मेसेज.", heroLine2: "प्रत्येक ग्राहकापर्यंत पोहोचेल", heroLine3: "त्याच्याच भाषेत.",
       heroSubhead: "ही प्रिया टेक्सटाइल्सची खरी ऑर्डर आहे, सुरुवातीपासून शेवटपर्यंत — एक इंस्टाग्राम जाहिरात, ग्राहकाच्या स्वतःच्या भाषेत उत्तर, व्हॉट्सअ‍ॅप न सोडता घेतलेले पेमेंट, आणि ती विक्री मिळवून देणाऱ्या जाहिरातीपर्यंत जोडलेले रेव्हेन्यू.",
       badgeReseller: "⚡ Meta चे अधिकृत Cloud API — रिसेलर नाही", badgeFree: "🆓 कायमचा मोफत प्लॅन — 14-दिवसांची ट्रायल नाही",
       ctaGetStarted: "मोफत सुरू करा →", ctaSeePricing: "किंमत पहा",
@@ -289,7 +289,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     landing: {
       navPricing: "விலை", navMcp: "MCP", navLogin: "உள்நுழை", navGetStarted: "தொடங்குங்கள்",
-      heroEyebrow: "வாட்ஸ்அப் மார்க்கெட்டிங் மென்பொருள்", heroLine1: "ஒருமுறை அனுப்புங்கள்.", heroLine2: "ஒவ்வொரு மொழியிலும்,", heroLine3: "ஒவ்வொரு வாடிக்கையாளரிடமும்.",
+      heroEyebrow: "வாட்ஸ்அப் மார்க்கெட்டிங் மென்பொருள்", heroLine1: "ஒரே ஒரு மெசேஜ்.", heroLine2: "ஒவ்வொரு வாடிக்கையாளரையும்", heroLine3: "அவரவர் மொழியில் சென்றடையும்.",
       heroSubhead: "இது பிரியா டெக்ஸ்டைல்ஸின் உண்மையான ஆர்டர், தொடக்கத்திலிருந்து முடிவு வரை — ஒரு இன்ஸ்டாகிராம் விளம்பரம், வாடிக்கையாளரின் சொந்த மொழியில் பதில், வாட்ஸ்அப்பை விட்டு வெளியேறாமல் பெறப்பட்ட பணம், மற்றும் அந்த விற்பனையைத் தந்த விளம்பரத்திற்கு திரும்ப இணைக்கப்பட்ட வருவாய்.",
       badgeReseller: "⚡ Meta-வின் அதிகாரப்பூர்வ Cloud API — மறுவிற்பனையாளர் அல்ல", badgeFree: "🆓 எப்போதும் இலவச திட்டம் — 14-நாள் சோதனை அல்ல",
       ctaGetStarted: "இலவசமாகத் தொடங்குங்கள் →", ctaSeePricing: "விலையைப் பார்க்க",
@@ -351,7 +351,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     landing: {
       navPricing: "ధర", navMcp: "MCP", navLogin: "లాగిన్", navGetStarted: "ప్రారంభించండి",
-      heroEyebrow: "వాట్సాప్ మార్కెటింగ్ సాఫ్ట్‌వేర్", heroLine1: "ఒకసారి పంపండి.", heroLine2: "ప్రతి భాషలో,", heroLine3: "ప్రతి కస్టమర్‌కు.",
+      heroEyebrow: "వాట్సాప్ మార్కెటింగ్ సాఫ్ట్‌వేర్", heroLine1: "ఒక్క మెసేజ్.", heroLine2: "ప్రతి కస్టమర్‌కి", heroLine3: "వారి సొంత భాషలో చేరుతుంది.",
       heroSubhead: "ఇది ప్రియా టెక్స్‌టైల్స్ యొక్క నిజమైన ఆర్డర్, మొదటి నుండి చివరి వరకు — ఒక ఇన్‌స్టాగ్రామ్ ప్రకటన, కస్టమర్ సొంత భాషలో సమాధానం, వాట్సాప్ వదలకుండా తీసుకున్న చెల్లింపు, మరియు ఆ అమ్మకాన్ని తెచ్చిన ప్రకటనకు తిరిగి అనుసంధానించబడిన ఆదాయం.",
       badgeReseller: "⚡ Meta యొక్క అధికారిక Cloud API — రీసెల్లర్ కాదు", badgeFree: "🆓 ఎప్పటికీ ఉచిత ప్లాన్ — 14-రోజుల ట్రయల్ కాదు",
       ctaGetStarted: "ఉచితంగా ప్రారంభించండి →", ctaSeePricing: "ధర చూడండి",
@@ -413,7 +413,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     },
     landing: {
       navPricing: "ಬೆಲೆ", navMcp: "MCP", navLogin: "ಲಾಗಿನ್", navGetStarted: "ಪ್ರಾರಂಭಿಸಿ",
-      heroEyebrow: "ವಾಟ್ಸಾಪ್ ಮಾರ್ಕೆಟಿಂಗ್ ಸಾಫ್ಟ್‌ವೇರ್", heroLine1: "ಒಮ್ಮೆ ಕಳುಹಿಸಿ.", heroLine2: "ಪ್ರತಿ ಭಾಷೆಯಲ್ಲಿ,", heroLine3: "ಪ್ರತಿ ಗ್ರಾಹಕರಿಗೆ.",
+      heroEyebrow: "ವಾಟ್ಸಾಪ್ ಮಾರ್ಕೆಟಿಂಗ್ ಸಾಫ್ಟ್‌ವೇರ್", heroLine1: "ಒಂದೇ ಸಂದೇಶ.", heroLine2: "ಪ್ರತಿ ಗ್ರಾಹಕರಿಗೂ", heroLine3: "ಅವರದೇ ಭಾಷೆಯಲ್ಲಿ ತಲುಪುತ್ತದೆ.",
       heroSubhead: "ಇದು ಪ್ರಿಯಾ ಟೆಕ್ಸ್‌ಟೈಲ್ಸ್‌ನ ನಿಜವಾದ ಆರ್ಡರ್, ಆರಂಭದಿಂದ ಅಂತ್ಯದವರೆಗೆ — ಒಂದು ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಜಾಹೀರಾತು, ಗ್ರಾಹಕರ ಸ್ವಂತ ಭಾಷೆಯಲ್ಲಿ ಪ್ರತ್ಯುತ್ತರ, ವಾಟ್ಸಾಪ್ ಬಿಡದೆ ಪಡೆದ ಪಾವತಿ, ಮತ್ತು ಆ ಮಾರಾಟವನ್ನು ತಂದ ಜಾಹೀರಾತಿಗೆ ಮರಳಿ ಜೋಡಿಸಲಾದ ಆದಾಯ.",
       badgeReseller: "⚡ Meta ನ ಅಧಿಕೃತ Cloud API — ಮರುಮಾರಾಟಗಾರರಲ್ಲ", badgeFree: "🆓 ಶಾಶ್ವತ ಉಚಿತ ಯೋಜನೆ — 14-ದಿನಗಳ ಟ್ರಯಲ್ ಅಲ್ಲ",
       ctaGetStarted: "ಉಚಿತವಾಗಿ ಪ್ರಾರಂಭಿಸಿ →", ctaSeePricing: "ಬೆಲೆ ನೋಡಿ",
