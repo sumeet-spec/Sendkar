@@ -59,7 +59,7 @@ export function SignupForm({ dict, lang }: { dict: Dictionary["auth"]; lang: Lan
         </form>
 
         <p className="mt-6 text-center text-sm text-muted">
-          {dict.haveAccount} <Link href="/login" className="text-accent hover:text-accent-hover">{dict.logIn}</Link>
+          {dict.haveAccount} <Link href="/login" prefetch={false} className="text-accent hover:text-accent-hover">{dict.logIn}</Link>
         </p>
       </div>
     </div>

@@ -25,7 +25,7 @@ export function ForgotPasswordForm() {
           <>
             <h1 className="mb-1 text-xl font-semibold">Password updated</h1>
             <p className="mb-6 text-sm text-muted">You can log in with your new password now.</p>
-            <Link href="/login" className="sk-btn sk-btn-primary block w-full text-center">Go to login</Link>
+            <Link href="/login" prefetch={false} className="sk-btn sk-btn-primary block w-full text-center">Go to login</Link>
           </>
         ) : !codeSent ? (
           <>
@@ -80,7 +80,7 @@ export function ForgotPasswordForm() {
         )}
 
         <p className="mt-6 text-center text-sm text-muted">
-          <Link href="/login" className="text-accent hover:text-accent-hover">Back to login</Link>
+          <Link href="/login" prefetch={false} className="text-accent hover:text-accent-hover">Back to login</Link>
         </p>
       </div>
     </div>

@@ -153,8 +153,8 @@ export default async function RootPage() {
         <nav className="flex items-center gap-3 sm:gap-5">
           <a href="#pricing" className="hidden whitespace-nowrap text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navPricing}</a>
           <a href="/mcp" className="hidden whitespace-nowrap text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navMcp}</a>
-          <Link href="/login" className="hidden whitespace-nowrap text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navLogin}</Link>
-          <Link href="/signup" className="sk-btn sk-btn-primary whitespace-nowrap text-[13.5px]">{t.navGetStarted}</Link>
+          <Link href="/login" prefetch={false} className="hidden whitespace-nowrap text-[13.5px] text-muted hover:text-foreground sm:inline">{t.navLogin}</Link>
+          <Link href="/signup" prefetch={false} className="sk-btn sk-btn-primary whitespace-nowrap text-[13.5px]">{t.navGetStarted}</Link>
           <LanguageSwitcher current={lang} compact />
         </nav>
       </header>
@@ -181,7 +181,7 @@ export default async function RootPage() {
               {t.heroSubhead}
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Link href="/signup" className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">{t.ctaGetStarted}</Link>
+              <Link href="/signup" prefetch={false} className="sk-btn sk-btn-primary px-5 py-2.5 text-[14.5px]">{t.ctaGetStarted}</Link>
               <a href="#pricing" className="sk-btn sk-btn-ghost px-5 py-2.5 text-[14.5px]">{t.ctaSeePricing}</a>
             </div>
             <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -416,6 +416,7 @@ export default async function RootPage() {
                 <div className="mt-auto pt-5">
                   <Link
                     href="/signup"
+                    prefetch={false}
                     className={`sk-btn w-full text-[13px] ${p.featured ? "sk-btn-primary" : "sk-btn-ghost"}`}
                   >
                     {p.key === "free" ? "Start free" : "Get started"}
@@ -439,7 +440,7 @@ export default async function RootPage() {
           </h2>
           <p className="mt-5 text-[15px] leading-relaxed text-muted max-w-lg mx-auto">Free to start, real Meta Cloud API from day one, AI copilot included. No card required.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/signup" className="sk-btn sk-btn-primary px-7 py-3 text-[15px]">Get started free →</Link>
+            <Link href="/signup" prefetch={false} className="sk-btn sk-btn-primary px-7 py-3 text-[15px]">Get started free →</Link>
             <a href="#pricing" className="sk-btn sk-btn-ghost px-7 py-3 text-[15px]">See pricing</a>
           </div>
         </div>
