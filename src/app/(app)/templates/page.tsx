@@ -26,7 +26,7 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Se
   if (!workspace) return null;
   const supabase = await createClient();
   const canSubmitToMeta = Boolean(workspace.whatsapp_waba_id && workspace.whatsapp_access_token);
-  const aiImageEnabled = Boolean(process.env.OPENAI_API_KEY);
+  const aiImageEnabled = Boolean(process.env.GEMINI_API_KEY);
 
   let query = supabase
     .from("templates")

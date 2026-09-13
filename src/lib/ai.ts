@@ -265,12 +265,13 @@ export async function generateAutoReply(
 }
 
 /**
- * Rewrites a vague business description into a DALL-E 3 optimised image prompt.
- * A short business description ("Diwali sale, silk sarees") becomes a specific
- * visual directive with style, mood, composition and technical constraints.
+ * Rewrites a vague business description into an image-generation-optimised
+ * prompt for Gemini. A short business description ("Diwali sale, silk
+ * sarees") becomes a specific visual directive with style, mood, composition
+ * and technical constraints.
  */
 export async function enhanceImagePrompt(description: string): Promise<string> {
-  const prompt = `Convert this WhatsApp marketing campaign description into a concise DALL-E 3 image generation prompt. The image will be used as a WhatsApp message header (1:1 square or 16:9 wide).
+  const prompt = `Convert this WhatsApp marketing campaign description into a concise image generation prompt. The image will be used as a WhatsApp message header (1:1 square or 16:9 wide).
 
 Business description: "${description}"
 
