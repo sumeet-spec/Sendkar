@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveApiKey } from "@/lib/apiKeys";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage } from "@/lib/whatsapp";
+import { isRateLimited } from "@/lib/rateLimit";
 
 /**
  * Plain REST/JSON send endpoint — the piece that makes Zapier/Make/Pabbly
@@ -15,6 +16,14 @@ export async function POST(request: NextRequest) {
   const token = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1] ?? null;
   const auth = await resolveApiKey(token);
   if (!auth) return NextResponse.json({ error: "Unauthorized — pass a Sendkar API key as a Bearer token." }, { status: 401 });
+
+  // A leaked or misbehaving key otherwise has nothing standing between it and
+  // unlimited WhatsApp sends — real per-message cost, and enough volume can
+  // get the number flagged by Meta. 60/min is generous for real automation
+  // (Zapier/Make) while capping a runaway loop.
+  if (await isRateLimited(`apisend:${auth.apiKeyId}`, 60, 60)) {
+    return NextResponse.json({ error: "Rate limit exceeded — max 60 sends per minute per API key." }, { status: 429 });
+  }
 
   let body: { to?: string; templateName?: string; language?: string; bodyParams?: string[] };
   try {

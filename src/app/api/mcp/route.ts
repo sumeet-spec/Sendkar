@@ -4,6 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage, sendSessionMessage, sendProductMessage, sendReaction, sendButtonsMessage } from "@/lib/whatsapp";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { attributeOrder } from "@/lib/attribution";
+import { isRateLimited } from "@/lib/rateLimit";
+
+// Tools that place a real WhatsApp send — same cost/abuse exposure as
+// /api/v1/send, so they share its rate limit rather than being unbounded
+// just because the caller happens to be an MCP client instead of a webhook.
+const SEND_TOOLS = new Set(["send_template_message", "send_session_message", "send_buttons_message", "send_product_message", "send_reaction"]);
 
 /**
  * Sendkar's MCP server — lets Claude (or any MCP client) send WhatsApp
@@ -261,6 +267,10 @@ export async function POST(request: NextRequest) {
 
   const toolName = params.name as string;
   const args = (params.arguments as Record<string, unknown>) ?? {};
+
+  if (SEND_TOOLS.has(toolName) && await isRateLimited(`apisend:${auth.apiKeyId}`, 60, 60)) {
+    return textResult(id, "Rate limit exceeded — max 60 sends per minute per API key.", true);
+  }
   const admin = createAdminClient();
   const workspaceId = auth.workspaceId;
 

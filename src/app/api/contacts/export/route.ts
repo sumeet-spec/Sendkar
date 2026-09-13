@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 
+// Contact names/tags can carry attacker-controlled text (a WhatsApp profile
+// name, for instance) — prefixing a leading =,+,-,@ with a quote stops
+// Excel/Sheets from treating the cell as a formula on open (CSV/formula
+// injection, CWE-1236).
 function csvEscape(value: string): string {
-  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
-  return value;
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  if (/[",\n]/.test(safe)) return `"${safe.replace(/"/g, '""')}"`;
+  return safe;
 }
 
 export async function GET() {

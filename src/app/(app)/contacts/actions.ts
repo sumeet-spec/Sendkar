@@ -126,7 +126,9 @@ export async function bulkTagContacts(
 }
 
 export async function deleteContact(contactId: string) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return;
   const supabase = await createClient();
-  await supabase.from("contacts").delete().eq("id", contactId);
+  await supabase.from("contacts").delete().eq("id", contactId).eq("workspace_id", workspace.id);
   revalidatePath("/contacts");
 }

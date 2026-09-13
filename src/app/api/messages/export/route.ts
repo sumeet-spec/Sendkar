@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 
+// Message bodies and contact names can carry attacker-controlled text — see
+// contacts/export's csvEscape for why leading =,+,-,@ get neutralized
+// (CSV/formula injection, CWE-1236).
 function csvEscape(value: string): string {
-  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
-  return value;
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  if (/[",\n]/.test(safe)) return `"${safe.replace(/"/g, '""')}"`;
+  return safe;
 }
 
 /** A real "chat backup" — every message across every conversation, exportable, unlike a feature you just have to trust exists. */
