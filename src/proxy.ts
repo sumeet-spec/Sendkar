@@ -7,6 +7,11 @@ const PUBLIC_PATHS = [
   "/api/mcp", "/mcp",
   "/privacy", "/terms", "/support", "/changelog",
   "/sitemap.xml", "/robots.txt", "/manifest.webmanifest", "/.well-known",
+  // Next.js file-convention image routes — no file extension in the URL, so
+  // the matcher's extension exclusion below doesn't catch them. Without this,
+  // link-preview crawlers (WhatsApp, Twitter, LinkedIn) fetching the OG image
+  // get redirected to /login instead of the actual image.
+  "/opengraph-image", "/twitter-image",
   "/api/shopify/callback", "/api/shopify/webhook",
   "/api/woocommerce/webhook",
   "/api/v1/send",
