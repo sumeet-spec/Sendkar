@@ -9,22 +9,35 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
  * Resolves the logged-in user exactly once PER REQUEST, memoized via
  * React's cache() — not just once per call site. Supabase's refresh
  * tokens are single-use: every layout.tsx AND its child page.tsx
- * independently call getCurrentWorkspace() today, each constructing its
- * own client and calling auth.getUser(). If the access token happens to be
- * expired, the first call's silent refresh consumes the refresh token
- * (server-side) but can't persist the new one back to cookies (Server
- * Components can't set cookies) — so the second call, reading the same
- * now-already-consumed refresh token, fails and gets no user back, even
- * though the session was perfectly valid a moment earlier. cache() ensures
- * every caller in the same render tree — layout, page, and anything else —
- * gets the exact same resolved result instead of each triggering its own
- * auth.getUser() call.
+ * independently need this today, each of which would otherwise construct
+ * its own client and call the auth server separately. If the access token
+ * happens to be expired, the first call's silent refresh consumes the
+ * refresh token (server-side) but can't persist the new one back to
+ * cookies (Server Components can't set cookies) — so a second, uncached
+ * call, reading the same now-already-consumed refresh token, would fail
+ * and get no user back, even though the session was perfectly valid a
+ * moment earlier. cache() ensures every caller in the same render tree —
+ * layout, page, and anything else — gets the exact same resolved result
+ * instead of each triggering its own auth call.
+ *
+ * getClaims() instead of getUser(): same swap proxy.ts's middleware
+ * already makes, for the same reason — this project signs JWTs with an
+ * asymmetric key, so getClaims() verifies the token locally against a
+ * JWKS cached in-process (first call in a cold function pays a real
+ * fetch, ~500ms measured directly against production; every call after
+ * that in the same warm instance is ~0-1ms) instead of getUser()'s ~230-
+ * 500ms live round trip to the auth server on every single call, cold or
+ * warm. Not a behavior change: getClaims() calls getSession() internally,
+ * which still silently refreshes an about-to-expire token first, so the
+ * refresh-token race this function exists to prevent is still prevented
+ * the same way. Falls back to an equivalent getUser()-shaped server call
+ * automatically if the project ever switches to a symmetric signing key.
  */
 const getAuthedClient = cache(async (): Promise<{ supabase: SupabaseServerClient; userId: string } | null> => {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return null;
-  return { supabase, userId: data.user.id };
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data?.claims?.sub) return null;
+  return { supabase, userId: data.claims.sub };
 });
 
 export const ACTIVE_WORKSPACE_COOKIE = "sk_active_workspace";
