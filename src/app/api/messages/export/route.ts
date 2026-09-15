@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { isRateLimited } from "@/lib/rateLimit";
 
 // Message bodies and contact names can carry attacker-controlled text — see
 // contacts/export's csvEscape for why leading =,+,-,@ get neutralized
@@ -15,6 +16,12 @@ function csvEscape(value: string): string {
 export async function GET() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return NextResponse.json({ error: "No workspace found." }, { status: 401 });
+
+  // Up to 50k rows per pull — bounding how often that's allowed rather than
+  // letting it be re-triggered on a loop, same posture as contacts/export.
+  if (await isRateLimited(`messagesexport:${workspace.id}`, 5, 60)) {
+    return NextResponse.json({ error: "Too many exports — try again in a minute." }, { status: 429 });
+  }
 
   const supabase = await createClient();
   const { data: messages } = await supabase

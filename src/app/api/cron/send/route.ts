@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage, type WorkspaceCreds } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
@@ -118,6 +119,16 @@ export async function GET(request: NextRequest) {
 
       if (concluded >= AUTO_PAUSE_MIN_SAMPLE && failedCount / concluded > AUTO_PAUSE_THRESHOLD) {
         await admin.from("campaigns").update({ status: "paused" }).eq("id", campaign.id);
+        // A high failure rate is emailed to the owner below, but that alone
+        // means nobody at Sendkar finds out about a systemic problem (a
+        // widespread token issue, a Meta-side change) unless a customer
+        // happens to complain — individual per-recipient send failures
+        // aren't captured here (that would flood Sentry on every large
+        // campaign), but this threshold crossing, at most once per campaign, is.
+        Sentry.captureMessage(`Campaign auto-paused: ${Math.round((failedCount / concluded) * 100)}% failure rate`, {
+          level: "warning",
+          tags: { workspaceId: workspace.id, campaignId: campaign.id },
+        });
         after(async () => {
           const email = await getWorkspaceOwnerEmail(admin, workspace.id);
           if (email) {
@@ -247,6 +258,10 @@ export async function GET(request: NextRequest) {
     const batchFailed = batchStats?.filter((r) => r.status === "failed").length ?? 0;
     if (batchConcluded >= AUTO_PAUSE_MIN_SAMPLE && batchFailed / batchConcluded > AUTO_PAUSE_THRESHOLD) {
       await admin.from("campaigns").update({ status: "paused" }).eq("id", campaign.id);
+      Sentry.captureMessage(`Campaign auto-paused: ${Math.round((batchFailed / batchConcluded) * 100)}% failure rate`, {
+        level: "warning",
+        tags: { workspaceId: workspace.id, campaignId: campaign.id },
+      });
       after(async () => {
         const email = await getWorkspaceOwnerEmail(admin, workspace.id);
         if (email) {

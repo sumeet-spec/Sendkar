@@ -7,6 +7,8 @@ interface PaymentLink {
   url: string;
   created_at: string;
   paid_at: string | null;
+  status?: string;
+  failure_reason?: string | null;
 }
 
 export function PaymentsPanel({ links, currency = "USD" }: { links: PaymentLink[]; currency?: string }) {
@@ -31,6 +33,10 @@ export function PaymentsPanel({ links, currency = "USD" }: { links: PaymentLink[
             </div>
             {l.paid_at ? (
               <span className="sk-pill border-accent text-accent">Paid</span>
+            ) : l.status === "failed" ? (
+              <span className="sk-pill border-danger text-danger" title={l.failure_reason ?? undefined}>
+                Failed
+              </span>
             ) : (
               <a href={l.url} target="_blank" rel="noreferrer" className="sk-pill text-faint hover:text-accent">
                 Pending ↗

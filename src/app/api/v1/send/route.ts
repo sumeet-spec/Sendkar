@@ -42,10 +42,27 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient();
   const { data: workspace } = await admin
     .from("workspaces")
-    .select("whatsapp_phone_number_id, whatsapp_access_token, daily_send_count, messaging_tier")
+    .select("whatsapp_phone_number_id, whatsapp_access_token, daily_send_count, daily_reset_at, messaging_tier")
     .eq("id", auth.workspaceId)
     .single();
   if (!workspace) return NextResponse.json({ error: "Workspace not found." }, { status: 404 });
+
+  // Same daily-tier accounting as cron/send.ts — this endpoint bypasses the
+  // campaign cron entirely, so without this check a leaked key (or a
+  // misconfigured Zapier loop) could push a workspace's number past Meta's
+  // own messaging-tier cap with nothing here to stop it.
+  const now = new Date();
+  let dailySendCount = workspace.daily_send_count;
+  if (now >= new Date(workspace.daily_reset_at)) {
+    dailySendCount = 0;
+    const nextReset = new Date(now);
+    nextReset.setUTCHours(0, 0, 0, 0);
+    nextReset.setUTCDate(nextReset.getUTCDate() + 1);
+    await admin.from("workspaces").update({ daily_send_count: 0, daily_reset_at: nextReset.toISOString() }).eq("id", auth.workspaceId);
+  }
+  if (dailySendCount >= workspace.messaging_tier) {
+    return NextResponse.json({ error: "Daily messaging-tier limit reached for this WhatsApp number — resumes after the daily reset." }, { status: 429 });
+  }
 
   try {
     const { metaMessageId } = await sendTemplateMessage({
@@ -64,7 +81,7 @@ export async function POST(request: NextRequest) {
       meta_message_id: metaMessageId,
       status: "sent",
     });
-    await admin.from("workspaces").update({ daily_send_count: workspace.daily_send_count + 1 }).eq("id", auth.workspaceId);
+    await admin.from("workspaces").update({ daily_send_count: dailySendCount + 1 }).eq("id", auth.workspaceId);
 
     return NextResponse.json({ sent: true, metaMessageId });
   } catch (err) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { isRateLimited } from "@/lib/rateLimit";
 
 // Contact names/tags can carry attacker-controlled text (a WhatsApp profile
 // name, for instance) — prefixing a leading =,+,-,@ with a quote stops
@@ -15,6 +16,13 @@ function csvEscape(value: string): string {
 export async function GET() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return NextResponse.json({ error: "No workspace found." }, { status: 401 });
+
+  // A full contact export is a real DB scan every time — bounding how often
+  // one workspace can trigger it, same posture as the other cost-bearing
+  // routes in this app.
+  if (await isRateLimited(`contactsexport:${workspace.id}`, 5, 60)) {
+    return NextResponse.json({ error: "Too many exports — try again in a minute." }, { status: 429 });
+  }
 
   const supabase = await createClient();
   const { data: contacts } = await supabase

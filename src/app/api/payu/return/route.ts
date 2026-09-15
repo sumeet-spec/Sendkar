@@ -59,10 +59,21 @@ export async function POST(request: NextRequest) {
     if (!link.paid_at) {
       await admin
         .from("payment_links")
-        .update({ paid_at: new Date().toISOString(), provider_ref: fields.mihpayid ?? link.id })
+        .update({ paid_at: new Date().toISOString(), provider_ref: fields.mihpayid ?? link.id, status: "paid" })
         .eq("id", link.id);
     }
     return htmlPage("Payment successful", "Thank you — your payment has been received.");
+  }
+
+  // A declined/failed outcome, verified as genuinely from PayU (the hash
+  // check above already ruled out a forged callback) — recorded so the
+  // dashboard can tell "customer's payment was declined" apart from "link
+  // still hasn't been clicked", instead of both looking identical forever.
+  if (!link.paid_at) {
+    await admin
+      .from("payment_links")
+      .update({ status: "failed", provider_ref: fields.mihpayid ?? link.id, failure_reason: fields.error_Message ?? fields.status ?? "Payment not completed" })
+      .eq("id", link.id);
   }
 
   return htmlPage("Payment not completed", "The payment wasn't completed. You can ask the business for a new link.");
