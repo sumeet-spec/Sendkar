@@ -7,6 +7,11 @@ const PUBLIC_PATHS = [
   "/api/mcp", "/mcp",
   "/privacy", "/terms", "/support", "/changelog",
   "/sitemap.xml", "/robots.txt", "/manifest.webmanifest", "/.well-known",
+  // The push-notification service worker — browsers re-fetch and byte-compare
+  // this periodically for update checks, same-origin cookies included but not
+  // guaranteed fresh; redirecting that fetch to /login's HTML would look like
+  // a changed (or broken) script instead of the real one.
+  "/sw.js",
   // Next.js file-convention image routes — no file extension in the URL, so
   // the matcher's extension exclusion below doesn't catch them. Without this,
   // link-preview crawlers (WhatsApp, Twitter, LinkedIn) fetching the OG image

@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileTopBar } from "@/components/MobileTopBar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { PageTransition } from "@/components/PageTransition";
+import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
@@ -20,6 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <PageTransition>{children}</PageTransition>
       </main>
       <CommandPalette nav={dict.nav} />
+      <PushNotificationPrompt />
     </div>
   );
 }

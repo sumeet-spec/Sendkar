@@ -85,6 +85,19 @@ export async function saveKlaviyoApiKey(_prevState: unknown, formData: FormData)
   return { success: true };
 }
 
+export async function saveHubspotApiKey(_prevState: unknown, formData: FormData) {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const apiKey = String(formData.get("apiKey") ?? "").trim();
+  const supabase = await createClient();
+  const { error } = await supabase.from("workspaces").update({ hubspot_api_key: apiKey || null }).eq("id", workspace.id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings/integrations");
+  return { success: true };
+}
+
 export async function importContactsFromSheetUrl(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };

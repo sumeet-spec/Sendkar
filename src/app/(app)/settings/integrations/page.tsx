@@ -5,9 +5,10 @@ import { headers } from "next/headers";
 import { ShopifyCard } from "./ShopifyCard";
 import { WooCommerceCard } from "./WooCommerceCard";
 import { KlaviyoCard } from "./KlaviyoCard";
+import { HubspotCard } from "./HubspotCard";
 import { OrderTemplatePicker } from "./OrderTemplatePicker";
 import { SheetsImportForm } from "./SheetsImportForm";
-import { saveKlaviyoApiKey } from "./actions";
+import { saveKlaviyoApiKey, saveHubspotApiKey } from "./actions";
 
 export default async function IntegrationsPage() {
   const workspace = await getCurrentWorkspace();
@@ -42,17 +43,18 @@ export default async function IntegrationsPage() {
         />
         <OrderTemplatePicker templates={templates ?? []} currentId={workspace.order_confirmation_template_id} />
         <KlaviyoCard hasKey={Boolean(workspace.klaviyo_api_key)} action={saveKlaviyoApiKey} />
+        <HubspotCard hasKey={Boolean(workspace.hubspot_api_key)} action={saveHubspotApiKey} />
         <SheetsImportForm />
 
         <div className="sk-card p-4">
           <div className="mb-1 flex items-center gap-2 font-medium">
-            Salesforce, HubSpot, Zoho CRM
+            Salesforce, Zoho CRM
             <span className="sk-pill text-faint">Coming soon</span>
           </div>
           <p className="text-[12.5px] text-faint">
-            Native CRM sync is on the roadmap. In the meantime, use{" "}
+            Both need a registered OAuth app and Sendkar hasn&apos;t built either yet. In the meantime, use{" "}
             <a href="/webhooks" className="text-accent hover:text-accent-hover">outbound webhooks</a> with a Zapier or Make automation to push
-            contacts and order events to any CRM.
+            contacts and order events to either one.
           </p>
         </div>
       </div>

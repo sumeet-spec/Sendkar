@@ -8,8 +8,10 @@ import {
 } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { syncKlaviyoProfile } from "@/lib/klaviyo";
+import { syncHubspotContact } from "@/lib/hubspot";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { classifyInboundMessage, generateAutoReply } from "@/lib/ai";
+import { sendPushNotification, truncateForNotification } from "@/lib/webPush";
 import { isStatusRegression } from "@/lib/messageStatus";
 import { isWithinBusinessHours } from "@/lib/businessHours";
 import { pickAssignee } from "@/lib/assignment";
@@ -369,7 +371,7 @@ export async function POST(request: NextRequest) {
 
         const { data: contact } = await admin
           .from("contacts")
-          .select("id, session_expires_at")
+          .select("id, session_expires_at, assignee_id, name")
           .eq("workspace_id", workspaceId)
           .eq("phone", msg.from)
           .maybeSingle();
@@ -482,6 +484,10 @@ export async function POST(request: NextRequest) {
             if (ws?.klaviyo_api_key) await syncKlaviyoProfile(ws.klaviyo_api_key, msg.from!, profileNameForNewContact);
           });
           after(async () => {
+            const { data: ws } = await admin.from("workspaces").select("hubspot_api_key").eq("id", wsId).single();
+            if (ws?.hubspot_api_key) await syncHubspotContact(ws.hubspot_api_key, msg.from!, profileNameForNewContact);
+          });
+          after(async () => {
             const { data: ws } = await admin.from("workspaces").select("auto_assignment_enabled").eq("id", wsId).single();
             if (!ws?.auto_assignment_enabled) return;
             const assigneeId = await pickAssignee(admin, wsId);
@@ -489,6 +495,40 @@ export async function POST(request: NextRequest) {
           });
         }
         after(() => dispatchOutboundWebhooks(wsId, "message.received", { contactId, phone: msg.from, body: inboundBody }));
+
+        // Push-notify whoever this contact is assigned to — fires regardless
+        // of whether a flow/automation/AI-agent reply also goes out below;
+        // the assignee still gets to know a real customer messaged. Nobody
+        // gets pushed for an unassigned contact — a whole team getting
+        // buzzed for every inbound message would train everyone to ignore
+        // the notification, defeating the point.
+        const assigneeId = contact?.assignee_id ?? null;
+        if (assigneeId) {
+          const cId = contactId;
+          const contactLabel = contact?.name || `+${msg.from}`;
+          after(async () => {
+            try {
+              const { data: subs } = await admin
+                .from("push_subscriptions")
+                .select("id, endpoint, p256dh, auth_key")
+                .eq("user_id", assigneeId);
+              if (!subs || subs.length === 0) return;
+
+              const payload = { title: contactLabel, body: truncateForNotification(inboundBody), url: `/inbox/${cId}` };
+              await Promise.all(
+                subs.map(async (sub) => {
+                  const result = await sendPushNotification(sub, payload);
+                  if (result.expired) await admin.from("push_subscriptions").delete().eq("id", sub.id);
+                }),
+              );
+            } catch (err) {
+              // Push failing (bad VAPID config, a transient push-service error)
+              // should never affect webhook processing — same posture as the
+              // AI classification catch just below.
+              Sentry.captureException(err, { tags: { workspaceId } });
+            }
+          });
+        }
 
         // Auto-tag + sentiment on every real inbound text — contacts self-segment
         // by intent without anyone tagging them by hand. Best-effort: a

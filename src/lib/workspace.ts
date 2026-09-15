@@ -53,6 +53,7 @@ export interface Workspace {
   woocommerce_store_url: string | null;
   woocommerce_webhook_secret: string | null;
   klaviyo_api_key: string | null;
+  hubspot_api_key: string | null;
   business_hours_enabled: boolean;
   business_hours_timezone: string;
   away_message: string;
