@@ -120,6 +120,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
           <Link
             key={f.value}
             href={`/inbox?filter=${f.value}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            prefetch={false}
             className={`sk-pill transition-colors ${
               filter === f.value ? "border-accent bg-accent text-[#05130a]" : "hover:border-foreground/50"
             }`}
@@ -136,6 +137,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
             <Link
               key={contactId}
               href={`/inbox/${contactId}`}
+              prefetch={false}
               className="group flex items-center gap-3 border-b border-border p-4 last:border-0 hover:bg-[var(--surface-2)]"
               style={waiting ? { borderLeft: "3px solid var(--accent)" } : undefined}
             >

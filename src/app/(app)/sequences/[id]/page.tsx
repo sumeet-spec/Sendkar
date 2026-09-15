@@ -26,7 +26,7 @@ export default async function SequenceDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="max-w-2xl">
-      <Link href="/sequences" className="mb-4 inline-block text-[13px] text-muted hover:text-foreground">← Sequences</Link>
+      <Link href="/sequences" prefetch={false} className="mb-4 inline-block text-[13px] text-muted hover:text-foreground">← Sequences</Link>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{sequence.name}</h1>

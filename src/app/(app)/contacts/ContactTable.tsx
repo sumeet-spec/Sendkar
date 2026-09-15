@@ -124,13 +124,13 @@ export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; c
                     />
                   </td>
                   <td className="px-4 py-2.5 font-mono text-[13px]">
-                    <Link href={`/inbox/${c.id}`} className="hover:text-accent">
+                    <Link href={`/inbox/${c.id}`} prefetch={false} className="hover:text-accent">
                       {c.phone}
                     </Link>
                     {c.opted_out && <span className="sk-pill ml-2 border-danger text-danger">opted out</span>}
                   </td>
                   <td className="px-4 py-2.5 text-muted">
-                    <Link href={`/inbox/${c.id}`} className="hover:text-accent">
+                    <Link href={`/inbox/${c.id}`} prefetch={false} className="hover:text-accent">
                       {c.name ?? "—"}
                     </Link>
                   </td>

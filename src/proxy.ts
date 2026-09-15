@@ -119,10 +119,25 @@ export async function proxy(request: NextRequest) {
 
   // Exact match for "/" — the marketing landing page for logged-out visitors —
   // since a startsWith("/") entry in PUBLIC_PATHS would match every route.
-  const isPublic = request.nextUrl.pathname === "/" || PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
+  const isRoot = request.nextUrl.pathname === "/";
+  const isPublic = isRoot || PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
   if (!authed && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // A logged-in visitor hitting the marketing homepage gets bounced to their
+  // dashboard — this used to be a second, separate supabase.auth.getUser()
+  // call inside page.tsx itself, on top of the getClaims() check above doing
+  // the exact same "is this request authed" work. Two redundant auth round-
+  // trips stacked on the single highest-traffic route in the app measured at
+  // 3.4-3.6s per load in production (2026-09-15), vs ~0.4s for /login and
+  // /signup, which never had this duplicate check. Folding it into the one
+  // check already happening here removes that whole second round-trip.
+  if (authed && isRoot) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 

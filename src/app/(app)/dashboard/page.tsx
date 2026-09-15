@@ -146,13 +146,13 @@ export default async function DashboardPage() {
         <h1 className="flex-1 text-xl font-semibold tracking-tight">{t.title}</h1>
         {configured && (
           <>
-            <Link href="/campaigns" className="sk-btn sk-btn-ghost text-[12.5px]">
+            <Link href="/campaigns" prefetch={false} className="sk-btn sk-btn-ghost text-[12.5px]">
               + New campaign
             </Link>
-            <Link href="/contacts" className="sk-btn sk-btn-ghost text-[12.5px]">
+            <Link href="/contacts" prefetch={false} className="sk-btn sk-btn-ghost text-[12.5px]">
               + Import contacts
             </Link>
-            <Link href="/templates" className="sk-btn sk-btn-ghost text-[12.5px]">
+            <Link href="/templates" prefetch={false} className="sk-btn sk-btn-ghost text-[12.5px]">
               + Template
             </Link>
           </>
@@ -165,7 +165,7 @@ export default async function DashboardPage() {
         <div className="sk-card mb-4 p-5" style={{ borderColor: "rgba(251,191,36,0.3)" }}>
           <p className="text-sm text-foreground">
             {t.noWhatsappBanner}{" "}
-            <Link href="/onboarding" className="text-accent hover:text-accent-hover">
+            <Link href="/onboarding" prefetch={false} className="text-accent hover:text-accent-hover">
               Finish setup →
             </Link>
           </p>
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
               WhatsApp connection broken
             </span>{" "}
             — last send failed: <span className="font-mono text-[13px]">{workspace.whatsapp_last_send_error}</span>.{" "}
-            <Link href="/settings/channels" className="text-accent hover:text-accent-hover">
+            <Link href="/settings/channels" prefetch={false} className="text-accent hover:text-accent-hover">
               Reconnect in Channels →
             </Link>
           </p>
@@ -256,7 +256,7 @@ export default async function DashboardPage() {
         <div className="sk-card overflow-hidden">
           <div className="flex items-center justify-between border-b border-border px-5 py-3">
             <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Recent campaigns</div>
-            <Link href="/campaigns" className="text-[11px] text-accent hover:text-accent-hover">
+            <Link href="/campaigns" prefetch={false} className="text-[11px] text-accent hover:text-accent-hover">
               View all →
             </Link>
           </div>
@@ -296,6 +296,7 @@ export default async function DashboardPage() {
             {templateHealth.approved === 0 && templateHealth.pending === 0 && (
               <Link
                 href="/templates"
+                prefetch={false}
                 className="mt-3 flex items-center gap-1 text-[12px] font-semibold text-accent hover:text-accent-hover"
               >
                 Create your first template

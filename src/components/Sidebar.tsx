@@ -159,6 +159,14 @@ export function Sidebar({
             <Link
               key={item.href}
               href={item.href}
+              // Every one of these ~18 links sits in the viewport at once on
+              // a persistent sidebar — Next's default prefetch behavior fires
+              // a real server render for every single one, on every single
+              // navigation. Measured directly against production: dozens of
+              // redundant RSC fetches per click, competing with the actual
+              // navigation for bandwidth/serverless capacity and making the
+              // whole app feel unresponsive (2026-09-15).
+              prefetch={false}
               className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13.5px] font-medium transition-colors ${
                 active ? "bg-accent-glow text-foreground" : "text-muted hover:text-foreground"
               }`}
@@ -180,6 +188,7 @@ export function Sidebar({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 className={`rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
                   active ? "text-foreground" : "text-muted hover:text-foreground"
                 }`}

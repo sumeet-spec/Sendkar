@@ -24,7 +24,7 @@ export function SequenceRow({ sequence }: { sequence: Sequence }) {
 
   return (
     <div className={`sk-card flex items-center justify-between p-4 ${pending ? "opacity-60" : ""}`}>
-      <Link href={`/sequences/${sequence.id}`} className="flex-1 min-w-0 pr-4">
+      <Link href={`/sequences/${sequence.id}`} prefetch={false} className="flex-1 min-w-0 pr-4">
         <div className="font-medium truncate">{sequence.name}</div>
         <div className="mt-0.5 text-[12.5px] text-faint">
           {TRIGGER_LABEL[sequence.trigger_type] ?? sequence.trigger_type}

@@ -19,7 +19,7 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="max-w-2xl">
-      <Link href="/flows" className="mb-4 inline-block text-[13px] text-muted hover:text-foreground">← Chatbot flows</Link>
+      <Link href="/flows" prefetch={false} className="mb-4 inline-block text-[13px] text-muted hover:text-foreground">← Chatbot flows</Link>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{flow.name}</h1>

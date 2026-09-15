@@ -131,7 +131,7 @@ export function RecipientTable({
                 <tr key={r.id} className="border-b border-border last:border-0 hover:bg-[var(--surface-2)]">
                   <td className="px-4 py-2.5 font-mono text-[13px]">
                     {r.contact_id ? (
-                      <Link href={`/inbox/${r.contact_id}`} className="hover:text-accent">
+                      <Link href={`/inbox/${r.contact_id}`} prefetch={false} className="hover:text-accent">
                         {contact?.phone}
                       </Link>
                     ) : (
