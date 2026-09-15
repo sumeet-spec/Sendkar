@@ -50,7 +50,7 @@ export default async function DashboardPage() {
       .eq("campaigns.workspace_id", workspace.id),
     supabase
       .from("orders")
-      .select("contact_id, total_amount, attributed_campaign_id, created_at, contacts(phone, name)")
+      .select("contact_id, total_amount, currency, attributed_campaign_id, created_at, contacts(phone, name)")
       .eq("workspace_id", workspace.id),
     supabase.from("templates").select("status").eq("workspace_id", workspace.id),
     supabase.from("messages").select("created_at").eq("workspace_id", workspace.id).gte("created_at", thirtyDaysAgo),
@@ -93,16 +93,19 @@ export default async function DashboardPage() {
   const templateHealth = computeTemplateHealth(allTemplates ?? []);
   const approvedTemplateCount = templateHealth.approved;
 
-  // Revenue
-  const orderRows = orders ?? [];
-  const { revenue30d, attributedRevenue30d, revenueTrendPct } = computeRevenueTrend(orderRows, now);
-  const topCustomers = groupTopCustomers(
-    orderRows.map((o) => ({ ...o, contacts: o.contacts as { phone?: string; name?: string } | null })),
-  );
-  const hasRevenue = orderRows.length > 0;
-
   // Currency
   const currency = workspace.currency ?? "USD";
+
+  // Revenue — orders in a different currency than the workspace's are excluded
+  // from the totals below rather than blended in (see dashboardMetrics.ts).
+  const orderRows = orders ?? [];
+  const { revenue30d, attributedRevenue30d, revenueTrendPct, excludedOtherCurrencyCount } = computeRevenueTrend(orderRows, now, currency);
+  const topCustomers = groupTopCustomers(
+    orderRows.map((o) => ({ ...o, contacts: o.contacts as { phone?: string; name?: string } | null })),
+    5,
+    currency,
+  );
+  const hasRevenue = orderRows.length > 0;
 
   // WhatsApp config
   const configured = isWhatsAppConfigured(workspace);
@@ -366,6 +369,11 @@ export default async function DashboardPage() {
                 <span className="font-semibold text-foreground">{formatCurrency(attributedRevenue30d, currency)}</span>{" "}
                 {t.fromCampaign.toLowerCase()}
               </div>
+              {excludedOtherCurrencyCount > 0 && (
+                <div className="mt-2 text-[11.5px] text-faint">
+                  {excludedOtherCurrencyCount} order{excludedOtherCurrencyCount === 1 ? "" : "s"} in a different currency than {currency} excluded from this total.
+                </div>
+              )}
             </div>
           {!checklistDone && <ActivationChecklist title={t.checklistTitle} steps={checklistSteps} />}
         </div>

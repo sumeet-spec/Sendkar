@@ -103,6 +103,36 @@ describe("computeRevenueTrend", () => {
     const orders = [{ total_amount: "250.50", attributed_campaign_id: null, created_at: daysAgo(1) }];
     expect(computeRevenueTrend(orders, now).revenue30d).toBe(250.5);
   });
+
+  it("excludes orders in a different currency than the workspace's when one is given", () => {
+    const orders = [
+      { total_amount: 1000, attributed_campaign_id: null, created_at: daysAgo(1), currency: "INR" },
+      { total_amount: 500, attributed_campaign_id: null, created_at: daysAgo(1), currency: "USD" },
+    ];
+    const trend = computeRevenueTrend(orders, now, "INR");
+    expect(trend.revenue30d).toBe(1000);
+    expect(trend.excludedOtherCurrencyCount).toBe(1);
+  });
+
+  it("is case-insensitive when matching currency codes", () => {
+    const orders = [{ total_amount: 100, attributed_campaign_id: null, created_at: daysAgo(1), currency: "inr" }];
+    expect(computeRevenueTrend(orders, now, "INR").revenue30d).toBe(100);
+  });
+
+  it("treats an order with no recorded currency as matching, not excluded", () => {
+    const orders = [{ total_amount: 100, attributed_campaign_id: null, created_at: daysAgo(1) }];
+    const trend = computeRevenueTrend(orders, now, "INR");
+    expect(trend.revenue30d).toBe(100);
+    expect(trend.excludedOtherCurrencyCount).toBe(0);
+  });
+
+  it("sums everything unfiltered when no workspace currency is given", () => {
+    const orders = [
+      { total_amount: 1000, attributed_campaign_id: null, created_at: daysAgo(1), currency: "INR" },
+      { total_amount: 500, attributed_campaign_id: null, created_at: daysAgo(1), currency: "USD" },
+    ];
+    expect(computeRevenueTrend(orders, now).revenue30d).toBe(1500);
+  });
 });
 
 describe("groupTopCustomers", () => {
@@ -127,6 +157,15 @@ describe("groupTopCustomers", () => {
       contact_id: `c${i}`, total_amount: i, contacts: { phone: "x", name: null },
     }));
     expect(groupTopCustomers(orders, 5)).toHaveLength(5);
+  });
+
+  it("excludes orders in a different currency than the workspace's when one is given", () => {
+    const orders = [
+      { contact_id: "a", total_amount: 100, currency: "INR", contacts: { phone: "+91A", name: "Alice" } },
+      { contact_id: "a", total_amount: 900, currency: "USD", contacts: { phone: "+91A", name: "Alice" } },
+    ];
+    const top = groupTopCustomers(orders, 5, "INR");
+    expect(top[0]).toMatchObject({ contactId: "a", spend: 100 });
   });
 });
 

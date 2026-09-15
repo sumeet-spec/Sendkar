@@ -54,8 +54,10 @@ export async function GET(request: NextRequest) {
       try {
         const status = await checkRazorpayPaymentLinkStatus(workspace, link.provider_ref);
         if (status === "paid") {
-          await admin.from("payment_links").update({ paid_at: new Date().toISOString() }).eq("id", link.id);
+          await admin.from("payment_links").update({ paid_at: new Date().toISOString(), status: "paid" }).eq("id", link.id);
           markedPaid++;
+        } else if (status === "expired" || status === "cancelled") {
+          await admin.from("payment_links").update({ status }).eq("id", link.id);
         }
       } catch {
         // Gateway hiccup or a since-revoked key — leave it pending, retried on the next run.

@@ -54,6 +54,7 @@ export interface OrderRow {
   total_amount: number | string;
   attributed_campaign_id: string | null;
   created_at: string;
+  currency?: string | null;
 }
 
 export interface RevenueTrend {
@@ -61,20 +62,34 @@ export interface RevenueTrend {
   attributedRevenue30d: number;
   revenuePrev30d: number;
   revenueTrendPct: number | null;
+  excludedOtherCurrencyCount: number;
 }
 
 /**
  * Revenue scoped to the trailing 30 days, compared against the 30 days
  * before that — a hero number needs a real baseline to read a trend
  * against, not a lifetime total with nothing to compare it to.
+ *
+ * `workspaceCurrency`, when given, excludes orders recorded in a different
+ * currency (e.g. a Shopify store that switched currencies, or a stray order
+ * with a different checkout currency) from the sum instead of silently
+ * blending them into one number — a ₹500 order and a $500 order are not the
+ * same ₹1000. Orders with no currency recorded (pre-tracking history) are
+ * treated as matching rather than dropped. Omit it to sum everything
+ * unfiltered, e.g. for a workspace where currency mixing isn't a concern.
  */
-export function computeRevenueTrend(orders: OrderRow[], now: number): RevenueTrend {
+export function computeRevenueTrend(orders: OrderRow[], now: number, workspaceCurrency?: string): RevenueTrend {
   const currentWindowStart = now - 30 * DAY_MS;
   const previousWindowStart = now - 60 * DAY_MS;
   let revenue30d = 0;
   let attributedRevenue30d = 0;
   let revenuePrev30d = 0;
+  let excludedOtherCurrencyCount = 0;
   for (const o of orders) {
+    if (workspaceCurrency && o.currency && o.currency.toUpperCase() !== workspaceCurrency.toUpperCase()) {
+      excludedOtherCurrencyCount++;
+      continue;
+    }
     const t = new Date(o.created_at).getTime();
     const amount = Number(o.total_amount);
     if (t >= currentWindowStart) {
@@ -85,12 +100,13 @@ export function computeRevenueTrend(orders: OrderRow[], now: number): RevenueTre
     }
   }
   const revenueTrendPct = revenuePrev30d > 0 ? Math.round(((revenue30d - revenuePrev30d) / revenuePrev30d) * 100) : null;
-  return { revenue30d, attributedRevenue30d, revenuePrev30d, revenueTrendPct };
+  return { revenue30d, attributedRevenue30d, revenuePrev30d, revenueTrendPct, excludedOtherCurrencyCount };
 }
 
 export interface TopCustomerOrderRow {
   contact_id: string | null;
   total_amount: number | string;
+  currency?: string | null;
   contacts: { phone?: string | null; name?: string | null } | null;
 }
 
@@ -101,11 +117,17 @@ export interface TopCustomer {
   spend: number;
 }
 
-/** Top spenders by lifetime value, not windowed — who has spent the most overall. */
-export function groupTopCustomers(orders: TopCustomerOrderRow[], limit = 5): TopCustomer[] {
+/**
+ * Top spenders by lifetime value, not windowed — who has spent the most
+ * overall. Same currency-matching behavior as computeRevenueTrend: an order
+ * in a different currency from `workspaceCurrency` is excluded rather than
+ * blended into the displayed total.
+ */
+export function groupTopCustomers(orders: TopCustomerOrderRow[], limit = 5, workspaceCurrency?: string): TopCustomer[] {
   const spendByContact = new Map<string, TopCustomer>();
   for (const o of orders) {
     if (!o.contact_id) continue;
+    if (workspaceCurrency && o.currency && o.currency.toUpperCase() !== workspaceCurrency.toUpperCase()) continue;
     const bucket = spendByContact.get(o.contact_id) ?? { contactId: o.contact_id, phone: o.contacts?.phone ?? "—", name: o.contacts?.name ?? null, spend: 0 };
     bucket.spend += Number(o.total_amount);
     spendByContact.set(o.contact_id, bucket);

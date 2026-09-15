@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
+import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { assertPublicHttpsUrl, UnsafeWebhookUrlError } from "@/lib/ssrf";
 
 /**
  * Generic outbound event dispatch — the "integrate with anything" answer
@@ -54,10 +56,16 @@ async function deliverWithRetry(
   let lastError: string | null = null;
   let lastStatus: number | null = null;
 
+  let attemptsMade = 0;
   for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
     if (RETRY_DELAYS_MS[attempt] > 0) await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+    attemptsMade = attempt + 1;
 
     try {
+      // Re-validated on every attempt, not just at webhook-creation time —
+      // DNS can change after a webhook is saved (see lib/ssrf.ts).
+      await assertPublicHttpsUrl(webhook.url);
+
       const res = await fetch(webhook.url, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Sendkar-Signature": `sha256=${signature}` },
@@ -70,7 +78,7 @@ async function deliverWithRetry(
         if (delivery) {
           await admin
             .from("webhook_deliveries")
-            .update({ status: "success", attempts: attempt + 1, response_status: res.status, delivered_at: new Date().toISOString() })
+            .update({ status: "success", attempts: attemptsMade, response_status: res.status, delivered_at: new Date().toISOString() })
             .eq("id", delivery.id);
         }
         return;
@@ -78,6 +86,12 @@ async function deliverWithRetry(
       lastError = `HTTP ${res.status}`;
     } catch (err) {
       lastError = err instanceof Error ? err.message : "Request failed";
+      if (err instanceof UnsafeWebhookUrlError) {
+        // Not a transient failure — retrying won't help, and every retry
+        // would just repeat the same SSRF attempt against internal infra.
+        Sentry.captureException(err, { tags: { webhookId: webhook.id, event } });
+        break;
+      }
     }
   }
 
@@ -86,7 +100,7 @@ async function deliverWithRetry(
   if (delivery) {
     await admin
       .from("webhook_deliveries")
-      .update({ status: "failed", attempts: RETRY_DELAYS_MS.length, last_error: lastError, response_status: lastStatus })
+      .update({ status: "failed", attempts: attemptsMade, last_error: lastError, response_status: lastStatus })
       .eq("id", delivery.id);
   }
 }

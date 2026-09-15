@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWooWebhookSignature, extractWooOrderPhone, type WooOrderPayload } from "@/lib/woocommerce";
 import { sendTemplateMessage } from "@/lib/whatsapp";
@@ -92,8 +93,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         status: "sent",
       });
     }
-  } catch {
+  } catch (err) {
     // Same posture as Shopify's webhook — don't make WooCommerce retry forever over a send failure.
+    Sentry.captureException(err, { tags: { workspaceId: workspace.id, source: "woocommerce_order_confirmation" } });
   }
 
   return NextResponse.json({ received: true });

@@ -51,7 +51,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Se
       .not("ad_headline", "is", null),
     supabase
       .from("orders")
-      .select("total_amount, attributed_campaign_id, campaigns(name)")
+      .select("total_amount, currency, attributed_campaign_id, campaigns(name)")
       .eq("workspace_id", workspace.id),
     supabase
       .from("contacts")
@@ -69,10 +69,23 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Se
   ]);
 
   // ── Revenue ──────────────────────────────────────────────────────────────
-  const totalRevenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total_amount), 0);
+  // Orders recorded in a different currency than the workspace's are excluded
+  // rather than blended into one total — a ₹500 order and a $500 order summed
+  // together would render under a single currency label as a made-up number.
+  // Orders with no currency recorded (pre-tracking history) are treated as
+  // matching rather than dropped.
+  let excludedOtherCurrencyCount = 0;
+  const currencyMatchedOrders = (orders ?? []).filter((o) => {
+    if (o.currency && o.currency.toUpperCase() !== currency.toUpperCase()) {
+      excludedOtherCurrencyCount++;
+      return false;
+    }
+    return true;
+  });
+  const totalRevenue = currencyMatchedOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
   const byCampaignRevenue = new Map<string, { name: string; revenue: number; orderCount: number }>();
   let organicRevenue = 0;
-  for (const o of orders ?? []) {
+  for (const o of currencyMatchedOrders) {
     const campaign = o.campaigns as { name?: string } | null;
     if (!o.attributed_campaign_id || !campaign?.name) {
       organicRevenue += Number(o.total_amount);
@@ -292,12 +305,17 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Se
       </div>
 
       {/* ── Revenue by campaign ── */}
-      {(orders?.length ?? 0) > 0 && (
+      {currencyMatchedOrders.length > 0 && (
         <div className="sk-card mb-6 overflow-hidden">
           <div className="flex items-center justify-between border-b border-border px-5 py-3">
             <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Revenue by campaign</div>
             <span className="sk-pill border-accent text-accent">{formatCurrency(totalRevenue, currency)} total</span>
           </div>
+          {excludedOtherCurrencyCount > 0 && (
+            <div className="border-b border-border px-4 py-2 text-[11.5px] text-faint">
+              {excludedOtherCurrencyCount} order{excludedOtherCurrencyCount === 1 ? "" : "s"} in a different currency than {currency} excluded from this total.
+            </div>
+          )}
           <div className="flex flex-col">
             {Array.from(byCampaignRevenue.entries())
               .sort((a, b) => b[1].revenue - a[1].revenue)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   verifyWebhookSignature, sendSessionMessage, sendButtonsMessage, sendListMessage,
@@ -164,6 +165,13 @@ async function sendAndLog(
 }
 
 async function recordSendFailure(admin: ReturnType<typeof createAdminClient>, workspaceId: string, err: unknown) {
+  // Visible to the business via the dashboard banner (whatsapp_last_send_error),
+  // but that alone means an engineer only finds out about a systemic problem
+  // (e.g. Meta rotated something, a whole class of sends is now broken) if a
+  // customer happens to mention it — this is what actually pages someone.
+  Sentry.captureException(err instanceof Error ? err : new Error("WhatsApp send failed"), {
+    tags: { workspaceId },
+  });
   await admin
     .from("workspaces")
     .update({ whatsapp_last_send_error: err instanceof Error ? err.message : "Send failed.", whatsapp_last_send_error_at: new Date().toISOString() })
@@ -494,8 +502,11 @@ export async function POST(request: NextRequest) {
               const { data: existingContact } = await admin.from("contacts").select("tags").eq("id", cId).single();
               const mergedTags = [...new Set([...(existingContact?.tags ?? []), ...newTags])];
               await admin.from("contacts").update({ tags: mergedTags, last_sentiment: sentiment }).eq("id", cId);
-            } catch {
-              // Classification is a nice-to-have, never load-bearing.
+            } catch (err) {
+              // Classification is a nice-to-have, never load-bearing — but a
+              // misbehaving key/prompt failing on every message is still
+              // worth someone seeing, at 'info' since it never blocks a reply.
+              Sentry.captureException(err, { level: "info", tags: { workspaceId } });
             }
           });
         }
@@ -708,9 +719,12 @@ export async function POST(request: NextRequest) {
               const { reply } = await generateAutoReply(thread, contactRow?.name ?? null, wsAgent.ai_agent_knowledge ?? "");
               const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, reply, matchedNumberId, true);
               if (sent) respondedToInbound = true;
-            } catch {
+            } catch (err) {
               // AI failing (bad key, malformed response, rate limit) should degrade
-              // to the away-message/silence below, not break webhook processing.
+              // to the away-message/silence below, not break webhook processing —
+              // but a workspace paying for this feature deserves it being visible
+              // somewhere other than a silent gap in their inbox.
+              Sentry.captureException(err, { tags: { workspaceId } });
             }
           }
         }

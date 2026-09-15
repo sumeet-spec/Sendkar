@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
+import { assertPublicHttpsUrl, UnsafeWebhookUrlError } from "@/lib/ssrf";
 import { revalidatePath } from "next/cache";
 
 const ALL_EVENTS = ["message.received", "campaign.completed", "contact.created"];
@@ -16,7 +17,11 @@ export async function createOutboundWebhook(_prevState: unknown, formData: FormD
   if (!limits.outboundWebhooksEnabled) return { error: "Outbound webhooks need the Growth plan or above." };
 
   const url = String(formData.get("url") ?? "").trim();
-  if (!url.startsWith("https://")) return { error: "URL must be https://" };
+  try {
+    await assertPublicHttpsUrl(url);
+  } catch (err) {
+    return { error: err instanceof UnsafeWebhookUrlError ? err.message : "Invalid URL." };
+  }
 
   const events = ALL_EVENTS.filter((e) => formData.get(`event_${e}`) === "on");
   if (events.length === 0) return { error: "Pick at least one event." };

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   verifyShopifyWebhookHmac, extractOrderPhone, extractCheckoutPhone,
@@ -154,8 +155,10 @@ export async function POST(request: NextRequest) {
         status: "sent",
       });
     }
-  } catch {
-    // A failed order-confirmation send shouldn't make Shopify retry the webhook forever — 200 either way.
+  } catch (err) {
+    // A failed order-confirmation send shouldn't make Shopify retry the webhook forever — 200 either way,
+    // but still worth an engineer seeing (dead token, template rejected, etc).
+    Sentry.captureException(err, { tags: { workspaceId: workspace.id, source: "shopify_order_confirmation" } });
   }
 
   return NextResponse.json({ received: true });

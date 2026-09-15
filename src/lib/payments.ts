@@ -89,10 +89,14 @@ export async function verifyRazorpayWebhookSignature(rawBody: string, signatureH
 // hosted link the way Razorpay's does — this builds that redirect (rendered
 // by src/app/pay/[id]/page.tsx, which posts the signed form to PayU) rather
 // than a raw payment_links API, which PayU only exposes to larger merchants.
-// NOTE: both hash functions below follow PayU's publicly documented spec
-// exactly, but haven't been exercised against a real sandbox merchant account
-// — verify one real payment end-to-end in PayU's test mode before relying on
-// this in production, same as any payment code should be before going live.
+// NOTE: both hash functions below were re-checked field-by-field against
+// PayU's current published hash-generation docs (docs.payu.in/docs/generate-
+// hash-payu-hosted) on 2026-09-15 — the field order, the empty udf1..udf10
+// slots, and the reversed-field response hash all match spec exactly. That's
+// a docs-level correctness check, not a live one: this still hasn't been
+// exercised against a real sandbox merchant account, so verify one real
+// payment end-to-end in PayU's test mode before relying on this in
+// production, same as any payment code should be before going live.
 
 export async function buildPayuPaymentRequest(
   creds: { payu_merchant_key: string | null; payu_salt: string | null },
