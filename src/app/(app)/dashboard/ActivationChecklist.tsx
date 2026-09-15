@@ -44,6 +44,7 @@ export function ActivationChecklist({ title, steps }: { title: string; steps: St
             <Link
               key={step.label}
               href={step.href}
+              prefetch={false}
               className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-[13px]"
               style={isNext ? { background: "rgba(34,197,94,0.07)" } : undefined}
             >

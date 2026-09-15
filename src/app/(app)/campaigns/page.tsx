@@ -128,6 +128,7 @@ export default async function CampaignsPage({
             <Link
               key={c.id}
               href={`/campaigns/${c.id}`}
+              prefetch={false}
               className="sk-card flex items-center gap-4 p-4 hover:border-accent-dim"
             >
               <div className="min-w-0 flex-1">

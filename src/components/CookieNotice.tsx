@@ -23,7 +23,7 @@ export function CookieNotice() {
       <p className="text-[12.5px] text-muted">
         Sendkar uses cookies to keep you signed in and basic analytics to understand how visitors use this site — no
         ads, no cross-site ad tracking. See our{" "}
-        <Link href="/privacy" className="text-accent hover:text-accent-hover">Privacy Policy</Link>.
+        <Link href="/privacy" prefetch={false} className="text-accent hover:text-accent-hover">Privacy Policy</Link>.
       </p>
       <button
         type="button"

@@ -13,7 +13,7 @@ export default async function LinksPage() {
         <div className="sk-card p-5" style={{ borderColor: "rgba(251,191,36,0.3)" }}>
           <p className="text-sm">
             Add your WhatsApp number&apos;s display number in{" "}
-            <Link href="/settings/channels" className="text-accent hover:text-accent-hover">Settings → Channels</Link> to generate a
+            <Link href="/settings/channels" prefetch={false} className="text-accent hover:text-accent-hover">Settings → Channels</Link> to generate a
             click-to-chat link — the Cloud API&apos;s phone_number_id alone can&apos;t build one.
           </p>
         </div>

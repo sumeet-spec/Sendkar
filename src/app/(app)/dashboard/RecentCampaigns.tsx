@@ -16,7 +16,7 @@ export function RecentCampaigns({ campaigns }: { campaigns: CampaignPerfRow[] })
         <p className="text-[12px] text-faint">
           Every campaign needs an approved template — create one first, then run a campaign.
         </p>
-        <Link href="/campaigns" className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent hover:text-accent-hover">
+        <Link href="/campaigns" prefetch={false} className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent hover:text-accent-hover">
           Start a campaign
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2.5 6h7M6 2.5L9.5 6L6 9.5" />

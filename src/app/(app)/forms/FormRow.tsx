@@ -23,7 +23,7 @@ export function FormRow({ form }: { form: Form }) {
 
   return (
     <div className={`sk-card flex items-center justify-between p-4 ${pending ? "opacity-60" : ""}`}>
-      <Link href={`/forms/${form.id}`} className="flex-1 min-w-0 pr-4">
+      <Link href={`/forms/${form.id}`} prefetch={false} className="flex-1 min-w-0 pr-4">
         <div className="font-medium truncate">{form.name}</div>
         <div className="mt-0.5 text-[12.5px] text-faint">
           {form.screen_count} screen{form.screen_count === 1 ? "" : "s"}

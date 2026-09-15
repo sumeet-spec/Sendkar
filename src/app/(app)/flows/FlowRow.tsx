@@ -18,7 +18,7 @@ export function FlowRow({ flow }: { flow: Flow }) {
 
   return (
     <div className={`sk-card flex items-center justify-between p-4 ${pending ? "opacity-60" : ""}`}>
-      <Link href={`/flows/${flow.id}`} className="flex-1 min-w-0 pr-4">
+      <Link href={`/flows/${flow.id}`} prefetch={false} className="flex-1 min-w-0 pr-4">
         <div className="font-medium truncate">{flow.name}</div>
         <div className="mt-0.5 text-[12.5px] text-faint">
           Triggers on <span className="font-mono text-accent">{flow.trigger_keyword}</span>

@@ -1,5 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PLAN_LIMITS } from "@/lib/plans";
 import { Logo } from "@/components/Logo";
@@ -136,10 +134,14 @@ const PLANS = [
 ];
 
 export default async function RootPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (data.user) redirect("/dashboard");
-
+  // A logged-in visitor never actually reaches this line — proxy.ts's
+  // middleware already redirects them to /dashboard before this component
+  // renders, using the SAME auth check it does for every other request
+  // rather than this page repeating it with its own separate
+  // supabase.auth.getUser() network round-trip. That duplicate check used to
+  // make this specific route (the single highest-traffic one in the app)
+  // take 3.4-3.6s to load for a logged-in visitor, vs ~0.4s for /login and
+  // /signup which never had it (measured against production, 2026-09-15).
   const lang = await getCurrentLanguage();
   const t = getDictionary(lang).landing;
 

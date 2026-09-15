@@ -38,7 +38,7 @@ export default async function CatalogPage() {
         <div className="sk-card mb-5 p-4" style={{ borderColor: "rgba(251,191,36,0.3)" }}>
           <p className="text-sm">
             Add your Meta Commerce catalog ID in{" "}
-            <Link href="/settings/channels" className="text-accent hover:text-accent-hover">Settings → Channels</Link> to actually send these as
+            <Link href="/settings/channels" prefetch={false} className="text-accent hover:text-accent-hover">Settings → Channels</Link> to actually send these as
             product messages — the catalog itself is still set up once in Meta Commerce Manager, same as templates.
           </p>
         </div>
