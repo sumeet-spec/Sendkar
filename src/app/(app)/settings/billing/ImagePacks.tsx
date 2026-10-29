@@ -23,7 +23,7 @@ export function ImagePacks({ packs }: { packs: PackOption[] }) {
       setPending(null);
       return;
     }
-    if (result.url) window.location.href = result.url;
+    if (result.url) window.location.assign(result.url);
   }
 
   return (
