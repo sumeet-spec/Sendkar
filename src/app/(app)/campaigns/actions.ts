@@ -8,6 +8,8 @@ import { applySegmentConditions, type SegmentCondition } from "@/lib/segments";
 import { draftCampaignStrategy, type CampaignStrategyDraft } from "@/lib/ai";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { runCampaignSends } from "@/lib/campaignSender";
 import { workspaceCanSend } from "@/lib/plans";
 import { NO_PLAN_MESSAGE } from "@/lib/planGate";
 
@@ -131,6 +133,9 @@ export async function startCampaign(campaignId: string): Promise<{ error?: strin
     .from("campaigns")
     .update({ status: "sending", started_at: new Date().toISOString() })
     .eq("id", campaign.id);
+
+  // Start sending now, after this response goes back, instead of waiting for tomorrow's daily job.
+  after(async () => { await runCampaignSends({ campaignId: campaign.id }); });
 
   revalidatePath(`/campaigns/${campaignId}`);
   return {};
@@ -360,5 +365,6 @@ export async function pauseCampaign(campaignId: string) {
 export async function resumeCampaign(campaignId: string) {
   const supabase = await createClient();
   await supabase.from("campaigns").update({ status: "sending" }).eq("id", campaignId);
+  after(async () => { await runCampaignSends({ campaignId }); });
   revalidatePath(`/campaigns/${campaignId}`);
 }

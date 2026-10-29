@@ -9,6 +9,9 @@ import { notFound } from "next/navigation";
 import { estimateCampaignCostInr, type TemplateCategory } from "@/lib/metaRates";
 import { formatCurrency } from "@/lib/dashboardMetrics";
 
+// Starting a campaign sends in the background of this page's request, for up to four minutes.
+export const maxDuration = 300;
+
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const workspace = await getCurrentWorkspace();
