@@ -28,6 +28,8 @@ const NAV_KEYS = [
   { href: "/forms", key: "forms", icon: "form" },
   { href: "/automations", key: "automations", icon: "bolt" },
   { href: "/sequences", key: "sequences", icon: "flow" },
+  { href: "/bills", key: "bills", icon: "doc" },
+  { href: "/customers", key: "myCustomers", icon: "users" },
   { href: "/reminders", key: "reminders", icon: "deals" },
   { href: "/library", key: "library", icon: "doc" },
   { href: "/cards", key: "cards", icon: "doc" },

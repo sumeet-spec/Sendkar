@@ -120,7 +120,7 @@ export type CardInput = {
   background?: { bytes: Buffer; mime: string };
   size?: number;
   /** A library design: its artwork and colours replace the plain brand-colour background. */
-  design?: { motif: MotifId; variant: Variant; palette: Palette };
+  design?: { motif?: MotifId; variant?: Variant; palette: Palette; art?: { bytes: Buffer; mime: string }; tint?: string };
   /** A small credit line at the very bottom, e.g. "Made with Sendkar · sendkar.shop". Used on cards from the free public tool. */
   watermark?: string;
 };
@@ -159,7 +159,13 @@ export function buildCardSvg(input: CardInput): string {
     const p = design.palette;
     parts.push(`<defs><linearGradient id="d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${safeColor(p.bg1, "#222222")}"/><stop offset="1" stop-color="${safeColor(p.bg2, "#111111")}"/></linearGradient><linearGradient id="foot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${safeColor(p.bg2, "#111111")}" stop-opacity="0"/><stop offset="1" stop-color="${safeColor(p.bg2, "#111111")}" stop-opacity="0.9"/></linearGradient></defs>`);
     parts.push(`<rect width="${S}" height="${S}" fill="url(#d)"/>`);
-    parts.push(`<g transform="scale(${u})">${renderMotif(design.motif, p, design.variant)}</g>`);
+    if (design.art) {
+      // A real picture fills the card; a shop's own colour can wash over it so the card still looks like theirs.
+      parts.push(`<image href="${dataUri(design.art)}" x="0" y="0" width="${S}" height="${S}" preserveAspectRatio="xMidYMid slice"/>`);
+      if (design.tint) parts.push(`<rect width="${S}" height="${S}" fill="${safeColor(design.tint, "#000000")}" fill-opacity="0.32"/>`);
+    } else if (design.motif) {
+      parts.push(`<g transform="scale(${u})">${renderMotif(design.motif, p, design.variant ?? 0)}</g>`);
+    }
   } else {
     parts.push(`<rect width="${S}" height="${S}" fill="url(#g)"/>`);
   }
@@ -194,7 +200,7 @@ export function buildCardSvg(input: CardInput): string {
   }
   if (design) {
     const dark = safeColor(design.palette.bg2, "#111111");
-    parts.splice(panelIdx, 0, `<rect x="${margin * 0.45}" y="${panelTop}" width="${S - margin * 0.9}" height="${y - panelTop + 34 * u}" rx="${34 * u}" fill="${dark}" fill-opacity="0.72"/>`);
+    parts.splice(panelIdx, 0, `<rect x="${margin * 0.45}" y="${panelTop}" width="${S - margin * 0.9}" height="${y - panelTop + 34 * u}" rx="${34 * u}" fill="${dark}" fill-opacity="${design.art ? 0.66 : 0.72}"/>`);
     parts.push(`<rect x="0" y="${S - 330 * u}" width="${S}" height="${330 * u}" fill="url(#foot)"/>`);
   }
 
@@ -370,3 +376,157 @@ export function renderFlyerPng(input: FlyerInput): Buffer {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${frame}${parts.join("")}</svg>`;
   return Buffer.from(new Resvg(svg, { fitTo: { mode: "width", value: W } }).render().asPng());
 }
+
+// ── Wide banner (store graphics) ────────────────────────────────────────────
+
+export type BannerInput = {
+  lang: LanguageCode;
+  headline: string;
+  sub?: string;
+  /** Optional picture across the whole banner, darkened on the text side. */
+  background?: { bytes: Buffer; mime: string };
+  w?: number;
+  h?: number;
+};
+
+/** A wide banner, such as the Play Store feature graphic (1024 x 500): brand name, a headline and a line below it. */
+export function renderBannerPng(input: BannerInput): Buffer {
+  const W = input.w ?? 1024, H = input.h ?? 500;
+  const parts: string[] = [`<rect width="${W}" height="${H}" fill="#052e16"/>`];
+  if (input.background) {
+    parts.push(`<image href="${dataUri(input.background)}" x="0" y="${-(W - H) / 2}" width="${W}" height="${W}" preserveAspectRatio="xMidYMid slice"/>`);
+    parts.push(`<defs><linearGradient id="fade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#021a0c" stop-opacity="0.94"/><stop offset="0.55" stop-color="#021a0c" stop-opacity="0.78"/><stop offset="1" stop-color="#021a0c" stop-opacity="0.15"/></linearGradient></defs>`);
+    parts.push(`<rect width="${W}" height="${H}" fill="url(#fade)"/>`);
+  }
+  const left = 70, textW = W * 0.62;
+  const cx = left + textW / 2;
+  let y = 56;
+  const brand = block("Sendkar", "en", { bold: true, size: 44, minSize: 30, maxWidth: textW, maxLines: 1, cx, top: y, fill: "#22c55e" });
+  parts.push(brand.svg);
+  y += brand.height + 18;
+  const head = block(input.headline, input.lang, { bold: true, size: 58, minSize: 34, maxWidth: textW, maxLines: 3, cx, top: y, fill: "#ffffff" });
+  parts.push(head.svg);
+  y += head.height + 14;
+  if (input.sub) parts.push(block(input.sub, input.lang, { bold: false, size: 30, minSize: 22, maxWidth: textW, maxLines: 2, cx, top: y, fill: "#fcd34d" }).svg);
+  return Buffer.from(new Resvg(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${parts.join("")}</svg>`, { fitTo: { mode: "width", value: W } }).render().asPng());
+}
+
+// ── Print ads (pamphlets and newspaper ads) ─────────────────────────────────
+
+export type PrintAdInput = {
+  lang: LanguageCode;
+  headline: string;
+  sub: string;
+  /** Short reasons; leave empty for a small newspaper ad. */
+  bullets: string[];
+  /** "Scan, try free for 7 days". */
+  cta: string;
+  /** The short address printed under the QR, e.g. "sendkar.shop/gu". */
+  url: string;
+  qr: boolean[][];
+  /** A real card, shown on a phone so the shopkeeper sees what customers get. */
+  sampleCard?: { bytes: Buffer; mime: string };
+  /** Black and white only, for newsprint that prints in one colour. */
+  bw?: boolean;
+  w: number;
+  h: number;
+};
+
+/** A portrait ad sized in pixels (use 300 dpi for print). Drawn like the cards, so every script is correct. */
+export function renderPrintAdPng(input: PrintAdInput): Buffer {
+  const { w: W, h: H, bw } = input;
+  const ink = bw ? "#000000" : "#ffffff";
+  const bg = bw ? "#ffffff" : "#052e16";
+  const accent = bw ? "#000000" : "#22c55e";
+  const gold = bw ? "#000000" : "#fcd34d";
+  const m = Math.round(W * 0.06);
+  const maxW = W - m * 2;
+  const parts: string[] = [];
+  const small = H / W < 1.25; // a squat newspaper ad: tighter layout, no bullets
+  const gap = W * 0.025;
+  let y = m;
+
+  parts.push(`<rect width="${W}" height="${H}" fill="${bg}"/>`);
+  if (!bw) parts.push(`<defs><linearGradient id="bgg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a4a26"/><stop offset="1" stop-color="#021a0c"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#bgg)"/>`);
+  parts.push(`<rect x="${m / 3}" y="${m / 3}" width="${W - (m / 3) * 2}" height="${H - (m / 3) * 2}" rx="${W * 0.025}" fill="none" stroke="${bw ? "#000" : accent}" stroke-width="${Math.max(4, W * 0.006)}"/>`);
+
+  const brand = block("Sendkar", "en", { bold: true, size: W * 0.06, minSize: 20, maxWidth: maxW, maxLines: 1, cx: W / 2, top: y, fill: accent });
+  parts.push(brand.svg);
+  y += brand.height + gap * 0.6;
+
+  const head = block(input.headline, input.lang, { bold: true, size: W * (small ? 0.068 : 0.078), minSize: W * 0.04, maxWidth: maxW, maxLines: 4, cx: W / 2, top: y, fill: ink });
+  parts.push(head.svg);
+  y += head.height + gap * 0.5;
+
+  const sub = block(input.sub, input.lang, { bold: false, size: W * (small ? 0.04 : 0.045), minSize: W * 0.028, maxWidth: maxW, maxLines: 3, cx: W / 2, top: y, fill: gold });
+  parts.push(sub.svg);
+  y += sub.height + gap;
+
+  // The bottom panel (QR and call to action) is sized first, so the phone and reasons can use what is left.
+  const qrBox = Math.round(W * (small ? 0.3 : 0.285));
+  const panelH = qrBox + W * 0.04;
+  const panelY = H - m - panelH;
+
+  // Reasons are measured, then dropped from the end if the phone would otherwise get too small.
+  const rowFor = (b: string) => block(b, input.lang, { bold: false, size: W * 0.034, minSize: W * 0.024, maxWidth: maxW - W * 0.13, maxLines: 2, cx: W / 2 + W * 0.05, top: 0, fill: ink });
+  const rowH = (b: string) => Math.max(rowFor(b).height + W * 0.02, W * 0.08);
+  let shown = input.bullets.slice();
+  const minPhone = W * (small ? 0.27 : 0.34);
+  const phoneFor = (bullets: string[]) => {
+    const room = panelY - y - gap - bullets.reduce((t, b) => t + rowH(b) + W * 0.006, 0) - (bullets.length ? gap : 0);
+    return Math.min(W * (small ? 0.46 : 0.52), room / 1.08);
+  };
+  if (input.sampleCard) while (shown.length && phoneFor(shown) < minPhone) shown = shown.slice(0, -1);
+  const phoneW = input.sampleCard ? phoneFor(shown) : 0;
+
+  if (input.sampleCard && phoneW >= W * 0.26) {
+    const phoneH = phoneW * 1.08, px = (W - phoneW) / 2;
+    const gray = bw ? ` filter="url(#gray)"` : "";
+    parts.push(`<defs><filter id="gray"><feColorMatrix type="saturate" values="0"/></filter><clipPath id="cardclip"><rect x="${px + phoneW * 0.05}" y="${y + phoneW * 0.05}" width="${phoneW * 0.9}" height="${phoneW * 0.9}" rx="${phoneW * 0.04}"/></clipPath></defs>`);
+    parts.push(`<rect x="${px}" y="${y}" width="${phoneW}" height="${phoneH}" rx="${phoneW * 0.09}" fill="${bw ? "#fff" : "#0b0b0b"}" stroke="${bw ? "#000" : "#3a3a3a"}" stroke-width="${Math.max(4, W * 0.006)}"/>`);
+    parts.push(`<image href="${dataUri(input.sampleCard)}" x="${px + phoneW * 0.05}" y="${y + phoneW * 0.05}" width="${phoneW * 0.9}" height="${phoneW * 0.9}" clip-path="url(#cardclip)" preserveAspectRatio="xMidYMid slice"${gray}/>`);
+    y += phoneH + gap;
+  }
+
+  for (const b of shown) {
+    const row = block(b, input.lang, { bold: false, size: W * 0.034, minSize: W * 0.024, maxWidth: maxW - W * 0.13, maxLines: 2, cx: W / 2 + W * 0.05, top: y + W * 0.01, fill: ink });
+    const h = rowH(b);
+    parts.push(`<circle cx="${m + W * 0.035}" cy="${y + h / 2}" r="${W * 0.025}" fill="${accent}"/>`);
+    parts.push(`<path d="M${m + W * 0.022} ${y + h / 2} l${W * 0.0105} ${W * 0.012} l${W * 0.02} ${-W * 0.024}" fill="none" stroke="${bw ? "#fff" : "#052e16"}" stroke-width="${W * 0.008}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    parts.push(row.svg);
+    y += h + W * 0.006;
+  }
+
+  // QR on a white panel with the call to action and address beside it, centred together.
+  const n = input.qr.length, pad = qrBox * 0.07, cell = (qrBox - pad * 2) / n;
+  parts.push(`<rect x="${m}" y="${panelY}" width="${W - m * 2}" height="${panelH}" rx="${W * 0.03}" fill="#ffffff" stroke="${bw ? "#000" : "none"}" stroke-width="${W * 0.006}"/>`);
+  const qx = m + W * 0.025, qy = panelY + (panelH - qrBox) / 2;
+  const mods: string[] = [];
+  input.qr.forEach((row, r) => row.forEach((dark, c) => {
+    if (dark) mods.push(`<rect x="${(qx + pad + c * cell).toFixed(2)}" y="${(qy + pad + r * cell).toFixed(2)}" width="${(cell + 0.5).toFixed(2)}" height="${(cell + 0.5).toFixed(2)}"/>`);
+  }));
+  parts.push(`<g fill="#000000">${mods.join("")}</g>`);
+  const tx = qx + qrBox + W * 0.02, tw = W - m - W * 0.02 - tx;
+  const cta = block(input.cta, input.lang, { bold: true, size: W * 0.05, minSize: W * 0.028, maxWidth: tw, maxLines: 3, cx: tx + tw / 2, top: 0, fill: bw ? "#000000" : "#052e16" });
+  const link = block(input.url, "en", { bold: true, size: W * 0.044, minSize: W * 0.026, maxWidth: tw, maxLines: 1, cx: tx + tw / 2, top: 0, fill: "#000000" });
+  const groupH = cta.height + W * 0.03 + link.height;
+  const gy = panelY + (panelH - groupH) / 2;
+  const ctaAt = block(input.cta, input.lang, { bold: true, size: W * 0.05, minSize: W * 0.028, maxWidth: tw, maxLines: 3, cx: tx + tw / 2, top: gy, fill: bw ? "#000000" : "#052e16" });
+  const linkAt = block(input.url, "en", { bold: true, size: W * 0.044, minSize: W * 0.026, maxWidth: tw, maxLines: 1, cx: tx + tw / 2, top: gy + cta.height + W * 0.03, fill: "#000000" });
+  parts.push(ctaAt.svg, linkAt.svg);
+
+  return Buffer.from(new Resvg(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${parts.join("")}</svg>`, { fitTo: { mode: "width", value: W } }).render().asPng());
+}
+
+// ── Text kit for other renderers (bills) ────────────────────────────────────
+
+export const textKit = {
+  measure,
+  wrap,
+  /** Draws one shaped line with its left edge (anchor "start"), right edge ("end") or middle at `x`. */
+  line(text: string, family: string, bold: boolean, size: number, x: number, baseline: number, fill: string, anchor: "start" | "end" | "middle" = "start") {
+    const w = measure(text, family, bold, size);
+    const cx = anchor === "start" ? x + w / 2 : anchor === "end" ? x - w / 2 : x;
+    return drawLine(text, family, bold, size, cx, baseline, fill);
+  },
+};

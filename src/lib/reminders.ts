@@ -144,18 +144,18 @@ const HEADER_ALIASES: Record<"party" | "phone" | "amount" | "due" | "invoice", s
 
 type Field = keyof typeof HEADER_ALIASES;
 
-function norm(h: string): string {
+export function norm(h: string): string {
   return h.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function detectDelimiter(sample: string): string {
+export function detectDelimiter(sample: string): string {
   if (sample.includes("\t")) return "\t"; // pasted from Excel / Tally
   const semis = (sample.match(/;/g) ?? []).length;
   const commas = (sample.match(/,/g) ?? []).length;
   return semis > commas ? ";" : ",";
 }
 
-function splitLine(line: string, delim: string): string[] {
+export function splitLine(line: string, delim: string): string[] {
   const out: string[] = [];
   let cur = "";
   let quoted = false;

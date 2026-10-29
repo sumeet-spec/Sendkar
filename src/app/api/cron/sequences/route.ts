@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
       }
 
       const mapping = step.variable_mapping ?? {};
-      const placeholderCount = (template.body_text?.match(/{{d+}}/g) ?? []).length;
+      const placeholderCount = (template.body_text?.match(/\{\{\d+\}\}/g) ?? []).length;
       const params = Array.from({ length: placeholderCount }, (_, i) =>
         resolveTemplateParam(mapping[String(i + 1)], { name: contactRow.name, phone: contactRow.phone }, template.language, context));
 
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
           workspace_id: workspace.id,
           contact_id: enrollment.contact_id,
           direction: "outbound",
-          body: (template.body_text ?? "").replace(/{{(d+)}}/g, (_m: string, n: string) => params[Number(n) - 1] ?? ""),
+          body: (template.body_text ?? "").replace(/\{\{(\d+)\}\}/g, (_m: string, n: string) => params[Number(n) - 1] ?? ""),
           meta_message_id: metaMessageId,
           status: "sent",
         });

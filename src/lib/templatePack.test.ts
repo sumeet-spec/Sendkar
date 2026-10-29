@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PACK_TEMPLATES, PACK_LANGUAGES, VAR_KINDS, JOURNEY_STEPS, buildPackTemplate, selectPackTemplates, journeyMapping } from "./templatePack";
+import { PACK_TEMPLATES, PACK_LANGUAGES, VAR_KINDS, JOURNEY_STEPS, BILL_TEMPLATE, billMessageLang, buildPackTemplate, selectPackTemplates, journeyMapping } from "./templatePack";
 import { buildTemplateComponents } from "./templateBuild";
 
 // The pack must suit ANY business. These are trade-specific words that belong in a business's own templates, not here.
@@ -114,5 +114,24 @@ describe("thank-you journey", () => {
   it("takes the customer's name from the contact and the amount and bill from the sale", () => {
     const t = PACK_TEMPLATES.find((x) => x.key === "purchase_thank_you")!;
     expect(journeyMapping(t, { shop: "Shop" })).toEqual({ "1": "name", "2": "text:Shop", "3": "ctx:amount_display", "4": "ctx:bill" });
+  });
+});
+
+describe("bill message template", () => {
+  it("is a UTILITY message with name, shop, bill and amount in every language", () => {
+    expect(BILL_TEMPLATE.category).toBe("UTILITY");
+    for (const { code } of PACK_LANGUAGES) {
+      const built = buildPackTemplate(BILL_TEMPLATE, code);
+      expect(built.metaName).toBe(`sk_bill_sent_${code}`);
+      expect([...new Set(variableIndexes(built.bodyText))].sort()).toEqual(["1", "2", "3", "4"].map(Number));
+      expect(built.bodyText.trim().endsWith("}}")).toBe(false);
+      expect(built.buttons).toBeUndefined();
+      expect(built.bodyText.replace(/\{\{\d+\}\}/g, "").split(/\s+/).filter(Boolean).length).toBeGreaterThanOrEqual(12);
+    }
+  });
+  it("sends every language the best wording it has", () => {
+    expect(billMessageLang("gu")).toBe("gu");
+    expect(billMessageLang("mr")).toBe("hi");
+    expect(billMessageLang("ta")).toBe("en");
   });
 });

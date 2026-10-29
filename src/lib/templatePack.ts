@@ -331,3 +331,31 @@ export function journeyMapping(t: PackTemplate, ctx: { shop: string }): Record<s
   });
   return mapping;
 }
+
+// ── The bill message (Quick Bill) ──────────────────────────────────────────
+
+/**
+ * The message that carries a bill picture to the customer. A UTILITY template with an IMAGE header (the bill
+ * itself), so it is not part of the starter pack: Quick Bill submits it, with a sample bill picture, the first
+ * time a shop sends one. Customers whose language has no wording here get the English or Hindi text, and the
+ * bill picture itself is always in the language the shop chose.
+ */
+export const BILL_TEMPLATE: PackTemplate = {
+  key: "bill_sent",
+  title: "Bill",
+  when: "Your customer's bill, sent to their WhatsApp the moment you make it.",
+  category: "UTILITY",
+  stage: "transactional",
+  vars: ["name", "shop", "bill", "amount"],
+  body: {
+    hi: "नमस्ते {{1}} जी, {{2}} से खरीदारी करने के लिए धन्यवाद। आपका बिल नंबर {{3}}, रकम {{4}}, इस संदेश के साथ भेजा गया है। कृपया इसे संभालकर रखें।",
+    gu: "નમસ્તે {{1}}, {{2}} પરથી ખરીદી કરવા બદલ આભાર. તમારું બિલ નંબર {{3}}, રકમ {{4}}, આ સંદેશ સાથે મોકલ્યું છે. કૃપા કરી તેને સાચવી રાખો.",
+    en: "Hello {{1}}, thank you for shopping at {{2}}. Your bill number {{3}}, amount {{4}}, is attached to this message. Please keep it for your records.",
+  },
+};
+
+/** Which of the three written languages carries the message text for a bill in `lang`. */
+export function billMessageLang(lang: string): PackLang {
+  if (lang === "gu" || lang === "hi" || lang === "en") return lang;
+  return lang === "mr" ? "hi" : "en";
+}

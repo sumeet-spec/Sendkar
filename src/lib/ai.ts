@@ -285,3 +285,24 @@ export async function summarizeThread(thread: ThreadMessage[], contactName: stri
   const prompt = `Summarize this WhatsApp conversation${contactName ? ` with ${contactName}` : ""} in 2-3 short sentences for a teammate who has never seen it — what they want, what's been done, what's outstanding. No preamble, just the summary.\n\n${transcript}`;
   return callClaude(prompt, 250);
 }
+
+const LANGUAGE_NAMES: Record<string, string> = { en: "English", hi: "Hindi", mr: "Marathi", gu: "Gujarati", ta: "Tamil", te: "Telugu", kn: "Kannada" };
+
+/**
+ * Writes the text of a follow-up WhatsApp message to a shop's customer, in the language asked for. {{1}} is the
+ * customer's name and {{2}} the shop's name (WhatsApp fills them per customer), which is why they are placeholders.
+ */
+export async function draftFollowupText(input: { goal: string; lang: string; timing: string; previous?: string }): Promise<string> {
+  const language = LANGUAGE_NAMES[input.lang] ?? "English";
+  const prompt = `Write ONE short WhatsApp message from a small Indian shop to a customer who bought from it ${input.timing}. Language: ${language}, written naturally in its own script the way a friendly shopkeeper would speak, not a stiff translation.
+
+What the shop wants to say: "${input.goal}"
+${input.previous ? `Rewrite this earlier draft to fix its problems: "${input.previous}"\n` : ""}
+Rules:
+- Use the placeholder {{1}} for the customer's name and {{2}} for the shop's name. Use each exactly once. Do not use any other placeholder.
+- Start with a greeting word, then {{1}} (never start the message with a placeholder), and do not end the message with a placeholder.
+- Two to four short sentences, under 400 characters, no line breaks, no emojis, no links.
+- Do not promise anything the shop did not say. Do not invent discounts, dates or numbers.
+- Output only the message text, nothing else.`;
+  return callClaude(prompt, 400);
+}
