@@ -5,11 +5,15 @@ import { BILL_UI } from "@/lib/i18n/billUi";
 import { formatRupees } from "@/lib/bills/renderBill";
 import { canSendFromWorkspace } from "@/lib/planGate";
 import { BILL_IMPORT_UI } from "@/lib/i18n/billImportUi";
+import { ORDER_UI } from "@/lib/i18n/orderUi";
 import { BillForm } from "./BillForm";
+import { DismissOrder } from "./DismissOrder";
+import Link from "next/link";
 import { SalesImport } from "./SalesImport";
 import { FollowUps } from "./FollowUps";
 import { FOLLOW_UI } from "@/lib/i18n/followUi";
 import { ResendButton } from "./ResendButton";
+import { MarkPaidButton } from "./MarkPaidButton";
 
 interface BillRow {
   id: string;
@@ -26,7 +30,8 @@ interface BillRow {
 // Pasting a day's sales bills and sends up to 40 customers in one go.
 export const maxDuration = 60;
 
-export default async function BillsPage() {
+export default async function BillsPage({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
+  const { order: orderParam } = await searchParams;
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const lang = await getCurrentLanguage();
@@ -50,6 +55,28 @@ export default async function BillsPage() {
     .limit(20);
   const canSend = await canSendFromWorkspace(supabase, workspace);
 
+  // What the shop sells (the form offers these names and fills in their prices) and orders the assistant took in chat.
+  const [{ data: itemRows }, { data: orderRows }] = await Promise.all([
+    supabase.from("shop_items").select("name, price").eq("workspace_id", workspace.id).eq("is_active", true).order("sort_order").limit(300),
+    supabase.from("order_requests").select("id, items, note, contact_id, contacts(name, phone)").eq("workspace_id", workspace.id).eq("status", "new").order("created_at", { ascending: false }).limit(20),
+  ]);
+  const catalog = (itemRows ?? []).map((i) => ({ name: i.name as string, price: i.price === null ? null : Number(i.price) }));
+  const orders = (orderRows ?? []).map((o) => {
+    const c = (Array.isArray(o.contacts) ? o.contacts[0] : o.contacts) as { name: string | null; phone: string } | null;
+    return { id: o.id as string, items: (o.items ?? []) as Array<{ name: string; qty: number }>, note: o.note as string | null, name: c?.name ?? "", phone: c?.phone ?? "" };
+  });
+  const chosen = orders.find((o) => o.id === orderParam);
+  const prefill = chosen
+    ? {
+        orderId: chosen.id, phone: chosen.phone.replace(/^91/, ""), name: chosen.name,
+        rows: chosen.items.map((i) => {
+          const hit = catalog.find((c) => c.name.toLowerCase() === i.name.toLowerCase());
+          return { name: i.name, qty: String(i.qty), rate: hit && hit.price !== null ? String(hit.price) : "" };
+        }),
+      }
+    : undefined;
+  const to = ORDER_UI[lang];
+
   const todayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
   const todays = rows.filter((r) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date(r.created_at)) === todayKey);
   const todayTotal = todays.reduce((s, r) => s + Number(r.amount), 0);
@@ -67,7 +94,25 @@ export default async function BillsPage() {
 
       <div className="mb-8">
         <h2 className="mb-2 text-[14px] font-medium">{t.newBill}</h2>
-        <BillForm t={t} defaultLang={lang} canSend={canSend} />
+        {orders.length > 0 && (
+          <div className="sk-card mb-4 max-w-xl p-4">
+            <div className="text-[14px] font-medium">{to.title}</div>
+            <p className="mb-2 text-[12.5px] text-faint">{to.hint}</p>
+            {orders.map((o) => (
+              <div key={o.id} className={`flex items-center justify-between gap-3 border-t border-border py-2 text-[13px] ${o.id === orderParam ? "text-accent" : ""}`}>
+                <div className="min-w-0">
+                  <div className="truncate font-medium">{o.name || `+${o.phone}`}</div>
+                  <div className="truncate text-[12px] text-faint">{o.items.map((i) => `${i.qty} × ${i.name}`).join(", ")}</div>
+                </div>
+                <div className="flex flex-none items-center gap-3">
+                  <Link href={`/bills?order=${o.id}`} className="text-[12.5px] text-accent hover:text-accent-hover">{to.make}</Link>
+                  <DismissOrder id={o.id} label={to.dismiss} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <BillForm key={prefill?.orderId ?? "new"} t={t} defaultLang={lang} canSend={canSend} prefill={prefill} catalog={catalog} />
       </div>
 
       <FollowUps t={FOLLOW_UI[lang]} defaultLang={lang} rows={(followups ?? []).map((f) => ({ id: f.id, language: f.language, body: f.body_text ?? "", status: f.status }))} />
@@ -118,6 +163,7 @@ export default async function BillsPage() {
                       <div className="flex flex-col items-end gap-1">
                         <a href={`/api/bills/${r.id}/image`} target="_blank" rel="noreferrer" className="text-[12.5px] text-accent hover:text-accent-hover">{t.openBill}</a>
                         {r.send_status !== "sent" && <ResendButton id={r.id} label={t.sendAgain} />}
+                        {!r.paid && <MarkPaidButton id={r.id} label={t.markPaid} />}
                       </div>
                     </td>
                   </tr>

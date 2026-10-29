@@ -79,6 +79,11 @@ export interface Workspace {
   razorpay_key_secret: string | null;
   payu_merchant_key: string | null;
   payu_salt: string | null;
+  pay_mode: "upi" | "gateway" | "link" | null;
+  upi_id: string | null;
+  upi_name: string | null;
+  manual_pay_link: string | null;
+  shop_slug: string | null;
   whatsapp_last_send_error: string | null;
   whatsapp_last_send_error_at: string | null;
   ai_agent_enabled: boolean;

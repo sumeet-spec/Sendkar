@@ -10,7 +10,8 @@ import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { syncKlaviyoProfile } from "@/lib/klaviyo";
 import { syncHubspotContact } from "@/lib/hubspot";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
-import { classifyInboundMessage, generateAutoReply } from "@/lib/ai";
+import { classifyInboundMessage } from "@/lib/ai";
+import { generateShopReply, loadShopKnowledge } from "@/lib/shopAssistant";
 import { sendPushNotification, truncateForNotification } from "@/lib/webPush";
 import { isStatusRegression } from "@/lib/messageStatus";
 import { isWithinBusinessHours } from "@/lib/businessHours";
@@ -776,11 +777,16 @@ export async function POST(request: NextRequest) {
                 .eq("contact_id", contactId)
                 .order("created_at", { ascending: false })
                 .limit(10);
-              const { data: contactRow } = await admin.from("contacts").select("name").eq("id", contactId).maybeSingle();
               const thread = (recentMessages ?? []).reverse().map((m) => ({ direction: m.direction as "inbound" | "outbound", body: m.body }));
-              const { reply } = await generateAutoReply(thread, contactRow?.name ?? null, wsAgent.ai_agent_knowledge ?? "");
-              const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, reply, matchedNumberId, true);
+              // The assistant reads the shop's own items, prices, hours, payment details and this customer's open bills,
+              // and answers in the customer's language. An order it takes is saved for the shop to turn into a bill.
+              const { knowledge, customerName } = await loadShopKnowledge(admin, workspaceId, contactId);
+              const answer = await generateShopReply(thread, knowledge, customerName);
+              const sent = await sendAndLog(admin, workspaceId, contactId, msg.from, answer.reply, matchedNumberId, true);
               if (sent) respondedToInbound = true;
+              if (sent && answer.order) {
+                await admin.from("order_requests").insert({ workspace_id: workspaceId, contact_id: contactId, items: answer.order.items, note: answer.order.note || null });
+              }
             } catch (err) {
               // AI failing (bad key, malformed response, rate limit) should degrade
               // to the away-message/silence below, not break webhook processing —

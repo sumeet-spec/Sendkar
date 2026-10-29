@@ -10,7 +10,7 @@ export type BillUi = {
   sentOk: string; savedNotSent: string; makeAnother: string; allBills: string;
   empty: string; colBill: string; colCustomer: string; colAmount: string; colStatus: string;
   sent: string; waiting: string; failed: string; notSent: string; sendAgain: string; openBill: string; paidTag: string; dueTag: string;
-  todayTotal: string; needNumber: string; unpaidNote: string;
+  todayTotal: string; needNumber: string; unpaidNote: string; markPaid: string;
 };
 
 export const BILL_UI: Record<LanguageCode, BillUi> = {
@@ -23,7 +23,7 @@ export const BILL_UI: Record<LanguageCode, BillUi> = {
     sentOk: "Bill {no} is on its way to the customer.", savedNotSent: "Bill {no} is saved, but not sent yet.", makeAnother: "Make another bill", allBills: "Recent bills",
     empty: "No bills yet. Make your first one above.", colBill: "Bill", colCustomer: "Customer", colAmount: "Amount", colStatus: "WhatsApp",
     sent: "Sent", waiting: "Waiting", failed: "Failed", notSent: "Not sent", sendAgain: "Send again", openBill: "View", paidTag: "Paid", dueTag: "Due",
-    todayTotal: "Today: {n}", needNumber: "Connect your WhatsApp number first.", unpaidNote: "A payment reminder will go out before the due date.",
+    todayTotal: "Today: {n}", needNumber: "Connect your WhatsApp number first.", unpaidNote: "A payment reminder will go out before the due date.", markPaid: "Mark paid",
   },
   hi: {
     nav: "झटपट बिल", title: "झटपट बिल", intro: "10 सेकंड में बिल बनाइए। ग्राहक को तुरंत WhatsApp पर मिल जाता है, और हर बिल आपको यहाँ दिखता है।", newBill: "बिल बनाएँ",
@@ -34,7 +34,7 @@ export const BILL_UI: Record<LanguageCode, BillUi> = {
     sentOk: "बिल {no} ग्राहक को भेजा जा रहा है।", savedNotSent: "बिल {no} सेव हो गया, पर अभी भेजा नहीं गया।", makeAnother: "एक और बिल बनाएँ", allBills: "हाल के बिल",
     empty: "अभी कोई बिल नहीं। ऊपर अपना पहला बिल बनाइए।", colBill: "बिल", colCustomer: "ग्राहक", colAmount: "रकम", colStatus: "WhatsApp",
     sent: "भेजा गया", waiting: "इंतज़ार", failed: "विफल", notSent: "नहीं भेजा", sendAgain: "फिर भेजें", openBill: "देखें", paidTag: "चुकता", dueTag: "बाकी",
-    todayTotal: "आज: {n}", needNumber: "पहले अपना WhatsApp नंबर जोड़ें।", unpaidNote: "देय तारीख़ से पहले भुगतान की याद दिलाई जाएगी।",
+    todayTotal: "आज: {n}", needNumber: "पहले अपना WhatsApp नंबर जोड़ें।", unpaidNote: "देय तारीख़ से पहले भुगतान की याद दिलाई जाएगी।", markPaid: "चुकता करें",
   },
   mr: {
     nav: "झटपट बिल", title: "झटपट बिल", intro: "10 सेकंदात बिल बनवा. ग्राहकाला लगेच WhatsApp वर मिळते, आणि प्रत्येक बिल तुम्हाला इथे दिसते.", newBill: "बिल बनवा",
@@ -45,7 +45,7 @@ export const BILL_UI: Record<LanguageCode, BillUi> = {
     sentOk: "बिल {no} ग्राहकाला पाठवले जात आहे.", savedNotSent: "बिल {no} सेव्ह झाले, पण अजून पाठवले नाही.", makeAnother: "आणखी एक बिल बनवा", allBills: "अलीकडील बिले",
     empty: "अजून बिले नाहीत. वर तुमचे पहिले बिल बनवा.", colBill: "बिल", colCustomer: "ग्राहक", colAmount: "रक्कम", colStatus: "WhatsApp",
     sent: "पाठवले", waiting: "प्रतीक्षा", failed: "अयशस्वी", notSent: "पाठवले नाही", sendAgain: "पुन्हा पाठवा", openBill: "पहा", paidTag: "भरले", dueTag: "बाकी",
-    todayTotal: "आज: {n}", needNumber: "आधी तुमचा WhatsApp नंबर जोडा.", unpaidNote: "देय तारखेआधी पैशांची आठवण पाठवली जाईल.",
+    todayTotal: "आज: {n}", needNumber: "आधी तुमचा WhatsApp नंबर जोडा.", unpaidNote: "देय तारखेआधी पैशांची आठवण पाठवली जाईल.", markPaid: "भरले करा",
   },
   gu: {
     nav: "ઝડપી બિલ", title: "ઝડપી બિલ", intro: "10 સેકન્ડમાં બિલ બનાવો. ગ્રાહકને તરત WhatsApp પર મળી જાય છે, અને દરેક બિલ તમને અહીં દેખાય છે.", newBill: "બિલ બનાવો",
@@ -56,7 +56,7 @@ export const BILL_UI: Record<LanguageCode, BillUi> = {
     sentOk: "બિલ {no} ગ્રાહકને મોકલાઈ રહ્યું છે.", savedNotSent: "બિલ {no} સેવ થયું, પણ હજી મોકલ્યું નથી.", makeAnother: "બીજું બિલ બનાવો", allBills: "તાજેતરનાં બિલ",
     empty: "હજી કોઈ બિલ નથી. ઉપર તમારું પહેલું બિલ બનાવો.", colBill: "બિલ", colCustomer: "ગ્રાહક", colAmount: "રકમ", colStatus: "WhatsApp",
     sent: "મોકલ્યું", waiting: "રાહ", failed: "નિષ્ફળ", notSent: "મોકલ્યું નથી", sendAgain: "ફરી મોકલો", openBill: "જુઓ", paidTag: "ચૂકવેલ", dueTag: "બાકી",
-    todayTotal: "આજે: {n}", needNumber: "પહેલા તમારો WhatsApp નંબર જોડો.", unpaidNote: "નિયત તારીખ પહેલાં ચુકવણીની યાદ મોકલાશે.",
+    todayTotal: "આજે: {n}", needNumber: "પહેલા તમારો WhatsApp નંબર જોડો.", unpaidNote: "નિયત તારીખ પહેલાં ચુકવણીની યાદ મોકલાશે.", markPaid: "ચૂકવેલ કરો",
   },
   ta: {
     nav: "விரைவு பில்", title: "விரைவு பில்", intro: "10 விநாடியில் பில் போடுங்கள். வாடிக்கையாளருக்கு உடனே WhatsApp-ல் கிடைக்கும், ஒவ்வொரு பில்லையும் இங்கே பார்க்கலாம்.", newBill: "பில் போடுங்கள்",
@@ -67,7 +67,7 @@ export const BILL_UI: Record<LanguageCode, BillUi> = {
     sentOk: "பில் {no} வாடிக்கையாளருக்கு அனுப்பப்படுகிறது.", savedNotSent: "பில் {no} சேமிக்கப்பட்டது, ஆனால் இன்னும் அனுப்பப்படவில்லை.", makeAnother: "இன்னொரு பில் போடு", allBills: "சமீபத்திய பில்கள்",
     empty: "இன்னும் பில்கள் இல்லை. மேலே உங்கள் முதல் பில்லைப் போடுங்கள்.", colBill: "பில்", colCustomer: "வாடிக்கையாளர்", colAmount: "தொகை", colStatus: "WhatsApp",
     sent: "அனுப்பப்பட்டது", waiting: "காத்திருப்பு", failed: "தோல்வி", notSent: "அனுப்பவில்லை", sendAgain: "மீண்டும் அனுப்பு", openBill: "பார்", paidTag: "செலுத்தப்பட்டது", dueTag: "நிலுவை",
-    todayTotal: "இன்று: {n}", needNumber: "முதலில் உங்கள் WhatsApp எண்ணை இணைக்கவும்.", unpaidNote: "கடைசி தேதிக்கு முன் பணம் செலுத்த நினைவூட்டல் செல்லும்.",
+    todayTotal: "இன்று: {n}", needNumber: "முதலில் உங்கள் WhatsApp எண்ணை இணைக்கவும்.", unpaidNote: "கடைசி தேதிக்கு முன் பணம் செலுத்த நினைவூட்டல் செல்லும்.", markPaid: "செலுத்தப்பட்டது எனக் குறி",
   },
   te: {
     nav: "క్విక్ బిల్లు", title: "క్విక్ బిల్లు", intro: "10 సెకన్లలో బిల్లు వేయండి. కస్టమర్‌కు వెంటనే WhatsApp‌లో వస్తుంది, ప్రతి బిల్లు ఇక్కడ కనిపిస్తుంది.", newBill: "బిల్లు వేయండి",
@@ -78,7 +78,7 @@ export const BILL_UI: Record<LanguageCode, BillUi> = {
     sentOk: "బిల్లు {no} కస్టమర్‌కు పంపబడుతోంది.", savedNotSent: "బిల్లు {no} సేవ్ అయింది, కానీ ఇంకా పంపలేదు.", makeAnother: "మరో బిల్లు వేయండి", allBills: "ఇటీవలి బిల్లులు",
     empty: "ఇంకా బిల్లులు లేవు. పైన మీ మొదటి బిల్లు వేయండి.", colBill: "బిల్లు", colCustomer: "కస్టమర్", colAmount: "మొత్తం", colStatus: "WhatsApp",
     sent: "పంపారు", waiting: "వేచి ఉంది", failed: "విఫలం", notSent: "పంపలేదు", sendAgain: "మళ్ళీ పంపండి", openBill: "చూడండి", paidTag: "చెల్లించారు", dueTag: "బాకీ",
-    todayTotal: "ఈ రోజు: {n}", needNumber: "ముందుగా మీ WhatsApp నంబర్‌ను కనెక్ట్ చేయండి.", unpaidNote: "గడువు తేదీకి ముందు చెల్లింపు రిమైండర్ వెళ్తుంది.",
+    todayTotal: "ఈ రోజు: {n}", needNumber: "ముందుగా మీ WhatsApp నంబర్‌ను కనెక్ట్ చేయండి.", unpaidNote: "గడువు తేదీకి ముందు చెల్లింపు రిమైండర్ వెళ్తుంది.", markPaid: "చెల్లించినట్టు గుర్తించు",
   },
   kn: {
     nav: "ಕ್ವಿಕ್ ಬಿಲ್", title: "ಕ್ವಿಕ್ ಬಿಲ್", intro: "10 ಸೆಕೆಂಡಿನಲ್ಲಿ ಬಿಲ್ ಮಾಡಿ. ಗ್ರಾಹಕರಿಗೆ ತಕ್ಷಣ WhatsApp‌ನಲ್ಲಿ ಸಿಗುತ್ತದೆ, ಪ್ರತಿ ಬಿಲ್ ಇಲ್ಲಿ ಕಾಣುತ್ತದೆ.", newBill: "ಬಿಲ್ ಮಾಡಿ",
@@ -89,6 +89,6 @@ export const BILL_UI: Record<LanguageCode, BillUi> = {
     sentOk: "ಬಿಲ್ {no} ಗ್ರಾಹಕರಿಗೆ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ.", savedNotSent: "ಬಿಲ್ {no} ಉಳಿಸಲಾಗಿದೆ, ಆದರೆ ಇನ್ನೂ ಕಳುಹಿಸಿಲ್ಲ.", makeAnother: "ಇನ್ನೊಂದು ಬಿಲ್ ಮಾಡಿ", allBills: "ಇತ್ತೀಚಿನ ಬಿಲ್‌ಗಳು",
     empty: "ಇನ್ನೂ ಬಿಲ್‌ಗಳಿಲ್ಲ. ಮೇಲೆ ನಿಮ್ಮ ಮೊದಲ ಬಿಲ್ ಮಾಡಿ.", colBill: "ಬಿಲ್", colCustomer: "ಗ್ರಾಹಕ", colAmount: "ಮೊತ್ತ", colStatus: "WhatsApp",
     sent: "ಕಳುಹಿಸಿದೆ", waiting: "ಕಾಯುತ್ತಿದೆ", failed: "ವಿಫಲ", notSent: "ಕಳುಹಿಸಿಲ್ಲ", sendAgain: "ಮತ್ತೆ ಕಳುಹಿಸಿ", openBill: "ನೋಡಿ", paidTag: "ಪಾವತಿಸಲಾಗಿದೆ", dueTag: "ಬಾಕಿ",
-    todayTotal: "ಇಂದು: {n}", needNumber: "ಮೊದಲು ನಿಮ್ಮ WhatsApp ಸಂಖ್ಯೆಯನ್ನು ಜೋಡಿಸಿ.", unpaidNote: "ಕೊನೆಯ ದಿನಾಂಕದ ಮೊದಲು ಪಾವತಿ ನೆನಪೋಲೆ ಹೋಗುತ್ತದೆ.",
+    todayTotal: "ಇಂದು: {n}", needNumber: "ಮೊದಲು ನಿಮ್ಮ WhatsApp ಸಂಖ್ಯೆಯನ್ನು ಜೋಡಿಸಿ.", unpaidNote: "ಕೊನೆಯ ದಿನಾಂಕದ ಮೊದಲು ಪಾವತಿ ನೆನಪೋಲೆ ಹೋಗುತ್ತದೆ.", markPaid: "ಪಾವತಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ",
   },
 };

@@ -8,10 +8,13 @@ import { makeBill, type BillFormResult } from "./actions";
 type Row = { name: string; qty: string; rate: string };
 const blank = (): Row => ({ name: "", qty: "", rate: "" });
 
-export function BillForm({ t, defaultLang, canSend }: { t: BillUi; defaultLang: LanguageCode; canSend: boolean }) {
+export interface BillPrefill { orderId: string; phone: string; name: string; rows: Row[] }
+export interface CatalogEntry { name: string; price: number | null }
+
+export function BillForm({ t, defaultLang, canSend, prefill, catalog = [] }: { t: BillUi; defaultLang: LanguageCode; canSend: boolean; prefill?: BillPrefill; catalog?: CatalogEntry[] }) {
   const [state, formAction, pending] = useActionState<BillFormResult | null, FormData>(makeBill, null);
-  const [showItems, setShowItems] = useState(false);
-  const [rows, setRows] = useState<Row[]>([blank()]);
+  const [showItems, setShowItems] = useState(Boolean(prefill));
+  const [rows, setRows] = useState<Row[]>(prefill?.rows.length ? prefill.rows : [blank()]);
   const [amount, setAmount] = useState("");
   const [later, setLater] = useState(false);
 
@@ -22,6 +25,11 @@ export function BillForm({ t, defaultLang, canSend }: { t: BillUi; defaultLang: 
   }, [rows]);
 
   const setRow = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  // Typing or picking a name from the shop's own list fills in its price.
+  const setName = (i: number, name: string) => {
+    const hit = catalog.find((c) => c.name.toLowerCase() === name.trim().toLowerCase());
+    setRow(i, hit && hit.price !== null && !rows[i].rate ? { name, rate: String(hit.price) } : { name });
+  };
   const tomorrow = new Date(Date.now() + 7 * 86400000 + 5.5 * 3600000).toISOString().slice(0, 10);
 
   if (state?.success) {
@@ -42,11 +50,11 @@ export function BillForm({ t, defaultLang, canSend }: { t: BillUi; defaultLang: 
     <form action={formAction} className="sk-card flex max-w-xl flex-col gap-4 p-4 sm:p-5">
       <div>
         <label className="sk-label" htmlFor="bill-phone">{t.phone}</label>
-        <input id="bill-phone" name="phone" type="tel" inputMode="numeric" autoComplete="off" required placeholder={t.phoneHint} className="sk-input text-[16px]" />
+        <input id="bill-phone" name="phone" defaultValue={prefill?.phone} type="tel" inputMode="numeric" autoComplete="off" required placeholder={t.phoneHint} className="sk-input text-[16px]" />
       </div>
       <div>
         <label className="sk-label" htmlFor="bill-name">{t.name} <span className="text-faint">({t.optional})</span></label>
-        <input id="bill-name" name="name" maxLength={60} autoComplete="off" className="sk-input text-[16px]" />
+        <input id="bill-name" name="name" defaultValue={prefill?.name} maxLength={60} autoComplete="off" className="sk-input text-[16px]" />
       </div>
 
       <div>
@@ -65,7 +73,7 @@ export function BillForm({ t, defaultLang, canSend }: { t: BillUi; defaultLang: 
         <div className="flex flex-col gap-2">
           {rows.map((r, i) => (
             <div key={i} className="grid grid-cols-[1fr_64px_88px] gap-2">
-              <input value={r.name} onChange={(e) => setRow(i, { name: e.target.value })} placeholder={t.itemName} maxLength={80} className="sk-input text-[15px]" />
+              <input value={r.name} onChange={(e) => setName(i, e.target.value)} list="shop-items" placeholder={t.itemName} maxLength={80} className="sk-input text-[15px]" />
               <input value={r.qty} onChange={(e) => setRow(i, { qty: e.target.value })} placeholder={t.qty} inputMode="decimal" className="sk-input text-[15px]" />
               <input value={r.rate} onChange={(e) => setRow(i, { rate: e.target.value })} placeholder={t.rate} inputMode="decimal" className="sk-input text-[15px]" />
             </div>
@@ -75,6 +83,8 @@ export function BillForm({ t, defaultLang, canSend }: { t: BillUi; defaultLang: 
           )}
         </div>
       )}
+      {prefill && <input type="hidden" name="orderRequestId" value={prefill.orderId} />}
+      <datalist id="shop-items">{catalog.map((c) => <option key={c.name} value={c.name} />)}</datalist>
       <input type="hidden" name="items" value={JSON.stringify(showItems ? rows.filter((r) => r.name.trim()) : [])} />
 
       <div className="grid grid-cols-2 gap-2">

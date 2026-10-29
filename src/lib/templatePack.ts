@@ -354,6 +354,26 @@ export const BILL_TEMPLATE: PackTemplate = {
   },
 };
 
+/**
+ * The same bill message for a bill that is not paid yet, with a "Pay now" button that opens the bill's pay page.
+ * The button's address ends in the bill's own short code, so one approved template serves every bill.
+ */
+export const BILL_DUE_TEMPLATE: PackTemplate = {
+  key: "bill_due",
+  title: "Bill with pay button",
+  when: "A bill that still has to be paid, with a button to pay it.",
+  category: "UTILITY",
+  stage: "transactional",
+  vars: ["name", "shop", "bill", "amount"],
+  body: {
+    hi: "नमस्ते {{1}} जी, {{2}} से खरीदारी के लिए धन्यवाद। आपका बिल नंबर {{3}}, रकम {{4}}, इस संदेश के साथ भेजा गया है। नीचे दिए बटन से आप सीधे भुगतान कर सकते हैं।",
+    gu: "નમસ્તે {{1}}, {{2}} પરથી ખરીદી કરવા બદલ આભાર. તમારું બિલ નંબર {{3}}, રકમ {{4}}, આ સંદેશ સાથે મોકલ્યું છે. નીચેના બટનથી તમે સીધું ચુકવણી કરી શકો છો.",
+    en: "Hello {{1}}, thank you for shopping at {{2}}. Your bill number {{3}}, amount {{4}}, is attached to this message. You can pay it directly with the button below.",
+  },
+};
+
+export const PAY_BUTTON_TEXT: Record<PackLang, string> = { hi: "अभी भुगतान करें", gu: "હમણાં ચૂકવો", en: "Pay now" };
+
 /** Which of the three written languages carries the message text for a bill in `lang`. */
 export function billMessageLang(lang: string): PackLang {
   if (lang === "gu" || lang === "hi" || lang === "en") return lang;

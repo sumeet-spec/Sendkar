@@ -85,6 +85,8 @@ export interface SendTemplateInput {
   otpCode?: string;
   /** Public URL of the picture for a template with an image header. Meta fetches it at send time. */
   headerImageUrl?: string;
+  /** The changing end of a URL button's address (for example a bill's pay code), when the template has one. */
+  urlButtonParam?: string;
 }
 
 export async function sendTemplateMessage(input: SendTemplateInput) {
@@ -96,8 +98,9 @@ export async function sendTemplateMessage(input: SendTemplateInput) {
   if (input.bodyParams?.length) {
     components.push({ type: "body", parameters: input.bodyParams.map((text) => ({ type: "text", text })) });
   }
-  if (input.otpCode) {
-    components.push({ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: input.otpCode }] });
+  const buttonParam = input.otpCode ?? input.urlButtonParam;
+  if (buttonParam) {
+    components.push({ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: buttonParam }] });
   }
   return graphPost(phoneNumberId, token, {
     messaging_product: "whatsapp",
@@ -486,7 +489,7 @@ export interface TemplateComponents {
   headerHandle?: string; // image headers need a sample picture uploaded to Meta first: see uploadMediaHandle
   bodyText: string;
   footerText?: string;
-  buttons?: Array<{ type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER"; text: string; url?: string; phone_number?: string }>;
+  buttons?: Array<{ type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER"; text: string; url?: string; phone_number?: string; example?: string[] }>;
   carouselCards?: CarouselCard[]; // 2-10 cards — when present, this becomes a carousel template
   bodyExamples?: string[]; // one realistic example per {{n}} in the body — Meta refuses variables without them
 }

@@ -78,6 +78,10 @@ export async function makeBill(_prev: unknown, formData: FormData): Promise<Bill
   revalidatePath("/dashboard");
   revalidatePath("/reminders");
   if (!result.ok) return { error: result.error };
+  const orderId = String(formData.get("orderRequestId") ?? "");
+  if (orderId) {
+    await createAdminClient().from("order_requests").update({ status: "billed", bill_id: result.billId }).eq("id", orderId).eq("workspace_id", workspace.id);
+  }
   return { success: true, billNo: result.billNo, sent: result.sent, notice: result.notice };
 }
 
@@ -148,4 +152,28 @@ export async function importSalesBills(_prev: unknown, formData: FormData): Prom
   revalidatePath("/analytics");
   revalidatePath("/reminders");
   return result;
+}
+
+export async function dismissOrder(id: string): Promise<void> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return;
+  await createAdminClient().from("order_requests").update({ status: "dismissed" }).eq("id", id).eq("workspace_id", workspace.id);
+  revalidatePath("/bills");
+}
+
+/** The shop got the money outside Sendkar (UPI, cash, a pasted link): the bill and its payment reminder are closed. */
+export async function markBillPaid(id: string): Promise<{ error?: string }> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+  const admin = createAdminClient();
+  const { data: bill } = await admin.from("bills").select("id, receivable_id, paid").eq("id", id).eq("workspace_id", workspace.id).maybeSingle();
+  if (!bill) return { error: "Bill not found." };
+  if (!bill.paid) {
+    await admin.from("bills").update({ paid: true, paid_at: new Date().toISOString(), paid_via: "manual" }).eq("id", id);
+    if (bill.receivable_id) await admin.from("receivables").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", bill.receivable_id).eq("status", "open");
+  }
+  revalidatePath("/bills");
+  revalidatePath("/customers");
+  revalidatePath("/reminders");
+  return {};
 }

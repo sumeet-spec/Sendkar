@@ -1,7 +1,8 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
 import type { LanguageCode } from "@/lib/i18n/dictionaries";
 import { LANGUAGES } from "@/lib/i18n/dictionaries";
-import { BILL_TEMPLATE, buildPackTemplate, billMessageLang } from "@/lib/templatePack";
+import { BILL_TEMPLATE, BILL_DUE_TEMPLATE, PAY_BUTTON_TEXT, buildPackTemplate, billMessageLang } from "@/lib/templatePack";
+import { canCollect, type PayWorkspace } from "@/lib/bills/pay";
 import { sendTemplateMessage, submitTemplateToMeta, uploadMediaHandle, type WorkspaceCreds } from "@/lib/whatsapp";
 import { attributeOrder } from "@/lib/attribution";
 import { enrollOnOrderPlaced } from "@/lib/sequences";
@@ -12,7 +13,7 @@ type Admin = ReturnType<typeof createAdminClient>;
 
 export const BILL_BUCKET = "bills";
 
-export interface BillWorkspace extends WorkspaceCreds {
+export interface BillWorkspace extends WorkspaceCreds, Partial<PayWorkspace> {
   id: string;
   name: string;
   whatsapp_waba_id: string | null;
@@ -78,8 +79,12 @@ export type BillTemplateState =
  * Finds the workspace's bill message for this language, and if it has never been submitted, submits it to
  * the shop's own Meta account with a sample bill as the header picture. Approval is Meta's, per account.
  */
-export async function ensureBillTemplate(admin: Admin, ws: BillWorkspace, lang: LanguageCode, kit: BrandKit | null): Promise<BillTemplateState> {
-  const built = buildPackTemplate(BILL_TEMPLATE, billMessageLang(lang));
+export async function ensureBillTemplate(admin: Admin, ws: BillWorkspace, lang: LanguageCode, kit: BrandKit | null, withPay = false): Promise<BillTemplateState> {
+  const built = buildPackTemplate(withPay ? BILL_DUE_TEMPLATE : BILL_TEMPLATE, billMessageLang(lang));
+  // The pay button's address ends in each bill's own short code, so one approved message serves every bill.
+  const buttons = withPay
+    ? [{ type: "URL" as const, text: PAY_BUTTON_TEXT[built.language], url: "https://www.sendkar.shop/p/{{1}}", example: ["https://www.sendkar.shop/p/a1b2c3d4e5f6"] }]
+    : undefined;
   const { data: row } = await admin
     .from("templates")
     .select("id, status, rejection_reason")
@@ -109,7 +114,7 @@ export async function ensureBillTemplate(admin: Admin, ws: BillWorkspace, lang: 
       name: built.metaName,
       language: built.language,
       category: "UTILITY",
-      components: { headerType: "image", headerHandle: handle, bodyText: built.bodyText, bodyExamples: [built.examples[0], built.examples[1], "B1", "₹500"] },
+      components: { headerType: "image", headerHandle: handle, bodyText: built.bodyText, buttons, bodyExamples: [built.examples[0], built.examples[1], "B1", "₹500"] },
     });
   } catch (err) {
     submitError = err instanceof Error ? err.message : "Meta did not accept the bill message.";
@@ -123,6 +128,7 @@ export async function ensureBillTemplate(admin: Admin, ws: BillWorkspace, lang: 
     meta_template_name: built.metaName,
     category: "UTILITY",
     header_type: "image",
+    buttons: buttons ?? null,
     body_text: built.bodyText,
     body_preview: built.bodyText,
     meta_response: metaResponse,
@@ -231,7 +237,9 @@ export async function sendBill(admin: Admin, ws: BillWorkspace, billId: string):
   if (!ws.whatsapp_phone_number_id || !ws.whatsapp_access_token) return fail("Connect your WhatsApp number first. The bill is saved and can be sent later.");
 
   const { data: kitRow } = await admin.from("brand_kits").select("*").eq("workspace_id", ws.id).maybeSingle();
-  const tpl = await ensureBillTemplate(admin, ws, lang, (kitRow as BrandKit | null) ?? null);
+  // An unpaid bill goes with a Pay now button when the shop has set up how customers pay.
+  const withPay = !bill.paid && canCollect(ws as PayWorkspace);
+  const tpl = await ensureBillTemplate(admin, ws, lang, (kitRow as BrandKit | null) ?? null, withPay);
   if (tpl.state === "pending") return fail("WhatsApp is still approving your bill message. It usually takes a few minutes. Tap Send again then.");
   if (tpl.state === "rejected") return fail(`WhatsApp did not accept the bill message${tpl.reason ? `: ${tpl.reason}` : "."}`);
   if (tpl.state !== "approved") return fail("Connect your WhatsApp number first. The bill is saved and can be sent later.");
@@ -242,7 +250,7 @@ export async function sendBill(admin: Admin, ws: BillWorkspace, billId: string):
   const shop = (kitRow as BrandKit | null)?.name?.trim() || ws.name;
   try {
     const { metaMessageId } = await sendTemplateMessage({
-      workspace: ws, to: bill.phone, templateName: tpl.metaName, language: tpl.language, headerImageUrl: signed.signedUrl,
+      workspace: ws, to: bill.phone, templateName: tpl.metaName, language: tpl.language, headerImageUrl: signed.signedUrl, urlButtonParam: withPay ? bill.pay_code : undefined,
       bodyParams: [cleanParam(bill.customer_name || "Customer"), cleanParam(shop), cleanParam(bill.bill_no), formatRupees(Number(bill.amount))],
     });
     await admin.from("bills").update({ send_status: "sent", send_error: null, meta_message_id: metaMessageId }).eq("id", billId);

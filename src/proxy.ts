@@ -20,7 +20,7 @@ const PUBLIC_PATHS = [
   "/api/shopify/callback", "/api/shopify/webhook",
   "/api/woocommerce/webhook",
   "/api/v1/send",
-  "/pay", "/api/payu/return",
+  "/pay", "/p/", "/api/payu/return",
   // Customers scanning a shop's counter QR: they have no account.
   "/join", "/api/join",
   // The free festival card tool for shopkeepers: no account needed.

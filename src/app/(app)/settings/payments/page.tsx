@@ -1,5 +1,7 @@
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { PaymentGatewayCard } from "./PaymentGatewayCard";
+import { PayModeCard } from "./PayModeCard";
+import { hasGateway } from "@/lib/bills/pay";
 import { saveRazorpayCreds, disconnectRazorpay, savePayuCreds, disconnectPayu } from "./actions";
 
 export default async function PaymentsPage() {
@@ -16,6 +18,7 @@ export default async function PaymentsPage() {
       </p>
 
       <div className="flex flex-col gap-4">
+        <PayModeCard initialMode={workspace.pay_mode} upiId={workspace.upi_id ?? ""} upiName={workspace.upi_name ?? ""} payLink={workspace.manual_pay_link ?? ""} gatewayConnected={hasGateway(workspace)} />
         <PaymentGatewayCard
           title="Razorpay"
           description="From Razorpay Dashboard → Settings → API Keys. Generates a real hosted payment link per customer."

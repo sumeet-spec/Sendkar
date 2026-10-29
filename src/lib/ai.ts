@@ -47,7 +47,7 @@ export async function draftReply(thread: ThreadMessage[], contactName: string | 
 }
 
 /** Shared Claude call — every other AI feature here is a thin prompt on top of this. */
-async function callClaude(prompt: string, maxTokens: number): Promise<string> {
+export async function callClaude(prompt: string, maxTokens: number): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new AiNotConfiguredError();
 

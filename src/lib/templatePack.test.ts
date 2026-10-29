@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PACK_TEMPLATES, PACK_LANGUAGES, VAR_KINDS, JOURNEY_STEPS, BILL_TEMPLATE, billMessageLang, buildPackTemplate, selectPackTemplates, journeyMapping } from "./templatePack";
+import { PACK_TEMPLATES, PACK_LANGUAGES, VAR_KINDS, JOURNEY_STEPS, BILL_TEMPLATE, BILL_DUE_TEMPLATE, PAY_BUTTON_TEXT, billMessageLang, buildPackTemplate, selectPackTemplates, journeyMapping } from "./templatePack";
 import { buildTemplateComponents } from "./templateBuild";
 
 // The pack must suit ANY business. These are trade-specific words that belong in a business's own templates, not here.
@@ -133,5 +133,17 @@ describe("bill message template", () => {
     expect(billMessageLang("gu")).toBe("gu");
     expect(billMessageLang("mr")).toBe("hi");
     expect(billMessageLang("ta")).toBe("en");
+  });
+});
+
+describe("bill message with a pay button", () => {
+  it("has the same four variables as the plain bill message, in every language, and a button label that fits", () => {
+    for (const { code } of PACK_LANGUAGES) {
+      const built = buildPackTemplate(BILL_DUE_TEMPLATE, code);
+      expect(built.metaName).toBe(`sk_bill_due_${code}`);
+      expect([...new Set(variableIndexes(built.bodyText))].sort()).toEqual([1, 2, 3, 4]);
+      expect(built.bodyText.trim().endsWith("}}")).toBe(false);
+      expect(PAY_BUTTON_TEXT[code].length).toBeLessThanOrEqual(25);
+    }
   });
 });
