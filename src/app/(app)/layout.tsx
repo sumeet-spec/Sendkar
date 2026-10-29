@@ -10,10 +10,17 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { effectivePlan, trialDaysLeft, trialExpired } from "@/lib/plans";
 import { TrialBanner } from "@/components/TrialBanner";
 import { ExpiredGate } from "@/components/ExpiredGate";
+import { createClient } from "@/lib/supabase/server";
+import { isPhoneVerified, otpRequired } from "@/lib/phoneVerify";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [workspace, workspaces, lang] = await Promise.all([getCurrentWorkspace(), listUserWorkspaces(), getCurrentLanguage()]);
   if (!workspace) redirect("/login");
+  // With number verification switched on, a new account sees nothing until it has entered its code.
+  if (otpRequired()) {
+    const { data: { user } } = await (await createClient()).auth.getUser();
+    if (user && !isPhoneVerified(user)) redirect("/verify");
+  }
   const dict = getDictionary(lang);
   const daysLeft = trialDaysLeft(workspace);
   const noPlan = effectivePlan(workspace) === "free";

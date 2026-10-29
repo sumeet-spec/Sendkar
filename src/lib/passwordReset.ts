@@ -26,7 +26,7 @@ function hashCode(code: string): string {
 }
 
 /** Supabase admin has no getUserByEmail — generateLink both confirms the user exists and returns their id, without the link itself ever being used. */
-async function resolveUserIdByPhone(admin: ReturnType<typeof createAdminClient>, phone: string): Promise<string | null> {
+export async function resolveUserIdByPhone(admin: ReturnType<typeof createAdminClient>, phone: string): Promise<string | null> {
   const { data, error } = await admin.auth.admin.generateLink({
     type: "recovery",
     email: phoneToAuthEmail(phone),

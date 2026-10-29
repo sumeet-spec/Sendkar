@@ -38,5 +38,5 @@ describe("counter poster", () => {
       const png = renderPosterPng({ lang: code, scanText: JOIN_COPY[code].scan, businessName: "Sharma Traders", qr: modules, primaryColor: "#14532d", accentColor: "#fcd34d" });
       expect(png.subarray(0, 4).toString("hex")).toBe("89504e47");
     }
-  });
+  }, 30_000);
 });

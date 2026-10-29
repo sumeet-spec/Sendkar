@@ -6,6 +6,8 @@ import { normalizePhone, phoneToAuthEmail } from "@/lib/auth";
 import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 import { redirect } from "next/navigation";
 import { trialStartFields } from "@/lib/plans";
+import { otpRequired } from "@/lib/phoneVerify";
+import { resolveUserIdByPhone } from "@/lib/passwordReset";
 
 export async function signup(_prevState: unknown, formData: FormData) {
   // The form only collects the 10-digit local number — India-only product,
@@ -28,6 +30,8 @@ export async function signup(_prevState: unknown, formData: FormData) {
 
   const email = phoneToAuthEmail(phone);
   const admin = createAdminClient();
+  // When number verification is on, the account starts unverified with no trial; the trial begins when the code is entered.
+  const needOtp = otpRequired();
 
   // Created via the admin API with email_confirm: true, not the session-bound
   // signUp() — that sidesteps this project's email-confirmation setting
@@ -38,22 +42,43 @@ export async function signup(_prevState: unknown, formData: FormData) {
     password,
     email_confirm: true,
     user_metadata: { whatsapp_number: phone },
+    ...(needOtp ? { app_metadata: { phone_verified: false } } : {}),
   });
+
+  let user = created?.user ?? null;
+  let takenOver = false;
   if (createError) {
-    return { error: createError.message.includes("already been registered") ? "That WhatsApp number already has an account — log in instead." : createError.message };
+    const alreadyThere = createError.message.includes("already been registered");
+    // A number that was signed up but never verified belongs to nobody yet. Whoever now proves they hold it with
+    // the code takes it over, so one person typing someone else's number cannot lock the real owner out.
+    if (alreadyThere && needOtp) {
+      const existingId = await resolveUserIdByPhone(admin, phone);
+      const { data: existing } = existingId ? await admin.auth.admin.getUserById(existingId) : { data: null };
+      if (existing?.user && existing.user.app_metadata?.phone_verified === false) {
+        const { error: pwError } = await admin.auth.admin.updateUserById(existing.user.id, { password });
+        if (!pwError) {
+          await admin.from("workspaces").update({ name: workspaceName }).eq("owner_id", existing.user.id).eq("plan", "free").is("trial_ends_at", null);
+          user = existing.user;
+          takenOver = true;
+        }
+      }
+    }
+    if (!user) {
+      return { error: alreadyThere ? "That WhatsApp number already has an account — log in instead." : createError.message };
+    }
   }
-  const user = created.user;
+  if (!user) return { error: "Could not create the account. Please try again." };
 
   // Deliberately the admin client here too, same reasoning as before: no RLS
   // policy lets a user insert their own workspace_members row (only the
   // on-workspace-created trigger can, via SECURITY DEFINER) — safe because
   // owner_id is set to the id createUser() just returned, never client input.
-  const { error: wsError } = await admin.from("workspaces").insert({ name: workspaceName, owner_id: user.id, ...trialStartFields() });
+  const { error: wsError } = takenOver ? { error: null } : await admin.from("workspaces").insert({ name: workspaceName, owner_id: user.id, ...(needOtp ? {} : trialStartFields()) });
   if (wsError) return { error: `Account created, but workspace setup failed: ${wsError.message}` };
 
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
   if (signInError) return { error: "Account created — log in with your WhatsApp number to continue." };
 
-  redirect("/onboarding");
+  redirect(needOtp ? "/verify" : "/onboarding");
 }
