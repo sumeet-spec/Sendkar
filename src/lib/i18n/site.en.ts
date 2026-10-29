@@ -11,7 +11,7 @@ export const siteEn: SiteCopy = {
     badge: "For shops and small businesses",
     titleA: "Bring your business",
     titleB: "to WhatsApp.",
-    sub: "Every bill, reminder, thank-you and festival wish goes to your customers on WhatsApp, and you see who bought and who owes.",
+    sub: "Bills, payment reminders, thank-yous and festival wishes on WhatsApp, in your customer's language. A better experience brings them back, and that means more business for you.",
     cta: "Start 7 days free",
     ctaSecondary: "See how it works",
     note: "No card needed. Set up in a few minutes.",
