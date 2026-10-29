@@ -12,12 +12,14 @@ import { buildReport, type Counts } from "@/lib/deliveryReport";
 import { CampaignProgress } from "./CampaignProgress";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { APP_COPY } from "@/lib/i18n/appCopy";
+import { CAMPAIGN_COPY } from "@/lib/i18n/campaignCopy";
 
 // Starting a campaign sends in the background of this page's request, for up to four minutes.
 export const maxDuration = 300;
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const ct = CAMPAIGN_COPY[await getCurrentLanguage()];
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const currency = workspace.currency ?? "USD";
@@ -103,12 +105,12 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           </div>
           {groupLanguages.length > 1 && (
             <div className="mt-1.5 text-[12px] text-accent">
-              Multi-language — auto-sends the right version to each contact ({groupLanguages.join(", ")})
+              {ct.detail.multiLanguage.replace("{langs}", groupLanguages.join(", "))}
             </div>
           )}
           {isScheduled && (
             <div className="mt-1.5 text-[12px]" style={{ color: "var(--accent)" }}>
-              Scheduled for{" "}
+              {ct.detail.scheduledFor}{" "}
               {new Date(campaign.scheduled_at).toLocaleString(undefined, {
                 weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
               })}
@@ -122,7 +124,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             status={campaign.status}
           />
           {campaign.status === "draft" && <TestSendForm campaignId={campaign.id} />}
-          <CampaignControls campaignId={campaign.id} status={campaign.status} scheduledAt={campaign.scheduled_at} />
+          <CampaignControls campaignId={campaign.id} status={campaign.status} scheduledAt={campaign.scheduled_at} t={ct.controls} />
         </div>
       </div>
 
@@ -139,11 +141,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         <div className="sk-card mb-6 flex items-center justify-between p-4">
           <div>
             <div className="text-[11px] font-medium uppercase tracking-wide text-faint">
-              {campaign.status === "draft" ? "Estimated Meta cost before you send" : "Meta cost so far"}
+              {campaign.status === "draft" ? ct.detail.costBefore : ct.detail.costSoFar}
             </div>
             <p className="mt-1 text-[12px] text-faint">
-              {audienceCount.toLocaleString("en-IN")} recipient{audienceCount === 1 ? "" : "s"} × {template?.category ?? "—"} rate — India,
-              at Meta&apos;s published rates. Not your Sendkar subscription fee, this is what Meta itself charges.
+              {ct.detail.costNote.replace("{n}", audienceCount.toLocaleString("en-IN")).replace("{cat}", template?.category ?? "—")}
             </p>
           </div>
           <div className="text-xl font-semibold text-accent">{formatCurrency(estimatedCost, currency)}</div>
@@ -156,7 +157,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
       <div className="mb-6 grid grid-cols-6 gap-3">
         {statuses.map((s) => (
           <div key={s} className="sk-card p-4">
-            <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">{s}</div>
+            <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">{ct.detail[s]}</div>
             <div
               className="text-xl font-semibold"
               style={s === "failed" && (counts[s] ?? 0) > 0 ? { color: "var(--danger)" } : undefined}
@@ -166,7 +167,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           </div>
         ))}
         <div className="sk-card p-4">
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">delivery</div>
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">{ct.detail.delivery}</div>
           <div
             className="text-xl font-semibold"
             style={{
@@ -185,9 +186,9 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
       {/* ── Revenue ── */}
       {revenue > 0 && (
         <div className="sk-card mb-6 p-4">
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Revenue attributed to this campaign</div>
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">{ct.detail.revenue}</div>
           <div className="text-xl font-semibold text-accent">{formatCurrency(revenue, currency)}</div>
-          <p className="mt-1 text-[12px] text-faint">Sales logged or synced within 7 days of a contact receiving this campaign.</p>
+          <p className="mt-1 text-[12px] text-faint">{ct.detail.revenueNote}</p>
         </div>
       )}
 

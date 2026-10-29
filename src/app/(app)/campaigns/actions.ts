@@ -11,7 +11,8 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { runCampaignSends } from "@/lib/campaignSender";
 import { workspaceCanSend } from "@/lib/plans";
-import { NO_PLAN_MESSAGE, NO_NUMBER_MESSAGE, canSendFromWorkspace } from "@/lib/planGate";
+import { canSendFromWorkspace } from "@/lib/planGate";
+import { refusal } from "@/lib/gateMessages";
 
 export async function generateCampaignStrategy(goal: string): Promise<{ draft?: CampaignStrategyDraft; error?: string }> {
   const workspace = await getCurrentWorkspace();
@@ -93,10 +94,10 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
  */
 export async function startCampaign(campaignId: string): Promise<{ error?: string }> {
   const owner = await getCurrentWorkspace();
-  if (owner && !workspaceCanSend(owner)) return { error: NO_PLAN_MESSAGE };
+  if (owner && !workspaceCanSend(owner)) return { error: await refusal("noPlan") };
 
   const supabase = await createClient();
-  if (owner && !(await canSendFromWorkspace(supabase, owner))) return { error: NO_NUMBER_MESSAGE };
+  if (owner && !(await canSendFromWorkspace(supabase, owner))) return { error: await refusal("noNumber") };
 
   const { data: campaign } = await supabase
     .from("campaigns")
@@ -160,10 +161,10 @@ export async function sendTestMessage(_prevState: unknown, formData: FormData) {
 
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
-  if (!workspaceCanSend(workspace)) return { error: NO_PLAN_MESSAGE };
+  if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
 
   const supabase = await createClient();
-  if (!(await canSendFromWorkspace(supabase, workspace))) return { error: NO_NUMBER_MESSAGE };
+  if (!(await canSendFromWorkspace(supabase, workspace))) return { error: await refusal("noNumber") };
   const { data: campaign } = await supabase
     .from("campaigns")
     .select("id, whatsapp_number_id, image_url, templates(meta_template_name, language, body_text, header_type, header_image_url)")
@@ -244,9 +245,9 @@ export async function getAudienceCount(
 
 export async function scheduleCampaign(campaignId: string, scheduledAt: string): Promise<{ error?: string }> {
   const owner = await getCurrentWorkspace();
-  if (owner && !workspaceCanSend(owner)) return { error: NO_PLAN_MESSAGE };
+  if (owner && !workspaceCanSend(owner)) return { error: await refusal("noPlan") };
   const supabase = await createClient();
-  if (owner && !(await canSendFromWorkspace(supabase, owner))) return { error: NO_NUMBER_MESSAGE };
+  if (owner && !(await canSendFromWorkspace(supabase, owner))) return { error: await refusal("noNumber") };
 
   const { data: campaign } = await supabase
     .from("campaigns")
@@ -381,9 +382,9 @@ export async function pauseCampaign(campaignId: string) {
 
 export async function resumeCampaign(campaignId: string): Promise<{ error?: string }> {
   const owner = await getCurrentWorkspace();
-  if (owner && !workspaceCanSend(owner)) return { error: NO_PLAN_MESSAGE };
+  if (owner && !workspaceCanSend(owner)) return { error: await refusal("noPlan") };
   const supabase = await createClient();
-  if (owner && !(await canSendFromWorkspace(supabase, owner))) return { error: NO_NUMBER_MESSAGE };
+  if (owner && !(await canSendFromWorkspace(supabase, owner))) return { error: await refusal("noNumber") };
   await supabase.from("campaigns").update({ status: "sending" }).eq("id", campaignId);
   after(async () => { await runCampaignSends({ campaignId }); });
   revalidatePath(`/campaigns/${campaignId}`);

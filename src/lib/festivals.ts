@@ -26,31 +26,45 @@ export type Festival = {
   around?: string;
   /** Languages whose speakers keep this festival; absent means everywhere. */
   langs?: LanguageCode[];
+  /** States where it is kept whatever language the shop uses; added on top of `langs` when a state is chosen. */
+  states?: StateCode[];
 };
 
 const NORTH_WEST: LanguageCode[] = ["hi", "gu", "mr"];
 
+/** States and regions a shop can pick, because the same language is celebrated differently from place to place. */
+export const STATES = [
+  { code: "gujarat", label: "Gujarat" }, { code: "maharashtra", label: "Maharashtra" }, { code: "rajasthan", label: "Rajasthan" },
+  { code: "madhya-pradesh", label: "Madhya Pradesh" }, { code: "uttar-pradesh", label: "Uttar Pradesh" }, { code: "delhi", label: "Delhi NCR" },
+  { code: "bihar", label: "Bihar and Jharkhand" }, { code: "punjab-haryana", label: "Punjab and Haryana" }, { code: "karnataka", label: "Karnataka" },
+  { code: "telangana", label: "Telangana" }, { code: "andhra", label: "Andhra Pradesh" }, { code: "tamil-nadu", label: "Tamil Nadu" },
+  { code: "kerala", label: "Kerala" }, { code: "west-bengal", label: "West Bengal" },
+] as const;
+export type StateCode = (typeof STATES)[number]["code"];
+
+const NORTH_WEST_STATES: StateCode[] = ["gujarat", "maharashtra", "rajasthan", "madhya-pradesh", "uttar-pradesh", "delhi", "bihar", "punjab-haryana"];
+
 export const FESTIVALS: Festival[] = [
-  { id: "rajyotsava-2026", name: "Kannada Rajyotsava", occasion: "rajyotsava", date: "2026-11-01", exact: true, langs: ["kn"] },
-  { id: "dhanteras-2026", name: "Dhanteras", occasion: "dhanteras", date: "2026-11-06", exact: true, langs: NORTH_WEST },
+  { id: "rajyotsava-2026", name: "Kannada Rajyotsava", occasion: "rajyotsava", date: "2026-11-01", exact: true, langs: ["kn"], states: ["karnataka"] },
+  { id: "dhanteras-2026", name: "Dhanteras", occasion: "dhanteras", date: "2026-11-06", exact: true, langs: NORTH_WEST, states: NORTH_WEST_STATES },
   { id: "diwali-2026", name: "Diwali", occasion: "diwali", date: "2026-11-08", exact: true },
-  { id: "bestu-2026", name: "Gujarati New Year (Bestu Varas)", occasion: "newyear", date: "2026-11-09", exact: false, around: "9 or 10 Nov", langs: ["gu"] },
-  { id: "bhaidooj-2026", name: "Bhai Dooj", occasion: "bhaidooj", date: "2026-11-10", exact: false, around: "10 or 11 Nov", langs: NORTH_WEST },
-  { id: "chhath-2026", name: "Chhath Puja", occasion: "chhath", date: "2026-11-15", exact: false, around: "13 to 16 Nov", langs: ["hi"] },
+  { id: "bestu-2026", name: "Gujarati New Year (Bestu Varas)", occasion: "newyear", date: "2026-11-09", exact: false, around: "9 or 10 Nov", langs: ["gu"], states: ["gujarat"] },
+  { id: "bhaidooj-2026", name: "Bhai Dooj", occasion: "bhaidooj", date: "2026-11-10", exact: false, around: "10 or 11 Nov", langs: NORTH_WEST, states: NORTH_WEST_STATES },
+  { id: "chhath-2026", name: "Chhath Puja", occasion: "chhath", date: "2026-11-15", exact: false, around: "13 to 16 Nov", langs: ["hi"], states: ["bihar", "uttar-pradesh", "delhi"] },
   { id: "christmas-2026", name: "Christmas", occasion: "christmas", date: "2026-12-25", exact: true },
   { id: "newyear-2027", name: "New Year", occasion: "newyear", date: "2027-01-01", exact: true },
-  { id: "uttarayan-2027", name: "Uttarayan", occasion: "uttarayan", date: "2027-01-14", exact: false, around: "14 or 15 Jan", langs: ["gu"] },
-  { id: "pongal-2027", name: "Pongal", occasion: "pongal", date: "2027-01-14", exact: false, around: "14 or 15 Jan", langs: ["ta"] },
-  { id: "sankranti-2027", name: "Makar Sankranti", occasion: "sankranti", date: "2027-01-14", exact: false, around: "14 or 15 Jan", langs: ["hi", "mr", "te", "kn"] },
+  { id: "uttarayan-2027", name: "Uttarayan", occasion: "uttarayan", date: "2027-01-14", exact: false, around: "14 or 15 Jan", langs: ["gu"], states: ["gujarat", "rajasthan"] },
+  { id: "pongal-2027", name: "Pongal", occasion: "pongal", date: "2027-01-14", exact: false, around: "14 or 15 Jan", langs: ["ta"], states: ["tamil-nadu"] },
+  { id: "sankranti-2027", name: "Makar Sankranti", occasion: "sankranti", date: "2027-01-14", exact: false, around: "14 or 15 Jan", langs: ["hi", "mr", "te", "kn"], states: ["karnataka", "telangana", "andhra", "maharashtra", "uttar-pradesh", "bihar", "delhi", "punjab-haryana"] },
   { id: "republic-2027", name: "Republic Day", occasion: "republic", date: "2027-01-26", exact: true },
   { id: "eid-2027", name: "Eid al-Fitr", occasion: "eid", date: "2027-03-09", exact: false, around: "9 or 10 Mar, after the moon is seen" },
-  { id: "holi-2027", name: "Holi", occasion: "holi", date: "2027-03-22", exact: false, around: "22 or 23 Mar", langs: ["hi", "gu", "mr", "te", "kn"] },
-  { id: "ugadi-2027", name: "Ugadi / Gudi Padwa", occasion: "ugadi", date: "2027-04-07", exact: false, around: "7 Apr", langs: ["mr", "te", "kn"] },
-  { id: "puthandu-2027", name: "Tamil New Year (Puthandu)", occasion: "puthandu", date: "2027-04-14", exact: true, langs: ["ta"] },
-  { id: "ramnavami-2027", name: "Ram Navami", occasion: "ramnavami", date: "2027-04-14", exact: false, around: "14 or 15 Apr", langs: NORTH_WEST },
-  { id: "akshaya-2027", name: "Akshaya Tritiya", occasion: "akshaya", date: "2027-05-08", exact: false, around: "8 or 9 May", langs: NORTH_WEST },
+  { id: "holi-2027", name: "Holi", occasion: "holi", date: "2027-03-22", exact: false, around: "22 or 23 Mar", langs: ["hi", "gu", "mr", "te", "kn"], states: NORTH_WEST_STATES },
+  { id: "ugadi-2027", name: "Ugadi / Gudi Padwa", occasion: "ugadi", date: "2027-04-07", exact: false, around: "7 Apr", langs: ["mr", "te", "kn"], states: ["maharashtra", "karnataka", "telangana", "andhra"] },
+  { id: "puthandu-2027", name: "Tamil New Year (Puthandu)", occasion: "puthandu", date: "2027-04-14", exact: true, langs: ["ta"], states: ["tamil-nadu"] },
+  { id: "ramnavami-2027", name: "Ram Navami", occasion: "ramnavami", date: "2027-04-14", exact: false, around: "14 or 15 Apr", langs: NORTH_WEST, states: NORTH_WEST_STATES },
+  { id: "akshaya-2027", name: "Akshaya Tritiya", occasion: "akshaya", date: "2027-05-08", exact: false, around: "8 or 9 May", langs: NORTH_WEST, states: NORTH_WEST_STATES },
   { id: "independence-2027", name: "Independence Day", occasion: "independence", date: "2027-08-15", exact: true },
-  { id: "rakhi-2027", name: "Raksha Bandhan", occasion: "rakhi", date: "2027-08-17", exact: false, around: "17 Aug", langs: ["hi", "gu", "mr", "te", "kn"] },
+  { id: "rakhi-2027", name: "Raksha Bandhan", occasion: "rakhi", date: "2027-08-17", exact: false, around: "17 Aug", langs: ["hi", "gu", "mr", "te", "kn"], states: NORTH_WEST_STATES },
   { id: "ganesh-2027", name: "Ganesh Chaturthi", occasion: "ganesh", date: "2027-09-03", exact: false, around: "3 or 4 Sep" },
   { id: "navratri-2027", name: "Navratri", occasion: "navratri", date: "2027-09-30", exact: false, around: "starts about 30 Sep" },
   { id: "diwali-2027", name: "Diwali", occasion: "diwali", date: "2027-10-29", exact: true },
@@ -80,15 +94,17 @@ function plainDate(iso: string) {
 const isoOf = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 /** True when this festival is kept by speakers of `lang`. English shows everything. */
-export function festivalIsFor(f: Festival, lang: LanguageCode): boolean {
-  return lang === "en" || !f.langs || f.langs.includes(lang);
+export function festivalIsFor(f: Festival, lang: LanguageCode, state?: StateCode | null): boolean {
+  if (lang === "en" || !f.langs || f.langs.includes(lang)) return true;
+  // A chosen state adds the festivals kept there, whatever language the shop writes in.
+  return Boolean(state && f.states?.includes(state));
 }
 
 /** The next festivals from `today` (a YYYY-MM-DD date in India) for speakers of `lang`, soonest first. */
-export function upcomingFestivals(today: string, limit = 4, lang: LanguageCode = "en"): UpcomingFestival[] {
+export function upcomingFestivals(today: string, limit = 4, lang: LanguageCode = "en", state?: StateCode | null): UpcomingFestival[] {
   const t = utc(today);
   return FESTIVALS
-    .filter((f) => festivalIsFor(f, lang))
+    .filter((f) => festivalIsFor(f, lang, state))
     .map((f) => {
       const daysLeft = Math.round((utc(f.date) - t) / 86_400_000);
       const releaseDate = isoOf(utc(f.date) - RELEASE_DAYS_BEFORE * 86_400_000);

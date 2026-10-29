@@ -305,3 +305,62 @@ export function renderPosterPng(input: PosterInput): Buffer {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${frame}${parts.join("")}</svg>`;
   return Buffer.from(new Resvg(svg, { fitTo: { mode: "width", value: W } }).render().asPng());
 }
+
+// ── Printed flyer (for the expo stand) ──────────────────────────────────────
+
+export type FlyerInput = {
+  lang: LanguageCode;
+  headline: string;
+  bullets: string[];
+  cta: string;
+  url: string;
+  qr: boolean[][];
+};
+
+/** A portrait flyer: the promise, three reasons, and a QR code that opens the site. Drawn like the cards, so every script is correct. */
+export function renderFlyerPng(input: FlyerInput): Buffer {
+  const W = 1080;
+  const bg = "#052e16", accent = "#22c55e", gold = "#fcd34d";
+  const parts: string[] = [];
+  let y = 70;
+
+  const brand = block("Sendkar", "en", { bold: true, size: 68, minSize: 40, maxWidth: W - 200, maxLines: 1, cx: W / 2, top: y, fill: accent });
+  parts.push(brand.svg);
+  y += brand.height + 30;
+
+  const head = block(input.headline, input.lang, { bold: true, size: 84, minSize: 48, maxWidth: W - 160, maxLines: 4, cx: W / 2, top: y, fill: "#ffffff" });
+  parts.push(head.svg);
+  y += head.height + 40;
+
+  input.bullets.forEach((text, i) => {
+    const row = block(text, input.lang, { bold: false, size: 46, minSize: 30, maxWidth: W - 300, maxLines: 2, cx: W / 2 + 40, top: y + 22, fill: "#ffffff" });
+    const h = Math.max(row.height + 44, 120);
+    parts.push(`<rect x="60" y="${y}" width="${W - 120}" height="${h}" rx="28" fill="#ffffff" fill-opacity="0.08"/>`);
+    parts.push(`<circle cx="130" cy="${y + h / 2}" r="34" fill="${accent}"/>`);
+    parts.push(`<path d="M${113} ${y + h / 2} l13 14 l25 -30" fill="none" stroke="#052e16" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`);
+    parts.push(row.svg.replace(`translate(`, `translate(`));
+    y += h + 20;
+  });
+  y += 20;
+
+  const cta = block(input.cta, input.lang, { bold: true, size: 66, minSize: 40, maxWidth: W - 160, maxLines: 2, cx: W / 2, top: y, fill: gold });
+  parts.push(cta.svg);
+  y += cta.height + 24;
+
+  const n = input.qr.length, panel = 430, pad = 34, cell = (panel - pad * 2) / n, px = (W - panel) / 2;
+  parts.push(`<rect x="${px}" y="${y}" width="${panel}" height="${panel}" rx="26" fill="#ffffff"/>`);
+  const mods: string[] = [];
+  input.qr.forEach((row, r) => row.forEach((dark, c) => {
+    if (dark) mods.push(`<rect x="${(px + pad + c * cell).toFixed(2)}" y="${(y + pad + r * cell).toFixed(2)}" width="${(cell + 0.6).toFixed(2)}" height="${(cell + 0.6).toFixed(2)}"/>`);
+  }));
+  parts.push(`<g fill="#000000">${mods.join("")}</g>`);
+  y += panel + 30;
+
+  const link = block(input.url, "en", { bold: true, size: 44, minSize: 28, maxWidth: W - 160, maxLines: 1, cx: W / 2, top: y, fill: "#ffffff" });
+  parts.push(link.svg);
+
+  const H = Math.round(y + link.height + 70);
+  const frame = `<rect width="${W}" height="${H}" fill="${bg}"/><rect x="26" y="26" width="${W - 52}" height="${H - 52}" rx="30" fill="none" stroke="${accent}" stroke-width="6"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${frame}${parts.join("")}</svg>`;
+  return Buffer.from(new Resvg(svg, { fitTo: { mode: "width", value: W } }).render().asPng());
+}

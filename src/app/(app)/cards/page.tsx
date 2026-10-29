@@ -2,10 +2,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { CardMaker } from "./CardMaker";
+import { SavedCards, type SavedCard } from "./SavedCards";
 import { occasionById, type OccasionId } from "@/lib/cards/occasions";
 import { todayInIndia, upcomingFestivals } from "@/lib/festivals";
 import { APP_COPY, fillN } from "@/lib/i18n/appCopy";
 import { LIBRARY_COPY } from "@/lib/i18n/libraryCopy";
+import { festivalName, localDate } from "@/lib/festivalNames";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
 
@@ -20,6 +22,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
   const supabase = await createClient();
   const { data: kit } = await supabase.from("brand_kits").select("name, logo_url").eq("workspace_id", workspace.id).maybeSingle();
   const ready = Boolean(kit?.name?.trim());
+  const { data: savedRows } = await supabase.from("saved_cards").select("id, title, url, urls, created_at").eq("workspace_id", workspace.id).order("created_at", { ascending: false }).limit(12);
 
   // The card language starts as the language most of this shop's customers speak, else the language
   // the app is shown in. It is only a starting point: the shopkeeper can change it on every card.
@@ -45,8 +48,8 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
             {coming.map((f) => (
               <Link key={f.id} href={`/cards?occasion=${f.occasion}`} className="sk-card flex items-center justify-between gap-3 p-3 hover:border-accent">
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">{f.name}</div>
-                  <div className="text-[12px] text-faint">{f.dateLabel}{!f.exact ? ` · ${t.confirmDay}` : ""}</div>
+                  <div className="truncate text-sm font-medium">{festivalName(f.id, f.name, uiLang)}</div>
+                  <div className="text-[12px] text-faint">{f.exact ? localDate(f.date, uiLang) : `${LIBRARY_COPY[uiLang].around} ${localDate(f.date, uiLang)}`}{!f.exact ? ` · ${t.confirmDay}` : ""}</div>
                 </div>
                 <div className={`flex-shrink-0 text-right text-[12px] ${f.stage === "now" ? "font-semibold text-accent" : "text-muted"}`}>
                   {f.daysLeft === 0 ? t.today : f.daysLeft === 1 ? t.tomorrow : fillN(t.inDays, f.daysLeft)}
@@ -65,6 +68,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
           <Link href="/settings/brand" className="text-accent hover:text-accent-hover">{t.setupLink}</Link>
         </div>
       )}
+      <SavedCards cards={(savedRows ?? []) as SavedCard[]} t={LIBRARY_COPY[uiLang]} />
     </div>
   );
 }

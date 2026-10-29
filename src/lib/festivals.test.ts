@@ -45,6 +45,27 @@ describe("festival calendar", () => {
     expect(ids("en").length).toBe(FESTIVALS.filter((f) => f.date >= "2026-10-29").length);
   });
 
+  it("a chosen state adds the festivals kept there, whatever the language", () => {
+    const ids = (lang: "hi" | "ta" | "en", state: string | null) => upcomingFestivals("2026-10-29", 40, lang, state as never).map((f) => f.id);
+    // a Hindi-speaking shop in Gujarat also sees the Gujarati festivals
+    expect(ids("hi", null)).not.toContain("bestu-2026");
+    expect(ids("hi", "gujarat")).toContain("bestu-2026");
+    expect(ids("hi", "gujarat")).toContain("uttarayan-2027");
+    // a Tamil-speaking shop in Karnataka also sees Rajyotsava
+    expect(ids("ta", "karnataka")).toContain("rajyotsava-2026");
+    expect(ids("ta", null)).not.toContain("rajyotsava-2026");
+    // a state does not remove anything the language already brings
+    for (const id of ids("hi", null)) expect(ids("hi", "gujarat")).toContain(id);
+    // English still shows everything
+    expect(ids("en", "gujarat").length).toBe(ids("en", null).length);
+  });
+
+  it("every state code used on a festival is a real state", async () => {
+    const { STATES } = await import("./festivals");
+    const known = new Set(STATES.map((s) => s.code));
+    for (const f of FESTIVALS) for (const s of f.states ?? []) expect(known.has(s), `${f.id} ${s}`).toBe(true);
+  });
+
   it("puts designs live 45 days ahead, with a coming-soon date before that", () => {
     const xmas = upcomingFestivals("2026-10-29", 30).find((f) => f.id === "christmas-2026")!;
     expect(xmas.releaseDate).toBe("2026-11-10");

@@ -149,5 +149,15 @@ export async function POST(req: NextRequest) {
   }
 
   // `url` stays for the single-card screen; `urls` and `lines` are for the one-per-language mode.
+  // Keep every card so it can be sent again. Best effort: a failure here must never lose the card just made.
+  await admin.from("saved_cards").insert({
+    workspace_id: workspaceId,
+    title: customHeadline || occasion?.label.en || "",
+    occasion: occasion?.id ?? null,
+    design_id: design?.id ?? null,
+    url: urls[makeFor[0]],
+    urls: makeFor.length > 1 ? urls : null,
+  });
+
   return NextResponse.json({ url: urls[makeFor[0]], urls, lines, skipped, imagesRemaining });
 }

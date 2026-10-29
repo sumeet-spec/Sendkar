@@ -6,6 +6,8 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { ActivationChecklist } from "./ActivationChecklist";
 import { effectivePlan } from "@/lib/plans";
 import { GATE_COPY } from "@/lib/i18n/gateCopy";
+import { SUMMARY_COPY } from "@/lib/i18n/summaryCopy";
+import { YesterdayCard } from "./YesterdayCard";
 import { DayChart } from "./DayChart";
 import { RecentCampaigns } from "./RecentCampaigns";
 import {
@@ -165,6 +167,8 @@ export default async function DashboardPage() {
         )}
         <div className="sk-pill">{configured ? t.whatsappConnected : t.whatsappNotConnected}</div>
       </div>
+
+      {configured && <YesterdayCard workspaceId={workspace.id} enabled={(workspace as { daily_summary?: boolean }).daily_summary !== false} t={SUMMARY_COPY[lang]} />}
 
       {/* ── Alert: not configured ── */}
       {!configured && (

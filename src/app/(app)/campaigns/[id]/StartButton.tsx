@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { startCampaign, scheduleCampaign, pauseCampaign, resumeCampaign } from "../actions";
+import type { CampaignCopy } from "@/lib/i18n/campaignCopy";
 
 function minDateTime() {
   const d = new Date();
@@ -9,7 +10,7 @@ function minDateTime() {
   return d.toISOString().slice(0, 16);
 }
 
-export function CampaignControls({ campaignId, status, scheduledAt }: { campaignId: string; status: string; scheduledAt?: string | null }) {
+export function CampaignControls({ campaignId, status, scheduledAt, t }: { campaignId: string; status: string; scheduledAt?: string | null; t: CampaignCopy["controls"] }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showScheduler, setShowScheduler] = useState(false);
@@ -30,14 +31,14 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
             }
             className="sk-btn sk-btn-primary disabled:opacity-60"
           >
-            {pending && !showScheduler ? "Starting…" : "Send now"}
+            {pending && !showScheduler ? t.starting : t.sendNow}
           </button>
           <button
             type="button"
             onClick={() => setShowScheduler((v) => !v)}
             className="sk-btn sk-btn-ghost"
           >
-            Schedule
+            {t.schedule}
           </button>
         </div>
 
@@ -61,13 +62,13 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
               }
               className="sk-btn sk-btn-primary flex-shrink-0 disabled:opacity-60"
             >
-              {pending ? "Scheduling…" : "Confirm schedule"}
+              {pending ? t.scheduling : t.confirmSchedule}
             </button>
           </div>
         )}
 
         <p className="text-[12px] text-faint">
-          Send now starts straight away. A scheduled campaign goes out in the first daily sending run after the time you pick (about 8:30 AM India time). Sending always stays within Meta&apos;s daily limit for your number.
+          {t.startNote}
         </p>
         {error && <p className="text-[12px] text-danger">{error}</p>}
       </div>
@@ -79,7 +80,7 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
       <div className="flex flex-col items-end gap-1">
         {scheduledAt && new Date(scheduledAt) > new Date() && (
           <div className="text-[12px] text-faint">
-            Scheduled for{" "}
+            {t.scheduledFor}{" "}
             <span className="font-medium text-accent">
               {new Date(scheduledAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
             </span>
@@ -90,7 +91,7 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
           onClick={() => startTransition(async () => { await pauseCampaign(campaignId); })}
           className="sk-btn sk-btn-ghost disabled:opacity-60"
         >
-          Pause
+          {t.pause}
         </button>
       </div>
     );
@@ -103,7 +104,7 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
         onClick={() => startTransition(async () => { setError(null); const result = await resumeCampaign(campaignId); if (result.error) setError(result.error); })}
         className="sk-btn sk-btn-primary disabled:opacity-60"
       >
-        Resume
+        {t.resume}
       </button>
     );
   }

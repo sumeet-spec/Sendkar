@@ -4,6 +4,7 @@ import { NewCampaignForm } from "./NewCampaignForm";
 import { AiStrategistPanel } from "./AiStrategistPanel";
 import { CampaignFilters } from "./CampaignFilters";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { CAMPAIGN_COPY } from "@/lib/i18n/campaignCopy";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -109,6 +110,7 @@ export default async function CampaignsPage({
           availableTags={availableTags}
           cardUrl={cardUrl}
           cardUrls={cardUrls}
+          t={CAMPAIGN_COPY[await getCurrentLanguage()].form}
         />
       </div>
 

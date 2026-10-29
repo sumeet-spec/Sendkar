@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
 import { fillN } from "@/lib/i18n/appCopy";
 import type { LibraryCopy } from "@/lib/i18n/libraryCopy";
-import { shortDate } from "@/lib/festivals";
+import { STATES, shortDate, type StateCode } from "@/lib/festivals";
 
 export type LibraryFestival = {
   id: string;
@@ -25,8 +25,10 @@ export type LibraryFestival = {
 
 const LANG_KEY = "sk_library_lang";
 
-export function LibraryBrowser({ workspaceId, lang, langFromUrl, festivals, anyTime, initialFestival, customerLangs, hasKit, t }: {
-  workspaceId: string; lang: LanguageCode; langFromUrl: boolean; festivals: LibraryFestival[]; anyTime: LibraryFestival[]; initialFestival: string | null;
+const STATE_KEY = "sk_library_state";
+
+export function LibraryBrowser({ workspaceId, lang, langFromUrl, state, festivals, anyTime, initialFestival, customerLangs, hasKit, t }: {
+  workspaceId: string; lang: LanguageCode; langFromUrl: boolean; state: StateCode | null; festivals: LibraryFestival[]; anyTime: LibraryFestival[]; initialFestival: string | null;
   customerLangs: LanguageCode[]; hasKit: boolean; t: LibraryCopy;
 }) {
   const router = useRouter();
@@ -53,7 +55,10 @@ export function LibraryBrowser({ workspaceId, lang, langFromUrl, festivals, anyT
     if (langFromUrl) return;
     try {
       const saved = localStorage.getItem(LANG_KEY);
-      if (saved && saved !== lang && LANGUAGES.some((l) => l.code === saved)) router.replace(`/library?lang=${saved}`);
+      const savedState = localStorage.getItem(STATE_KEY);
+      const target = saved && LANGUAGES.some((l) => l.code === saved) ? saved : lang;
+      const targetState = savedState && STATES.some((s) => s.code === savedState) ? savedState : "";
+      if (target !== lang || (targetState && !state)) router.replace(`/library?lang=${target}${targetState ? `&state=${targetState}` : ""}`);
     } catch { /* storage unavailable: keep the default */ }
   }, [langFromUrl, lang, router]);
 
@@ -62,7 +67,14 @@ export function LibraryBrowser({ workspaceId, lang, langFromUrl, festivals, anyT
     setCardLangPick(null);
     setFestivalId(firstOpen.id);
     setDesignChoice(null);
-    router.replace(`/library?lang=${code}`);
+    router.replace(`/library?lang=${code}${state ? `&state=${state}` : ""}`);
+  }
+
+  function chooseState(code: string) {
+    try { localStorage.setItem(STATE_KEY, code); } catch { /* ignore */ }
+    setFestivalId(firstOpen.id);
+    setDesignChoice(null);
+    router.replace(`/library?lang=${lang}${code ? `&state=${code}` : ""}`);
   }
 
   const preview = (id: string, size: number, withLine = true) => {
@@ -100,11 +112,20 @@ export function LibraryBrowser({ workspaceId, lang, langFromUrl, festivals, anyT
           <h1 className="mb-1 text-xl font-semibold tracking-tight">{t.title}</h1>
           <p className="text-sm text-muted">{t.intro}</p>
         </div>
-        <div>
-          <label className="sk-label">{t.festivalsFor}</label>
-          <select value={lang} onChange={(e) => chooseLang(e.target.value as LanguageCode)} className="sk-input w-auto">
-            {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
-          </select>
+        <div className="flex flex-wrap gap-3">
+          <div>
+            <label className="sk-label">{t.festivalsFor}</label>
+            <select value={lang} onChange={(e) => chooseLang(e.target.value as LanguageCode)} className="sk-input w-auto">
+              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="sk-label">{t.stateLabel}</label>
+            <select value={state ?? ""} onChange={(e) => chooseState(e.target.value)} className="sk-input w-auto">
+              <option value="">{t.anyState}</option>
+              {STATES.map((s) => <option key={s.code} value={s.code}>{s.label}</option>)}
+            </select>
+          </div>
         </div>
       </div>
 

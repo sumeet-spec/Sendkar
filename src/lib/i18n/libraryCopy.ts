@@ -6,6 +6,7 @@ export type LibraryCopy = {
   comingSoon: string; confirmDay: string; pick: string; cardLanguage: string; offerLabel: string; offerPlaceholder: string;
   colours: string; festivalColours: string; myColours: string; everyLanguage: string; send: string; sending: string;
   free: string; fresh: string; none: string; brandEmpty: string; brandLink: string; designsLive: string;
+  stateLabel: string; anyState: string; around: string; savedTitle: string; sendAgain: string; remove: string;
 };
 
 export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
@@ -19,6 +20,7 @@ export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
     everyLanguage: "Make it for every language my customers speak", send: "Send this to my customers", sending: "Getting it ready…",
     free: "Free", fresh: "New", none: "No designs for this festival yet.",
     brandEmpty: "Your brand kit is empty, so the designs show a stand-in name. Fill it in once to send.", brandLink: "Fill in brand kit →", designsLive: "{n} designs",
+    stateLabel: "State (optional)", anyState: "Any state", around: "around", savedTitle: "My cards", sendAgain: "Send again", remove: "Delete",
   },
   hi: {
     title: "त्योहार लाइब्रेरी",
@@ -30,6 +32,7 @@ export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
     everyLanguage: "मेरे ग्राहकों की हर भाषा में बनाएँ", send: "मेरे ग्राहकों को भेजें", sending: "तैयार हो रहा है…",
     free: "मुफ़्त", fresh: "नया", none: "इस त्योहार के डिज़ाइन अभी नहीं हैं।",
     brandEmpty: "आपका ब्रांड किट ख़ाली है, इसलिए डिज़ाइन में एक नमूना नाम दिख रहा है। भेजने के लिए इसे एक बार भरें।", brandLink: "ब्रांड किट भरें →", designsLive: "{n} डिज़ाइन",
+    stateLabel: "राज्य (ज़रूरी नहीं)", anyState: "कोई भी राज्य", around: "लगभग", savedTitle: "मेरे कार्ड", sendAgain: "फिर से भेजें", remove: "हटाएँ",
   },
   mr: {
     title: "सण लायब्ररी",
@@ -41,6 +44,7 @@ export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
     everyLanguage: "माझ्या ग्राहकांच्या प्रत्येक भाषेत बनवा", send: "माझ्या ग्राहकांना पाठवा", sending: "तयार होत आहे…",
     free: "मोफत", fresh: "नवीन", none: "या सणाचे डिझाइन अजून नाहीत.",
     brandEmpty: "तुमचा ब्रँड किट रिकामा आहे, म्हणून डिझाइनमध्ये नमुना नाव दिसत आहे. पाठवण्यासाठी तो एकदा भरा.", brandLink: "ब्रँड किट भरा →", designsLive: "{n} डिझाइन",
+    stateLabel: "राज्य (ऐच्छिक)", anyState: "कोणतेही राज्य", around: "सुमारे", savedTitle: "माझे कार्ड", sendAgain: "पुन्हा पाठवा", remove: "हटवा",
   },
   ta: {
     title: "பண்டிகை நூலகம்",
@@ -52,6 +56,7 @@ export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
     everyLanguage: "என் வாடிக்கையாளர்கள் பேசும் ஒவ்வொரு மொழியிலும் உருவாக்கு", send: "என் வாடிக்கையாளர்களுக்கு அனுப்பு", sending: "தயாராகிறது…",
     free: "இலவசம்", fresh: "புதியது", none: "இந்தப் பண்டிகைக்கு இன்னும் வடிவமைப்புகள் இல்லை.",
     brandEmpty: "உங்கள் பிராண்ட் கிட் காலியாக உள்ளது, அதனால் வடிவமைப்புகளில் மாதிரிப் பெயர் தெரிகிறது. அனுப்ப ஒருமுறை நிரப்புங்கள்.", brandLink: "பிராண்ட் கிட் நிரப்பு →", designsLive: "{n} வடிவமைப்புகள்",
+    stateLabel: "மாநிலம் (விருப்பம்)", anyState: "எந்த மாநிலமும்", around: "சுமார்", savedTitle: "என் கார்டுகள்", sendAgain: "மீண்டும் அனுப்பு", remove: "நீக்கு",
   },
   te: {
     title: "పండుగల లైబ్రరీ",
@@ -63,6 +68,7 @@ export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
     everyLanguage: "నా కస్టమర్లు మాట్లాడే ప్రతి భాషలో తయారు చేయి", send: "నా కస్టమర్లకు పంపండి", sending: "సిద్ధమవుతోంది…",
     free: "ఉచితం", fresh: "కొత్తది", none: "ఈ పండుగకు ఇంకా డిజైన్లు లేవు.",
     brandEmpty: "మీ బ్రాండ్ కిట్ ఖాళీగా ఉంది, అందుకే డిజైన్లలో నమూనా పేరు కనిపిస్తోంది. పంపడానికి ఒకసారి నింపండి.", brandLink: "బ్రాండ్ కిట్ నింపండి →", designsLive: "{n} డిజైన్లు",
+    stateLabel: "రాష్ట్రం (ఐచ్ఛికం)", anyState: "ఏ రాష్ట్రమైనా", around: "సుమారు", savedTitle: "నా కార్డ్‌లు", sendAgain: "మళ్ళీ పంపండి", remove: "తొలగించు",
   },
   kn: {
     title: "ಹಬ್ಬದ ಲೈಬ್ರರಿ",
@@ -74,6 +80,7 @@ export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
     everyLanguage: "ನನ್ನ ಗ್ರಾಹಕರು ಮಾತನಾಡುವ ಪ್ರತಿ ಭಾಷೆಯಲ್ಲೂ ಮಾಡಿ", send: "ನನ್ನ ಗ್ರಾಹಕರಿಗೆ ಕಳುಹಿಸಿ", sending: "ಸಿದ್ಧವಾಗುತ್ತಿದೆ…",
     free: "ಉಚಿತ", fresh: "ಹೊಸದು", none: "ಈ ಹಬ್ಬಕ್ಕೆ ಇನ್ನೂ ವಿನ್ಯಾಸಗಳಿಲ್ಲ.",
     brandEmpty: "ನಿಮ್ಮ ಬ್ರ್ಯಾಂಡ್ ಕಿಟ್ ಖಾಲಿ ಇದೆ, ಆದ್ದರಿಂದ ವಿನ್ಯಾಸಗಳಲ್ಲಿ ಮಾದರಿ ಹೆಸರು ಕಾಣಿಸುತ್ತಿದೆ. ಕಳುಹಿಸಲು ಒಮ್ಮೆ ತುಂಬಿ.", brandLink: "ಬ್ರ್ಯಾಂಡ್ ಕಿಟ್ ತುಂಬಿ →", designsLive: "{n} ವಿನ್ಯಾಸಗಳು",
+    stateLabel: "ರಾಜ್ಯ (ಐಚ್ಛಿಕ)", anyState: "ಯಾವುದೇ ರಾಜ್ಯ", around: "ಸುಮಾರು", savedTitle: "ನನ್ನ ಕಾರ್ಡ್‌ಗಳು", sendAgain: "ಮತ್ತೆ ಕಳುಹಿಸಿ", remove: "ಅಳಿಸಿ",
   },
   gu: {
     title: "તહેવાર લાઇબ્રેરી",
@@ -85,5 +92,6 @@ export const LIBRARY_COPY: Record<LanguageCode, LibraryCopy> = {
     everyLanguage: "મારા ગ્રાહકો બોલે છે તે દરેક ભાષામાં બનાવો", send: "મારા ગ્રાહકોને મોકલો", sending: "તૈયાર થઈ રહ્યું છે…",
     free: "મફત", fresh: "નવું", none: "આ તહેવારની ડિઝાઇન હજી નથી.",
     brandEmpty: "તમારી બ્રાન્ડ કિટ ખાલી છે, એટલે ડિઝાઇનમાં નમૂનારૂપ નામ દેખાય છે. મોકલવા માટે એક વાર ભરો.", brandLink: "બ્રાન્ડ કિટ ભરો →", designsLive: "{n} ડિઝાઇન",
+    stateLabel: "રાજ્ય (વૈકલ્પિક)", anyState: "કોઈપણ રાજ્ય", around: "લગભગ", savedTitle: "મારા કાર્ડ", sendAgain: "ફરી મોકલો", remove: "કાઢી નાખો",
   },
 };

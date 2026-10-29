@@ -11,7 +11,8 @@ import { attributeOrder } from "@/lib/attribution";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enrollOnOrderPlaced } from "@/lib/sequences";
 import { workspaceCanSend } from "@/lib/plans";
-import { NO_PLAN_MESSAGE, NO_NUMBER_MESSAGE, canSendFromWorkspace } from "@/lib/planGate";
+import { canSendFromWorkspace } from "@/lib/planGate";
+import { refusal } from "@/lib/gateMessages";
 import { revalidatePath } from "next/cache";
 
 export async function replyToContact(_prevState: unknown, formData: FormData) {
@@ -21,10 +22,10 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
 
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
-  if (!workspaceCanSend(workspace)) return { error: NO_PLAN_MESSAGE };
+  if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
 
   const supabase = await createClient();
-  if (!(await canSendFromWorkspace(supabase, workspace))) return { error: NO_NUMBER_MESSAGE };
+  if (!(await canSendFromWorkspace(supabase, workspace))) return { error: await refusal("noNumber") };
   const { data: contact } = await supabase.from("contacts").select("phone, channel, session_expires_at, whatsapp_number_id").eq("id", contactId).single();
   if (!contact) return { error: "Contact not found." };
 
