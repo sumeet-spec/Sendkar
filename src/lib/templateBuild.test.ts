@@ -11,7 +11,7 @@ describe("countBodyVariables", () => {
 
 describe("exampleValues", () => {
   it("uses provided examples, then falls back per variable", () => {
-    expect(exampleValues("{{1}} {{2}} {{3}}", ["Anil", "", undefined as unknown as string])).toEqual(["Anil", "Maheshwari Steel House", "Diwali"]);
+    expect(exampleValues("{{1}} {{2}} {{3}}", ["Anil", "", undefined as unknown as string])).toEqual(["Anil", "Sharma Traders", "Diwali"]);
   });
   it("never returns fewer examples than variables", () => {
     expect(exampleValues("{{1}}{{2}}{{3}}{{4}}{{5}}{{6}}{{7}}{{8}}{{9}}")).toHaveLength(9);
@@ -21,7 +21,7 @@ describe("exampleValues", () => {
 describe("buildTemplateComponents", () => {
   it("adds body examples whenever the body has variables (Meta rejects it otherwise)", () => {
     const [body] = buildTemplateComponents({ bodyText: "Hello {{1}}, your bill {{2}} is ready." });
-    expect(body).toEqual({ type: "BODY", text: "Hello {{1}}, your bill {{2}} is ready.", example: { body_text: [["Rajesh", "Maheshwari Steel House"]] } });
+    expect(body).toEqual({ type: "BODY", text: "Hello {{1}}, your bill {{2}} is ready.", example: { body_text: [["Rajesh", "Sharma Traders"]] } });
   });
   it("omits the example for a body with no variables", () => {
     expect(buildTemplateComponents({ bodyText: "Plain message" })[0]).toEqual({ type: "BODY", text: "Plain message" });

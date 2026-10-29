@@ -1,14 +1,17 @@
 /**
- * Ready-made WhatsApp templates for an Indian trader — built around a steel
- * utensil shop (festival and wedding-season offers, dealer rates, new stock,
- * bill / LR updates, payment reminders), but written so any shop or wholesaler
- * can use them. One click submits the whole pack to the business's own Meta
- * account; Meta approves per account, so these cannot be pre-approved globally.
+ * Ready-made WhatsApp templates for an Indian business — written to suit ANY
+ * shop, trader or service (clothing, kirana, jewellery, hardware, electronics,
+ * wholesale…), not one trade. Wording stays general on purpose: a business that
+ * needs trade-specific copy should write its own (the template form can draft
+ * one with AI). templatePack.test.ts fails if industry-specific words creep in.
+ *
+ * One click submits the whole pack to the business's own Meta account; Meta
+ * approves per account, so these cannot be pre-approved globally.
  *
  * Hindi and Gujarati text is machine-written: have a fluent speaker read it
- * before relying on it. Every template is checked against Meta's rules in
+ * before relying on it. Every template is also checked against Meta's rules in
  * templatePack.test.ts (name format, length, no variable at the start or end,
- * enough words per variable, an opt-out button on marketing).
+ * enough words per variable, an opt-out button on promotional messages).
  */
 
 export const PACK_LANGUAGES = [
@@ -26,26 +29,27 @@ type VarKind =
   | "amount" | "bill" | "transport" | "lr" | "tip" | "occasion" | "link";
 
 interface VarInfo {
-  /** What the shopkeeper types or picks for this variable. */
+  /** What the business types or picks for this variable. */
   label: string;
   /** "name" fills from the contact; everything else is one fixed text per campaign. */
   source: "contact" | "fixed";
+  /** Realistic, trade-neutral sample shown to Meta's reviewers. */
   example: Record<PackLang, string>;
 }
 
 export const VAR_KINDS: Record<VarKind, VarInfo> = {
   name: { label: "Customer name", source: "contact", example: { hi: "राजेश", gu: "રાજેશ", en: "Rajesh" } },
-  shop: { label: "Your shop name", source: "fixed", example: { hi: "माहेश्वरी स्टील हाउस", gu: "માહેશ્વરી સ્ટીલ હાઉસ", en: "Maheshwari Steel House" } },
-  festival: { label: "Festival name", source: "fixed", example: { hi: "दिवाली", gu: "દિવાળી", en: "Diwali" } },
-  offer: { label: "The offer, in one line", source: "fixed", example: { hi: "स्टील थाली सेट पर 15% की छूट।", gu: "સ્ટીલ થાળી સેટ પર 15% ની છૂટ.", en: "15% off on steel thali sets." } },
-  items: { label: "What arrived (items)", source: "fixed", example: { hi: "स्टील टिफिन, कुकर और कढ़ाई", gu: "સ્ટીલ ટિફિન, કુકર અને કઢાઈ", en: "steel tiffins, cookers and kadhais" } },
-  rates: { label: "Today's rates, on one line", source: "fixed", example: { hi: "स्टील थाली ₹420/किलो, कढ़ाई ₹395/किलो", gu: "સ્ટીલ થાળી ₹420/કિલો, કઢાઈ ₹395/કિલો", en: "steel thali ₹420/kg, kadhai ₹395/kg" } },
+  shop: { label: "Your business name", source: "fixed", example: { hi: "शर्मा ट्रेडर्स", gu: "શર્મા ટ્રેડર્સ", en: "Sharma Traders" } },
+  festival: { label: "Festival or season name", source: "fixed", example: { hi: "दिवाली", gu: "દિવાળી", en: "Diwali" } },
+  offer: { label: "The offer, in one line", source: "fixed", example: { hi: "चुनिंदा सामान पर 15% की छूट।", gu: "પસંદગીની વસ્તુઓ પર 15% ની છૂટ.", en: "15% off on selected items." } },
+  items: { label: "What arrived (items)", source: "fixed", example: { hi: "हमारी नई फेस्टिव रेंज और बेस्ट-सेलर्स", gu: "અમારી નવી ફેસ્ટિવ રેન્જ અને બેસ્ટ-સેલર્સ", en: "our new festive range and best-sellers" } },
+  rates: { label: "Today's rates, on one line", source: "fixed", example: { hi: "आइटम A ₹420, आइटम B ₹395, आइटम C ₹350", gu: "આઇટમ A ₹420, આઇટમ B ₹395, આઇટમ C ₹350", en: "Item A ₹420, Item B ₹395, Item C ₹350" } },
   date: { label: "Date", source: "fixed", example: { hi: "15 नवंबर 2026", gu: "15 નવેમ્બર 2026", en: "15 Nov 2026" } },
   amount: { label: "Amount (numbers only)", source: "fixed", example: { hi: "12,500", gu: "12,500", en: "12,500" } },
   bill: { label: "Bill or order number", source: "fixed", example: { hi: "1042", gu: "1042", en: "1042" } },
   transport: { label: "Transport / courier name", source: "fixed", example: { hi: "शर्मा ट्रांसपोर्ट", gu: "શર્મા ટ્રાન્સપોર્ટ", en: "Sharma Transport" } },
   lr: { label: "LR / tracking number", source: "fixed", example: { hi: "LR-55821", gu: "LR-55821", en: "LR-55821" } },
-  tip: { label: "The tip, one or two sentences", source: "fixed", example: { hi: "नींबू और नमक से रगड़ें, फिर साफ पानी से धोएँ।", gu: "લીંબુ અને મીઠાથી ઘસો, પછી સાફ પાણીથી ધોઈ લો.", en: "Rub with lemon and salt, then rinse with clean water." } },
+  tip: { label: "The tip, one or two sentences", source: "fixed", example: { hi: "इसे ठंडी, सूखी जगह पर रखें और केयर लेबल के निर्देशों का पालन करें।", gu: "તેને ઠંડી, સૂકી જગ્યાએ રાખો અને કેર લેબલની સૂચનાઓ અનુસરો.", en: "Store it in a cool, dry place and follow the care label." } },
   occasion: { label: "Occasion (birthday / anniversary)", source: "fixed", example: { hi: "जन्मदिन", gu: "જન્મદિવસ", en: "birthday" } },
   link: { label: "Payment link", source: "fixed", example: { hi: "https://rzp.io/i/abc123", gu: "https://rzp.io/i/abc123", en: "https://rzp.io/i/abc123" } },
 };
@@ -53,7 +57,7 @@ export const VAR_KINDS: Record<VarKind, VarInfo> = {
 export interface PackTemplate {
   key: string;
   title: string;
-  /** When a shopkeeper would use it — shown beside the template. */
+  /** When a business would use it — shown beside the template. */
   when: string;
   category: PackCategory;
   stage: PackStage;
@@ -66,7 +70,7 @@ export const PACK_TEMPLATES: PackTemplate[] = [
   {
     key: "festival_greeting",
     title: "Festival greeting",
-    when: "Diwali, Dhanteras, Navratri, Holi, Eid, Raksha Bandhan — a warm wish to every customer.",
+    when: "Diwali, Navratri, Holi, Eid, Raksha Bandhan, New Year — a warm wish to every customer.",
     category: "MARKETING",
     stage: "campaign",
     vars: ["name", "festival", "shop"],
@@ -78,8 +82,8 @@ export const PACK_TEMPLATES: PackTemplate[] = [
   },
   {
     key: "festival_offer",
-    title: "Festival offer",
-    when: "A time-limited festival scheme or discount you want every customer to see.",
+    title: "Festival or sale offer",
+    when: "A time-limited scheme, discount or sale you want every customer to see.",
     category: "MARKETING",
     stage: "campaign",
     vars: ["name", "shop", "festival", "offer"],
@@ -90,29 +94,29 @@ export const PACK_TEMPLATES: PackTemplate[] = [
     },
   },
   {
-    key: "wedding_season_gifts",
-    title: "Wedding-season gift sets",
-    when: "Lagna season — gift sets and dinner sets for weddings and gifting.",
+    key: "seasonal_collection",
+    title: "Seasonal collection",
+    when: "A new festive, wedding or summer range — announce it to everyone at once.",
     category: "MARKETING",
     stage: "campaign",
-    vars: ["name", "shop"],
+    vars: ["name", "shop", "festival"],
     body: {
-      hi: "नमस्ते {{1}} जी, शादी का सीज़न आ गया है! {{2}} में उपहार के लिए स्टील के बर्तनों के गिफ्ट सेट और डिनर सेट की बड़ी रेंज उपलब्ध है। दुकान पर पधारें या इस मैसेज का जवाब दें, हम आपके बजट में सबसे अच्छे विकल्प दिखाएँगे।",
-      gu: "નમસ્તે {{1}}, લગ્નની સીઝન આવી ગઈ છે! {{2}} માં ભેટ માટે સ્ટીલના વાસણોના ગિફ્ટ સેટ અને ડિનર સેટની મોટી રેન્જ ઉપલબ્ધ છે. દુકાને પધારો અથવા આ મેસેજનો જવાબ આપો, અમે તમારા બજેટમાં શ્રેષ્ઠ વિકલ્પો બતાવીશું.",
-      en: "Hello {{1}}, wedding season is here! {{2}} has a wide range of steel utensil gift sets and dinner sets, ideal for gifting. Visit us or reply to this message and we will show you the best options within your budget.",
+      hi: "नमस्ते {{1}} जी, {{2}} में हमारा {{3}} कलेक्शन आ गया है! दुकान पर पधारें या इस मैसेज का जवाब दें, हम आपके बजट में सबसे अच्छे विकल्प दिखाएँगे।",
+      gu: "નમસ્તે {{1}}, {{2}} માં અમારું {{3}} કલેક્શન આવી ગયું છે! દુકાને પધારો અથવા આ મેસેજનો જવાબ આપો, અમે તમારા બજેટમાં શ્રેષ્ઠ વિકલ્પો બતાવીશું.",
+      en: "Hello {{1}}, our {{3}} collection has arrived at {{2}}! Visit us or reply to this message and we will show you the best options within your budget.",
     },
   },
   {
     key: "exchange_offer",
     title: "Old-for-new exchange",
-    when: "Bring old utensils, get a new set — a classic steel-shop draw.",
+    when: "Bring an old item, get credit on a new one — for any shop that takes trade-ins.",
     category: "MARKETING",
     stage: "campaign",
     vars: ["name", "shop", "offer"],
     body: {
-      hi: "नमस्ते {{1}} जी, अपने पुराने बर्तन {{2}} पर लाएँ और नए स्टील के बर्तनों से बदलवाएँ। {{3}} अधिक जानकारी के लिए दुकान पर पधारें या इस मैसेज का जवाब दें।",
-      gu: "નમસ્તે {{1}}, તમારા જૂના વાસણો {{2}} પર લાવો અને નવા સ્ટીલના વાસણો સાથે બદલાવો. {{3}} વધુ માહિતી માટે દુકાને પધારો અથવા આ મેસેજનો જવાબ આપો.",
-      en: "Hello {{1}}, bring your old utensils to {{2}} and exchange them for new steel ware. {{3}} Visit us or reply to this message to know more.",
+      hi: "नमस्ते {{1}} जी, अपना पुराना सामान {{2}} पर लाएँ और नए सामान से बदलवाएँ। {{3}} अधिक जानकारी के लिए दुकान पर पधारें या इस मैसेज का जवाब दें।",
+      gu: "નમસ્તે {{1}}, તમારો જૂનો સામાન {{2}} પર લાવો અને નવા સામાન સાથે બદલાવો. {{3}} વધુ માહિતી માટે દુકાને પધારો અથવા આ મેસેજનો જવાબ આપો.",
+      en: "Hello {{1}}, bring your old items to {{2}} and exchange them for new ones. {{3}} Visit us or reply to this message to know more.",
     },
   },
   {
@@ -130,8 +134,8 @@ export const PACK_TEMPLATES: PackTemplate[] = [
   },
   {
     key: "dealer_rates",
-    title: "Today's rates for dealers",
-    when: "Steel rates move — send dealers and wholesale buyers the day's price list.",
+    title: "Price list / today's rates",
+    when: "For wholesalers and dealers — send the day's or week's rates to your buyers.",
     category: "MARKETING",
     stage: "campaign",
     vars: ["name", "shop", "date", "rates"],
@@ -184,8 +188,8 @@ export const PACK_TEMPLATES: PackTemplate[] = [
   },
   {
     key: "order_dispatched",
-    title: "Order dispatched (LR number)",
-    when: "Goods sent by transport — share the transporter and LR number.",
+    title: "Order dispatched",
+    when: "Goods sent by transport or courier — share who is carrying it and the LR / tracking number.",
     category: "UTILITY",
     stage: "transactional",
     vars: ["name", "bill", "transport", "lr"],
@@ -211,16 +215,29 @@ export const PACK_TEMPLATES: PackTemplate[] = [
 
   // ── Keeping customers close (nurture) ─────────────────────────────────────
   {
-    key: "care_tips",
-    title: "Care tip",
-    when: "A few days after a sale — a useful tip that keeps your name in their kitchen.",
+    key: "purchase_check_in",
+    title: "How is your purchase?",
+    when: "About a week after a sale — a friendly check-in that invites feedback or an exchange.",
+    category: "MARKETING",
+    stage: "nurture",
+    vars: ["name", "shop"],
+    body: {
+      hi: "नमस्ते {{1}} जी, आपको {{2}} से खरीदारी किए एक सप्ताह हो गया है। हमें आशा है कि आप अपनी खरीदारी से खुश हैं! कोई मदद, बदलाव या सुझाव हो तो बस इस मैसेज का जवाब दें।",
+      gu: "નમસ્તે {{1}}, તમે {{2}} માંથી ખરીદી કરી તેને એક અઠવાડિયું થઈ ગયું. અમને આશા છે કે તમે તમારી ખરીદીથી ખુશ છો! કોઈ મદદ, બદલી કે સૂચન હોય તો બસ આ મેસેજનો જવાબ આપો.",
+      en: "Hello {{1}}, it has been a week since you shopped at {{2}}. We hope you are happy with your purchase! If you need any help, an exchange or have feedback, simply reply to this message.",
+    },
+  },
+  {
+    key: "useful_tip",
+    title: "A useful tip",
+    when: "Share advice that fits your products — care, usage or styling — to keep your name in their mind.",
     category: "MARKETING",
     stage: "nurture",
     vars: ["name", "shop", "tip"],
     body: {
-      hi: "नमस्ते {{1}} जी, {{2}} की ओर से एक छोटी सी सलाह: {{3}} इससे आपके स्टील के बर्तन सालों तक नए जैसे रहेंगे। कोई मदद चाहिए तो इस मैसेज का जवाब दें।",
-      gu: "નમસ્તે {{1}}, {{2}} તરફથી એક નાની સલાહ: {{3}} આથી તમારા સ્ટીલના વાસણો વર્ષો સુધી નવા જેવા રહેશે. કોઈ મદદ જોઈએ તો આ મેસેજનો જવાબ આપો.",
-      en: "Hello {{1}}, a quick tip from {{2}}: {{3}} This will keep your steel utensils looking new for years. Reply to this message if you need any help.",
+      hi: "नमस्ते {{1}} जी, {{2}} की ओर से एक छोटी सी सलाह: {{3}} हमें आशा है कि इससे आपको अपनी खरीदारी का पूरा लाभ मिलेगा। कोई मदद चाहिए तो इस मैसेज का जवाब दें।",
+      gu: "નમસ્તે {{1}}, {{2}} તરફથી એક નાની સલાહ: {{3}} અમને આશા છે કે આથી તમને તમારી ખરીદીનો પૂરો લાભ મળશે. કોઈ મદદ જોઈએ તો આ મેસેજનો જવાબ આપો.",
+      en: "Hello {{1}}, a quick tip from {{2}}: {{3}} We hope it helps you get the most from your purchase. Reply to this message if you need any help.",
     },
   },
   {
@@ -231,9 +248,9 @@ export const PACK_TEMPLATES: PackTemplate[] = [
     stage: "nurture",
     vars: ["name", "shop"],
     body: {
-      hi: "नमस्ते {{1}} जी, आपको {{2}} पर आए काफ़ी समय हो गया है। कुछ नया लेना है या बदलवाना है? इस मैसेज का जवाब दें, हम तुरंत आपकी मदद करेंगे।",
-      gu: "નમસ્તે {{1}}, તમે {{2}} પર આવ્યા ને ઘણો સમય થઈ ગયો. કંઈ નવું લેવું છે કે બદલાવવું છે? આ મેસેજનો જવાબ આપો, અમે તરત જ તમારી મદદ કરીશું.",
-      en: "Hello {{1}}, it has been a while since your last visit to {{2}}. Need to restock or replace something? Reply to this message and we will help you right away.",
+      hi: "नमस्ते {{1}} जी, आपको {{2}} पर आए काफ़ी समय हो गया है। कुछ नया देखना है? इस मैसेज का जवाब दें, हम तुरंत आपकी मदद करेंगे।",
+      gu: "નમસ્તે {{1}}, તમે {{2}} પર આવ્યા ને ઘણો સમય થઈ ગયો. કંઈ નવું જોવું છે? આ મેસેજનો જવાબ આપો, અમે તરત જ તમારી મદદ કરીશું.",
+      en: "Hello {{1}}, it has been a while since your last visit to {{2}}. Looking for something new? Reply to this message and we will help you right away.",
     },
   },
   {
@@ -295,22 +312,15 @@ export function selectPackTemplates(opts: { keys?: string[]; stages?: PackStage[
 
 // ── The "thank you and stay in touch" journey ──────────────────────────────
 
-/** Steel-care tip used in the care-tip step until the shop swaps in its own. */
-const DEFAULT_TIP: Record<PackLang, string> = {
-  hi: "स्टील के बर्तनों को नरम स्पंज और हल्के साबुन से धोएँ और पानी के दाग से बचने के लिए अच्छी तरह सुखाएँ।",
-  gu: "સ્ટીલના વાસણોને નરમ સ્પંજ અને હળવા સાબુથી ધોઈ, પાણીના ડાઘથી બચવા સારી રીતે સૂકવી લો.",
-  en: "Wash steel utensils with a soft sponge and mild soap, and dry them well to avoid water marks.",
-};
-
-/** After a sale: thank them now, share a tip in a week, bring them back after six weeks. */
+/** After a sale: thank them now, check in after a week, bring them back after six weeks. */
 export const JOURNEY_STEPS: Array<{ key: string; delayMinutes: number }> = [
   { key: "purchase_thank_you", delayMinutes: 0 },
-  { key: "care_tips", delayMinutes: 7 * 24 * 60 },
+  { key: "purchase_check_in", delayMinutes: 7 * 24 * 60 },
   { key: "reorder_nudge", delayMinutes: 45 * 24 * 60 },
 ];
 
 /** Which variable gets what, for a template placed in a sale-triggered sequence. */
-export function journeyMapping(t: PackTemplate, ctx: { shop: string; language: PackLang }): Record<string, string> {
+export function journeyMapping(t: PackTemplate, ctx: { shop: string }): Record<string, string> {
   const mapping: Record<string, string> = {};
   t.vars.forEach((kind, i) => {
     const slot = String(i + 1);
@@ -318,7 +328,6 @@ export function journeyMapping(t: PackTemplate, ctx: { shop: string; language: P
     else if (kind === "shop") mapping[slot] = `text:${ctx.shop}`;
     else if (kind === "amount") mapping[slot] = "ctx:amount_display";
     else if (kind === "bill") mapping[slot] = "ctx:bill";
-    else if (kind === "tip") mapping[slot] = `text:${DEFAULT_TIP[ctx.language]}`;
   });
   return mapping;
 }

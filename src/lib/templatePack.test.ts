@@ -2,9 +2,22 @@ import { describe, it, expect } from "vitest";
 import { PACK_TEMPLATES, PACK_LANGUAGES, VAR_KINDS, JOURNEY_STEPS, buildPackTemplate, selectPackTemplates, journeyMapping } from "./templatePack";
 import { buildTemplateComponents } from "./templateBuild";
 
+// The pack must suit ANY business. These are trade-specific words that belong in a business's own templates, not here.
+const INDUSTRY_WORDS = /steel|utensil|thali|kadhai|tiffin|cooker|vessel|cutlery|saree|sari|lehenga|jewel|gold|silver|grocery|kirana|medicine|pharma|electronic|furniture/i;
+
 const variableIndexes = (text: string) => [...text.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
 
 describe("starter template pack — Meta's rules", () => {
+  it("contains no industry-specific wording, in any language, example or description", () => {
+    for (const t of PACK_TEMPLATES) {
+      const text = [t.title, t.when, ...Object.values(t.body), ...t.vars.flatMap((v) => Object.values(VAR_KINDS[v].example))].join(" ");
+      expect(text, t.key).not.toMatch(INDUSTRY_WORDS);
+    }
+    for (const info of Object.values(VAR_KINDS)) {
+      expect([info.label, ...Object.values(info.example)].join(" ")).not.toMatch(INDUSTRY_WORDS);
+    }
+  });
+
   it("has unique template keys", () => {
     const keys = PACK_TEMPLATES.map((t) => t.key);
     expect(new Set(keys).size).toBe(keys.length);
@@ -93,13 +106,13 @@ describe("thank-you journey", () => {
     for (const step of JOURNEY_STEPS) {
       const t = PACK_TEMPLATES.find((x) => x.key === step.key)!;
       for (const { code } of PACK_LANGUAGES) {
-        const mapping = journeyMapping(t, { shop: "Maheshwari Steel House", language: code });
+        const mapping = journeyMapping(t, { shop: "Sharma Traders" });
         expect(Object.keys(mapping).sort()).toEqual(t.vars.map((_, i) => String(i + 1)));
       }
     }
   });
   it("takes the customer's name from the contact and the amount and bill from the sale", () => {
     const t = PACK_TEMPLATES.find((x) => x.key === "purchase_thank_you")!;
-    expect(journeyMapping(t, { shop: "Shop", language: "en" })).toEqual({ "1": "name", "2": "text:Shop", "3": "ctx:amount_display", "4": "ctx:bill" });
+    expect(journeyMapping(t, { shop: "Shop" })).toEqual({ "1": "name", "2": "text:Shop", "3": "ctx:amount_display", "4": "ctx:bill" });
   });
 });

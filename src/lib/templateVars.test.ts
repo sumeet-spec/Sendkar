@@ -21,7 +21,7 @@ describe("resolveTemplateParam", () => {
     expect(resolveTemplateParam("text:Diwali", contact, "en")).toBe("Diwali");
     expect(resolveTemplateParam("text:Diwali", { name: null }, "en")).toBe("Diwali");
   });
-  it("flattens newlines in fixed text", () => expect(cleanFixedText("Steel thali\n  set   at ₹999")).toBe("Steel thali set at ₹999"));
+  it("flattens newlines in fixed text", () => expect(cleanFixedText("Festive combo\n  set   at ₹999")).toBe("Festive combo set at ₹999"));
   it("falls back to a language-aware name when the contact has none", () => {
     expect(resolveTemplateParam("name", { name: null }, "hi")).toBe("ग्राहक");
     expect(resolveTemplateParam(undefined, { name: "" }, "gu")).toBe("ગ્રાહક");

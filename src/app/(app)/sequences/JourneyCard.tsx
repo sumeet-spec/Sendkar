@@ -25,7 +25,7 @@ export function JourneyCard() {
       <div className="font-medium">Thank customers and stay in touch</div>
       <p className="mt-0.5 text-[12.5px] text-muted">
         Every sale you log (in the inbox, or from Shopify / WooCommerce) sends a thank-you with the bill details straight
-        away, a care tip a week later, and a we-miss-you note after six weeks. Set up in one click from the Starter pack.
+        away, a friendly check-in a week later, and a we-miss-you note after six weeks. Set up in one click from the Starter pack.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <select value={language} onChange={(e) => setLanguage(e.target.value)} className="sk-input w-36 text-sm">

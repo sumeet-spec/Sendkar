@@ -32,8 +32,9 @@ export function StarterPack({ canSubmitToMeta, installedCount }: { canSubmitToMe
       <summary className="cursor-pointer list-none">
         <div className="font-medium">Starter pack for Indian traders</div>
         <p className="mt-0.5 text-[12.5px] text-muted">
-          {PACK_TEMPLATES.length} ready-made messages — festival greetings and offers, dealer rates, new stock, thank-you,
-          payment reminders, LR updates — in Hindi, Gujarati and English. Add them in one click instead of writing each.
+          {PACK_TEMPLATES.length} ready-made messages for any shop or business — festival greetings and offers, new stock, price lists,
+          thank-you, payment reminders, dispatch updates, follow-ups — in Hindi, Gujarati and English. Add them in one click, and write
+          your own for anything specific to your trade.
         </p>
       </summary>
 

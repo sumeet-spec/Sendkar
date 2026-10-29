@@ -136,7 +136,7 @@ export async function deleteSequenceStep(id: string, sequenceId: string) {
 
 /**
  * Creates the "thank you, then stay in touch" journey for shops that sell at a
- * counter: every sale you log sends a thank-you at once, a care tip a week
+ * counter: every sale you log sends a thank-you at once, a check-in a week
  * later and a we-miss-you note after six weeks. Built from the starter pack,
  * so those templates must already be in the account.
  */
@@ -174,7 +174,7 @@ export async function createThankYouJourney(language: string): Promise<{ error?:
       message_body: pack.body[lang.code as PackLang],
       include_payment_link: false,
       template_id: byName.get(`sk_${step.key}_${lang.code}`)!.id,
-      variable_mapping: journeyMapping(pack, { shop: workspace.name, language: lang.code as PackLang }),
+      variable_mapping: journeyMapping(pack, { shop: workspace.name }),
     };
   });
   const { error: stepsError } = await supabase.from("sequence_steps").insert(steps);

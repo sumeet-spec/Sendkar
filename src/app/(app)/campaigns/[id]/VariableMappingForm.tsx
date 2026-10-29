@@ -78,7 +78,7 @@ export function VariableMappingForm({
                   className="sk-input text-[13px]"
                   disabled={disabled}
                   maxLength={200}
-                  placeholder="e.g. Diwali, Maheshwari Steel House, or the offer line"
+                  placeholder="e.g. Diwali, your business name, or the offer line"
                   value={mapping[idx].slice(5)}
                   onChange={(e) => {
                     setSaved(false);

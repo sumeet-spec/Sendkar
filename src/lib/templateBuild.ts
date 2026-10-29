@@ -20,7 +20,7 @@ export interface BuildInput {
 }
 
 // Realistic-looking fallbacks: Meta's reviewers reject obvious placeholders like "test" or "xxx".
-const FALLBACK_EXAMPLES = ["Rajesh", "Maheshwari Steel House", "Diwali", "₹5,000", "15 Nov 2026", "https://sendkar.shop/pay/abc123", "BILL-1042", "Sharma Transport"];
+const FALLBACK_EXAMPLES = ["Rajesh", "Sharma Traders", "Diwali", "₹5,000", "15 Nov 2026", "https://sendkar.shop/pay/abc123", "BILL-1042", "Sharma Transport"];
 
 export function countBodyVariables(bodyText: string): number {
   const indexes = [...bodyText.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
