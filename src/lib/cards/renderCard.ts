@@ -121,6 +121,8 @@ export type CardInput = {
   size?: number;
   /** A library design: its artwork and colours replace the plain brand-colour background. */
   design?: { motif: MotifId; variant: Variant; palette: Palette };
+  /** A small credit line at the very bottom, e.g. "Made with Sendkar · sendkar.shop". Used on cards from the free public tool. */
+  watermark?: string;
 };
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -212,6 +214,10 @@ export function buildCardSvg(input: CardInput): string {
   const n = block(input.businessName, lang, { bold: true, size: 64 * u, minSize: 36 * u, maxWidth: maxW, maxLines: 1, cx: S / 2, top: fy - 64 * u * 1.3, fill: accent });
   foot.push(n.svg);
   parts.push(...foot);
+  if (input.watermark) {
+    const w = block(input.watermark, "en", { bold: false, size: 24 * u, minSize: 16 * u, maxWidth: maxW, maxLines: 1, cx: S / 2, top: S - 64 * u, fill: "#ffffff" });
+    parts.push(`<g opacity="0.75">${w.svg}</g>`);
+  }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">${parts.join("")}</svg>`;
 }

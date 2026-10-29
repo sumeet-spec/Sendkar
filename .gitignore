@@ -49,3 +49,8 @@ next-env.d.ts
 
 # Marketing creatives (PNG/PDF/PPTX) — not app source, no need in the repo.
 /marketing/
+
+.vercel
+
+# contains the cron secret: never commit
+supabase/cron/*.READY.sql

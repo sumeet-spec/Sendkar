@@ -15,7 +15,7 @@ select cron.schedule(
   $$
   select net.http_get(
     url := 'https://www.sendkar.shop/api/cron/send',
-    headers := jsonb_build_object('authorization', 'Bearer PUT_YOUR_CRON_SECRET_HERE')
+    headers := jsonb_build_object('authorization', 'Bearer fTuQmRI4LJ8Xv2ByJ4xnw2h7vBrAcyX6')
   );
   $$
 );

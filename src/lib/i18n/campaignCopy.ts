@@ -31,7 +31,7 @@ export const CAMPAIGN_COPY: Record<LanguageCode, CampaignCopy> = {
     },
     controls: {
       sendNow: "Send now", starting: "Starting…", schedule: "Schedule", confirmSchedule: "Confirm schedule", scheduling: "Scheduling…", pause: "Pause", resume: "Resume", scheduledFor: "Scheduled for",
-      startNote: "Send now starts straight away. A scheduled campaign goes out in the first daily sending run after the time you pick (about 8:30 AM India time). Sending always stays within Meta's daily limit for your number.",
+      startNote: "Send now starts straight away. A scheduled campaign goes out within a few minutes of the time you pick. Sending always stays within Meta's daily limit for your number.",
     },
     detail: {
       multiLanguage: "Multi-language — auto-sends the right version to each contact ({langs})", scheduledFor: "Scheduled for",
@@ -56,7 +56,7 @@ export const CAMPAIGN_COPY: Record<LanguageCode, CampaignCopy> = {
     },
     controls: {
       sendNow: "अभी भेजें", starting: "शुरू हो रहा है…", schedule: "समय तय करें", confirmSchedule: "समय पक्का करें", scheduling: "तय हो रहा है…", pause: "रोकें", resume: "फिर शुरू करें", scheduledFor: "तय समय",
-      startNote: "अभी भेजें दबाते ही भेजना शुरू हो जाता है। समय तय किया हुआ कैंपेन चुने हुए समय के बाद पहले रोज़ाना भेजने वाले दौर में जाता है (भारतीय समय लगभग सुबह 8:30)। भेजना हमेशा आपके नंबर की Meta की रोज़ की सीमा के भीतर रहता है।",
+      startNote: "अभी भेजें दबाते ही भेजना शुरू हो जाता है। समय तय किया हुआ कैंपेन चुने हुए समय के कुछ ही मिनटों में चला जाता है। भेजना हमेशा आपके नंबर की Meta की रोज़ की सीमा के भीतर रहता है।",
     },
     detail: {
       multiLanguage: "कई भाषाएँ — हर संपर्क को सही भाषा वाला संदेश अपने आप जाता है ({langs})", scheduledFor: "तय समय",
@@ -81,7 +81,7 @@ export const CAMPAIGN_COPY: Record<LanguageCode, CampaignCopy> = {
     },
     controls: {
       sendNow: "आत्ता पाठवा", starting: "सुरू होत आहे…", schedule: "वेळ ठरवा", confirmSchedule: "वेळ पक्की करा", scheduling: "ठरवत आहे…", pause: "थांबवा", resume: "पुन्हा सुरू करा", scheduledFor: "ठरलेली वेळ",
-      startNote: "आत्ता पाठवा दाबताच पाठवणे सुरू होते. वेळ ठरवलेले कॅम्पेन निवडलेल्या वेळेनंतरच्या पहिल्या रोजच्या पाठवण्याच्या फेरीत जाते (भारतीय वेळेनुसार सुमारे सकाळी 8:30). पाठवणे नेहमी तुमच्या नंबरच्या Meta च्या रोजच्या मर्यादेत राहते.",
+      startNote: "आत्ता पाठवा दाबताच पाठवणे सुरू होते. वेळ ठरवलेले कॅम्पेन निवडलेल्या वेळेच्या काही मिनिटांतच जाते. पाठवणे नेहमी तुमच्या नंबरच्या Meta च्या रोजच्या मर्यादेत राहते.",
     },
     detail: {
       multiLanguage: "अनेक भाषा — प्रत्येक संपर्काला योग्य भाषेतील संदेश आपोआप जातो ({langs})", scheduledFor: "ठरलेली वेळ",
@@ -106,7 +106,7 @@ export const CAMPAIGN_COPY: Record<LanguageCode, CampaignCopy> = {
     },
     controls: {
       sendNow: "இப்போதே அனுப்பு", starting: "தொடங்குகிறது…", schedule: "நேரம் குறிக்கவும்", confirmSchedule: "நேரத்தை உறுதி செய்", scheduling: "குறிக்கிறது…", pause: "நிறுத்து", resume: "தொடரவும்", scheduledFor: "குறித்த நேரம்",
-      startNote: "இப்போதே அனுப்பு என்பதை அழுத்தியவுடன் அனுப்புதல் தொடங்கும். நேரம் குறித்த கேம்பெயின் நீங்கள் தேர்ந்த நேரத்துக்குப் பிறகு வரும் முதல் தினசரி அனுப்பும் சுற்றில் செல்லும் (இந்திய நேரப்படி சுமார் காலை 8:30). அனுப்புதல் எப்போதும் உங்கள் எண்ணுக்கான Meta-வின் தினசரி வரம்புக்குள் இருக்கும்.",
+      startNote: "இப்போதே அனுப்பு என்பதை அழுத்தியவுடன் அனுப்புதல் தொடங்கும். நேரம் குறித்த கேம்பெயின் நீங்கள் தேர்ந்த நேரத்திலிருந்து சில நிமிடங்களுக்குள் செல்லும். அனுப்புதல் எப்போதும் உங்கள் எண்ணுக்கான Meta-வின் தினசரி வரம்புக்குள் இருக்கும்.",
     },
     detail: {
       multiLanguage: "பல மொழிகள் — ஒவ்வொருவருக்கும் சரியான மொழிச் செய்தி தானாகச் செல்லும் ({langs})", scheduledFor: "குறித்த நேரம்",
@@ -131,7 +131,7 @@ export const CAMPAIGN_COPY: Record<LanguageCode, CampaignCopy> = {
     },
     controls: {
       sendNow: "ఇప్పుడే పంపండి", starting: "మొదలవుతోంది…", schedule: "సమయం నిర్ణయించండి", confirmSchedule: "సమయం ఖరారు చేయండి", scheduling: "నిర్ణయిస్తోంది…", pause: "ఆపండి", resume: "మళ్ళీ మొదలుపెట్టండి", scheduledFor: "నిర్ణయించిన సమయం",
-      startNote: "ఇప్పుడే పంపండి నొక్కగానే పంపడం మొదలవుతుంది. సమయం నిర్ణయించిన క్యాంపెయిన్ మీరు ఎంచుకున్న సమయం తర్వాత వచ్చే మొదటి రోజువారీ పంపే రౌండ్‌లో వెళ్తుంది (భారత కాలమానం ప్రకారం సుమారు ఉదయం 8:30). పంపడం ఎప్పుడూ మీ నంబర్‌కు Meta రోజువారీ పరిమితిలోనే ఉంటుంది.",
+      startNote: "ఇప్పుడే పంపండి నొక్కగానే పంపడం మొదలవుతుంది. సమయం నిర్ణయించిన క్యాంపెయిన్ మీరు ఎంచుకున్న సమయం నుండి కొన్ని నిమిషాల్లో వెళ్తుంది. పంపడం ఎప్పుడూ మీ నంబర్‌కు Meta రోజువారీ పరిమితిలోనే ఉంటుంది.",
     },
     detail: {
       multiLanguage: "బహుళ భాషలు — ప్రతి కాంటాక్ట్‌కు సరైన భాష సందేశం ఆటోమేటిక్‌గా వెళ్తుంది ({langs})", scheduledFor: "నిర్ణయించిన సమయం",
@@ -156,7 +156,7 @@ export const CAMPAIGN_COPY: Record<LanguageCode, CampaignCopy> = {
     },
     controls: {
       sendNow: "ಈಗಲೇ ಕಳುಹಿಸಿ", starting: "ಶುರುವಾಗುತ್ತಿದೆ…", schedule: "ಸಮಯ ನಿಗದಿಸಿ", confirmSchedule: "ಸಮಯ ಖಚಿತಪಡಿಸಿ", scheduling: "ನಿಗದಿಸುತ್ತಿದೆ…", pause: "ನಿಲ್ಲಿಸಿ", resume: "ಮತ್ತೆ ಶುರು ಮಾಡಿ", scheduledFor: "ನಿಗದಿತ ಸಮಯ",
-      startNote: "ಈಗಲೇ ಕಳುಹಿಸಿ ಒತ್ತಿದ ತಕ್ಷಣ ಕಳುಹಿಸುವಿಕೆ ಶುರುವಾಗುತ್ತದೆ. ಸಮಯ ನಿಗದಿಸಿದ ಕ್ಯಾಂಪೇನ್ ನೀವು ಆರಿಸಿದ ಸಮಯದ ನಂತರದ ಮೊದಲ ದೈನಂದಿನ ಕಳುಹಿಸುವ ಸುತ್ತಿನಲ್ಲಿ ಹೋಗುತ್ತದೆ (ಭಾರತೀಯ ಸಮಯ ಸುಮಾರು ಬೆಳಿಗ್ಗೆ 8:30). ಕಳುಹಿಸುವಿಕೆ ಯಾವಾಗಲೂ ನಿಮ್ಮ ಸಂಖ್ಯೆಗೆ Meta ದ ದೈನಂದಿನ ಮಿತಿಯೊಳಗೇ ಇರುತ್ತದೆ.",
+      startNote: "ಈಗಲೇ ಕಳುಹಿಸಿ ಒತ್ತಿದ ತಕ್ಷಣ ಕಳುಹಿಸುವಿಕೆ ಶುರುವಾಗುತ್ತದೆ. ಸಮಯ ನಿಗದಿಸಿದ ಕ್ಯಾಂಪೇನ್ ನೀವು ಆರಿಸಿದ ಸಮಯದಿಂದ ಕೆಲವೇ ನಿಮಿಷಗಳಲ್ಲಿ ಹೋಗುತ್ತದೆ. ಕಳುಹಿಸುವಿಕೆ ಯಾವಾಗಲೂ ನಿಮ್ಮ ಸಂಖ್ಯೆಗೆ Meta ದ ದೈನಂದಿನ ಮಿತಿಯೊಳಗೇ ಇರುತ್ತದೆ.",
     },
     detail: {
       multiLanguage: "ಬಹು ಭಾಷೆ — ಪ್ರತಿ ಸಂಪರ್ಕಕ್ಕೂ ಸರಿಯಾದ ಭಾಷೆಯ ಸಂದೇಶ ತಾನಾಗಿ ಹೋಗುತ್ತದೆ ({langs})", scheduledFor: "ನಿಗದಿತ ಸಮಯ",
@@ -181,7 +181,7 @@ export const CAMPAIGN_COPY: Record<LanguageCode, CampaignCopy> = {
     },
     controls: {
       sendNow: "હમણાં જ મોકલો", starting: "શરૂ થઈ રહ્યું છે…", schedule: "સમય નક્કી કરો", confirmSchedule: "સમય પાકો કરો", scheduling: "નક્કી થઈ રહ્યું છે…", pause: "અટકાવો", resume: "ફરી શરૂ કરો", scheduledFor: "નક્કી કરેલો સમય",
-      startNote: "હમણાં જ મોકલો દબાવતા જ મોકલવાનું શરૂ થઈ જાય છે. સમય નક્કી કરેલું કેમ્પેઇન તમે પસંદ કરેલા સમય પછીના પહેલા રોજના મોકલવાના રાઉન્ડમાં જાય છે (ભારતીય સમય મુજબ લગભગ સવારે 8:30). મોકલવાનું હંમેશા તમારા નંબરની Meta ની રોજની મર્યાદામાં રહે છે.",
+      startNote: "હમણાં જ મોકલો દબાવતા જ મોકલવાનું શરૂ થઈ જાય છે. સમય નક્કી કરેલું કેમ્પેઇન તમે પસંદ કરેલા સમયથી થોડી જ મિનિટોમાં જાય છે. મોકલવાનું હંમેશા તમારા નંબરની Meta ની રોજની મર્યાદામાં રહે છે.",
     },
     detail: {
       multiLanguage: "ઘણી ભાષાઓ — દરેક સંપર્કને સાચી ભાષાનો સંદેશ આપોઆપ જાય છે ({langs})", scheduledFor: "નક્કી કરેલો સમય",
