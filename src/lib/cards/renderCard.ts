@@ -200,3 +200,33 @@ export function renderCardPng(input: CardInput): Buffer {
   const svg = buildCardSvg(input);
   return Buffer.from(new Resvg(svg, { fitTo: { mode: "width", value: input.size ?? 1080 } }).render().asPng());
 }
+
+// ── Simple logo ("monogram") ────────────────────────────────────────────────
+// For shops with no logo: the first letters of the name on a coloured shape, drawn with the same
+// shaped-text code as the cards, so it works in every script.
+
+export type MonogramShape = "circle" | "rounded" | "square";
+
+const SCRIPT_RANGES: Array<[RegExp, string]> = [
+  [/[ऀ-ॿ]/, "NotoSansDevanagari"], [/[઀-૿]/, "NotoSansGujarati"], [/[஀-௿]/, "NotoSansTamil"],
+  [/[ఀ-౿]/, "NotoSansTelugu"], [/[ಀ-೿]/, "NotoSansKannada"],
+];
+
+export function fontFamilyForText(text: string): string {
+  return SCRIPT_RANGES.find(([re]) => re.test(text))?.[1] ?? "NotoSans";
+}
+
+export function renderMonogramPng(input: { text: string; shape: MonogramShape; fill: string; ink: string; size?: number }): Buffer {
+  const S = input.size ?? 512;
+  const fill = safeColor(input.fill, "#0f766e");
+  const ink = safeColor(input.ink, "#ffffff");
+  const family = fontFamilyForText(input.text);
+  let size = S * 0.46;
+  while (measure(input.text, family, true, size) > S * 0.72 && size > 40) size -= 4;
+  const shape =
+    input.shape === "circle" ? `<circle cx="${S / 2}" cy="${S / 2}" r="${S / 2}" fill="${fill}"/>`
+    : `<rect width="${S}" height="${S}" rx="${input.shape === "rounded" ? S * 0.22 : 0}" fill="${fill}"/>`;
+  const text = drawLine(input.text, family, true, size, S / 2, S / 2 + size * 0.34, ink);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">${shape}${text}</svg>`;
+  return Buffer.from(new Resvg(svg, { fitTo: { mode: "width", value: S } }).render().asPng());
+}

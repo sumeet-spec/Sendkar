@@ -109,7 +109,7 @@ export function NewCampaignForm({
           ))}
         </select>
         {cardUrl && selectedTemplate && selectedTemplate.header_type !== "image" && (
-          <p className="mt-2 text-[12.5px] text-danger">This template has no picture at the top, so your card would not be sent. Pick one marked "with picture".</p>
+          <p className="mt-2 text-[12.5px] text-danger">This template has no picture at the top, so your card would not be sent. Pick one marked &quot;with picture&quot;.</p>
         )}
         {selectedTemplate?.body_preview && (
           <div className="mt-2 rounded-md border border-border bg-[var(--surface-2)] px-3 py-2.5 text-[12.5px] text-muted" style={{ whiteSpace: "pre-wrap" }}>

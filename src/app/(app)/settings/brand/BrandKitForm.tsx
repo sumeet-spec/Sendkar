@@ -13,6 +13,28 @@ export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceNam
   const [primary, setPrimary] = useState(kit?.primary_color ?? DEFAULT_PRIMARY);
   const [accent, setAccent] = useState(kit?.accent_color ?? DEFAULT_ACCENT);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState(kit?.name ?? workspaceName);
+  const [site, setSite] = useState(kit?.website ?? "");
+  const [shape, setShape] = useState<"circle" | "rounded" | "square">("circle");
+  const [working, setWorking] = useState<"site" | "make" | null>(null);
+
+  async function callLogo(kind: "logo-from-site" | "logo-make", payload: Record<string, unknown>) {
+    setLogoError(null);
+    setWorking(kind === "logo-make" ? "make" : "site");
+    try {
+      const res = await fetch(`/api/brand/${kind}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspaceId, ...payload }) });
+      const json = (await res.json()) as { url?: string; error?: string; themeColor?: string | null };
+      if (!res.ok || !json.url) setLogoError(json.error ?? "Could not get a logo.");
+      else {
+        setLogo(json.url);
+        if (json.themeColor) setPrimary(json.themeColor);
+      }
+    } catch {
+      setLogoError("Could not get a logo. Check your internet and try again.");
+    } finally {
+      setWorking(null);
+    }
+  }
 
   async function onLogo(file: File | undefined) {
     if (!file) return;
@@ -39,7 +61,7 @@ export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceNam
     <form action={formAction} className="flex flex-col gap-5">
       <div>
         <label className="sk-label">Shop or business name</label>
-        <input name="name" defaultValue={kit?.name ?? workspaceName} className="sk-input" maxLength={60} />
+        <input name="name" value={name} onChange={(e) => setName(e.target.value)} className="sk-input" maxLength={60} />
       </div>
 
       <div className="sk-card p-4">
@@ -64,12 +86,26 @@ export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceNam
         </div>
         <div className="flex-1">
           <div className="text-sm font-medium">Logo</div>
-          <p className="text-[12.5px] text-faint">PNG, JPG or WebP, under 1 MB. A square logo works best.</p>
+          <p className="text-[12.5px] text-faint">Three ways: upload yours, take it from your website, or make a simple one from your name.</p>
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => onLogo(e.target.files?.[0])} />
-          <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className="sk-btn mt-2 disabled:opacity-60">
-            {uploading ? "Uploading…" : logo ? "Change logo" : "Upload logo"}
-          </button>
-          {logoError && <p className="mt-1 text-sm text-danger">{logoError}</p>}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className="sk-btn disabled:opacity-60">
+              {uploading ? "Uploading…" : logo ? "Upload a different logo" : "Upload logo"}
+            </button>
+            <button type="button" disabled={working !== null || !site.trim()} onClick={() => callLogo("logo-from-site", { website: site })} className="sk-btn disabled:opacity-60" title={site.trim() ? undefined : "Type your website below first"}>
+              {working === "site" ? "Looking…" : "Get it from my website"}
+            </button>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+            <span className="text-[12.5px] text-muted">No logo? Make one:</span>
+            {(["circle", "rounded", "square"] as const).map((sh) => (
+              <button key={sh} type="button" onClick={() => setShape(sh)} aria-label={sh} className={`h-7 w-7 border ${sh === "circle" ? "rounded-full" : sh === "rounded" ? "rounded-md" : ""} ${shape === sh ? "border-accent bg-accent/20" : "border-border"}`} />
+            ))}
+            <button type="button" disabled={working !== null || !name.trim()} onClick={() => callLogo("logo-make", { name, shape, fill: primary, ink: "#ffffff" })} className="sk-btn disabled:opacity-60">
+              {working === "make" ? "Making…" : "Make my logo"}
+            </button>
+          </div>
+          {logoError && <p className="mt-2 text-sm text-danger">{logoError}</p>}
         </div>
       </div>
 
@@ -95,7 +131,7 @@ export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceNam
         </div>
         <div>
           <label className="sk-label">Website (optional)</label>
-          <input name="website" defaultValue={kit?.website ?? ""} className="sk-input" maxLength={60} />
+          <input name="website" value={site} onChange={(e) => setSite(e.target.value)} className="sk-input" maxLength={60} />
         </div>
       </div>
       <div>

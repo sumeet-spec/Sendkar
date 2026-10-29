@@ -1,14 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
 import { OCCASIONS, matchOccasion, type OccasionId } from "@/lib/cards/occasions";
 
 type Made = { url: string; imagesRemaining?: number };
 
-export function CardMaker({ workspaceId, hasLogo }: { workspaceId: string; hasLogo: boolean }) {
-  const [lang, setLang] = useState<LanguageCode>("hi");
+const LANG_KEY = "sk_card_lang";
+
+export function CardMaker({ workspaceId, hasLogo, defaultLang, fromCustomers }: { workspaceId: string; hasLogo: boolean; defaultLang: LanguageCode; fromCustomers: boolean }) {
+  const [lang, setLangState] = useState<LanguageCode>(defaultLang);
+  const [remembered, setRemembered] = useState(false);
+
+  // Use the language this shopkeeper picked last time, if any; otherwise the suggested default.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LANG_KEY);
+      // Read once after mount (reading earlier would not match the server-rendered page).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (saved && LANGUAGES.some((l) => l.code === saved)) { setLangState(saved as LanguageCode); setRemembered(true); }
+    } catch { /* storage unavailable: keep the default */ }
+  }, []);
+
+  function setLang(code: LanguageCode) {
+    setLangState(code);
+    setRemembered(true);
+    try { localStorage.setItem(LANG_KEY, code); } catch { /* ignore */ }
+  }
   const [occasion, setOccasion] = useState<OccasionId | "">("diwali");
   const [ask, setAsk] = useState("");
   const [custom, setCustom] = useState("");
@@ -77,6 +96,9 @@ export function CardMaker({ workspaceId, hasLogo }: { workspaceId: string; hasLo
           <select value={lang} onChange={(e) => setLang(e.target.value as LanguageCode)} className="sk-input">
             {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
           </select>
+          <p className="mt-1 text-[12px] text-faint">
+            {remembered ? "Remembered from last time. Change it any time." : fromCustomers ? "Most of your customers speak this language. Change it any time." : "Starts as the language of your app. Change it any time."}
+          </p>
         </div>
 
         <div>
