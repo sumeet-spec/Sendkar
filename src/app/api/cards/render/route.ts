@@ -5,6 +5,7 @@ import { isRateLimited } from "@/lib/rateLimit";
 import { generateWorkspaceImage } from "@/lib/aiImage";
 import { renderCardPng } from "@/lib/cards/renderCard";
 import { occasionById } from "@/lib/cards/occasions";
+import { brandPalette, designById } from "@/lib/cards/designs";
 import { contactLine, nameFor, DEFAULT_ACCENT, DEFAULT_PRIMARY, sniffImage, type BrandKit } from "@/lib/brandKit";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
 import { translateLine } from "@/lib/translateLine";
@@ -22,6 +23,10 @@ type Body = {
   headline?: string;
   line?: string;
   withBackground?: boolean;
+  /** A ready-made design from the festival library. */
+  designId?: string;
+  /** "festival" keeps the design's own colours; "brand" repaints it in the shop's colours. */
+  colourMode?: string;
 };
 
 /** Fetches one of our own stored images. Refuses any other host so a stored URL can never be used to reach elsewhere. */
@@ -60,7 +65,9 @@ export async function POST(req: NextRequest) {
     : [codeOf(body.lang)].filter((l): l is LanguageCode => Boolean(l));
   if (langs.length === 0) return NextResponse.json({ error: "Choose a language." }, { status: 400 });
 
-  const occasion = body.occasion ? occasionById(body.occasion) : undefined;
+  const design = body.designId ? designById(body.designId) : undefined;
+  if (body.designId && !design) return NextResponse.json({ error: "That design is not available." }, { status: 404 });
+  const occasion = design ? occasionById(design.occasion) : body.occasion ? occasionById(body.occasion) : undefined;
   const customHeadline = body.headline?.trim().slice(0, 80) || "";
   // A heading typed by the shop is in one language only, so it cannot be used for several languages.
   if (multi && langs.length > 1 && customHeadline) {
@@ -103,7 +110,8 @@ export async function POST(req: NextRequest) {
   let background: { bytes: Buffer; mime: string } | undefined;
   let imagesRemaining: number | undefined;
   let refund: (() => Promise<void>) | undefined;
-  if (body.withBackground) {
+  // A library design brings its own artwork, so no AI picture (and no image charge) is used with one.
+  if (body.withBackground && !design) {
     const scene = occasion?.scene ?? "soft abstract colour shapes";
     const prompt = `A square, text-free background picture for a shop's greeting card: ${scene}. Leave the centre calm and uncluttered. No text, no letters, no numbers, no logos, no people.`;
     const result = await generateWorkspaceImage(admin, workspaceId, prompt, "1:1");
@@ -128,6 +136,7 @@ export async function POST(req: NextRequest) {
         accentColor: kit.accent_color || DEFAULT_ACCENT,
         logo,
         background,
+        design: design ? { motif: design.motif, variant: design.variant, palette: body.colourMode === "brand" ? brandPalette(kit.primary_color, kit.accent_color) : design.palette } : undefined,
       });
       const path = `cards/${workspaceId}/${stamp}-${lang}.png`;
       const { error: uploadError } = await admin.storage.from("campaign-images").upload(path, png, { contentType: "image/png", upsert: false });

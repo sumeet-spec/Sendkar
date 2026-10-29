@@ -3,6 +3,7 @@ import path from "path";
 import * as hb from "harfbuzzjs";
 import { Resvg } from "@resvg/resvg-js";
 import type { LanguageCode } from "@/lib/i18n/dictionaries";
+import { renderMotif, type MotifId, type Palette, type Variant } from "./motifs";
 
 /**
  * Card renderer. Text is shaped with HarfBuzz and drawn as outlines, because the
@@ -118,6 +119,8 @@ export type CardInput = {
   /** Optional AI-made background picture, drawn under a colour wash. */
   background?: { bytes: Buffer; mime: string };
   size?: number;
+  /** A library design: its artwork and colours replace the plain brand-colour background. */
+  design?: { motif: MotifId; variant: Variant; palette: Palette };
 };
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -138,8 +141,10 @@ export function buildCardSvg(input: CardInput): string {
   const S = input.size ?? 1080;
   const u = S / 1080;
   const primary = safeColor(input.primaryColor, "#0f766e");
-  const accent = safeColor(input.accentColor, "#f59e0b");
-  const onPrimary = luminance(primary) > 0.45 ? "#14110f" : "#ffffff";
+  const design = input.design;
+  const accent = safeColor(design?.palette.accent ?? input.accentColor, "#f59e0b");
+  // Design cards always put white words on a dark calm panel, so they read over any artwork.
+  const onPrimary = design ? "#ffffff" : luminance(primary) > 0.45 ? "#14110f" : "#ffffff";
   const lang = input.lang;
   const margin = 90 * u;
   const maxW = S - margin * 2;
@@ -148,8 +153,15 @@ export function buildCardSvg(input: CardInput): string {
   const parts: string[] = [];
 
   parts.push(`<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${primary}"/><stop offset="1" stop-color="${primary}" stop-opacity="0.82"/></linearGradient></defs>`);
-  parts.push(`<rect width="${S}" height="${S}" fill="url(#g)"/>`);
-  if (input.background) {
+  if (design) {
+    const p = design.palette;
+    parts.push(`<defs><linearGradient id="d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${safeColor(p.bg1, "#222222")}"/><stop offset="1" stop-color="${safeColor(p.bg2, "#111111")}"/></linearGradient><linearGradient id="foot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${safeColor(p.bg2, "#111111")}" stop-opacity="0"/><stop offset="1" stop-color="${safeColor(p.bg2, "#111111")}" stop-opacity="0.9"/></linearGradient></defs>`);
+    parts.push(`<rect width="${S}" height="${S}" fill="url(#d)"/>`);
+    parts.push(`<g transform="scale(${u})">${renderMotif(design.motif, p, design.variant)}</g>`);
+  } else {
+    parts.push(`<rect width="${S}" height="${S}" fill="url(#g)"/>`);
+  }
+  if (input.background && !design) {
     parts.push(`<image href="${dataUri(input.background)}" x="0" y="0" width="${S}" height="${S}" preserveAspectRatio="xMidYMid slice"/>`);
     parts.push(`<rect width="${S}" height="${S}" fill="${primary}" fill-opacity="0.55"/>`);
   }
@@ -165,6 +177,8 @@ export function buildCardSvg(input: CardInput): string {
     y += 40 * u;
   }
 
+  const panelIdx = parts.length;
+  const panelTop = y - 30 * u;
   const head = block(input.headline, lang, { bold: true, size: 120 * u, minSize: 56 * u, maxWidth: maxW, maxLines: 3, cx: S / 2, top: y, fill: onPrimary });
   parts.push(head.svg);
   y += head.height + 24 * u;
@@ -174,6 +188,12 @@ export function buildCardSvg(input: CardInput): string {
     y += 36 * u;
     const sub = block(input.line, lang, { bold: false, size: 60 * u, minSize: 36 * u, maxWidth: maxW, maxLines: 3, cx: S / 2, top: y, fill: onPrimary });
     parts.push(sub.svg);
+    y += sub.height;
+  }
+  if (design) {
+    const dark = safeColor(design.palette.bg2, "#111111");
+    parts.splice(panelIdx, 0, `<rect x="${margin * 0.45}" y="${panelTop}" width="${S - margin * 0.9}" height="${y - panelTop + 34 * u}" rx="${34 * u}" fill="${dark}" fill-opacity="0.72"/>`);
+    parts.push(`<rect x="0" y="${S - 330 * u}" width="${S}" height="${330 * u}" fill="url(#foot)"/>`);
   }
 
   // footer: business name, tagline, contact — anchored to the bottom

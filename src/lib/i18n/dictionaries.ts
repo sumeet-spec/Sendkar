@@ -27,7 +27,7 @@ export interface Dictionary {
     webhooks: string; linksWidget: string; agency: string; settings: string; billing: string; sequences: string; deals: string;
     team: string; channels: string; cannedResponses: string; apiKeys: string; integrations: string;
     businessHours: string; payments: string; calling: string; language: string; aiAgent: string; reminders: string;
-    brandKit: string; cards: string; permission: string;
+    brandKit: string; cards: string; permission: string; library: string;
     logout: string;
   };
   auth: {
@@ -70,7 +70,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       webhooks: "Webhooks", linksWidget: "Links & widget", agency: "Agency", settings: "Settings", billing: "Billing", sequences: "Sequences", deals: "Deals",
       team: "Team", channels: "Channels", cannedResponses: "Canned responses", apiKeys: "API keys", integrations: "Integrations",
       businessHours: "Business hours", payments: "Payments", calling: "Calling", language: "Language", aiAgent: "AI agent", reminders: "Payment reminders",
-      brandKit: "Brand kit", cards: "Make a card", permission: "Collect permission",
+      brandKit: "Brand kit", cards: "Make a card", permission: "Collect permission", library: "Festival library",
       logout: "Log out",
     },
     auth: {
@@ -125,7 +125,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       webhooks: "वेबहुक", linksWidget: "लिंक और विजेट", agency: "एजेंसी", settings: "सेटिंग्स", billing: "बिलिंग", sequences: "सीक्वेंस", deals: "डील्स",
       team: "टीम", channels: "चैनल", cannedResponses: "सेव्ड रिप्लाई", apiKeys: "API कीज़", integrations: "इंटीग्रेशन",
       businessHours: "बिज़नेस समय", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा", aiAgent: "AI एजेंट", reminders: "पेमेंट रिमाइंडर",
-      brandKit: "ब्रांड किट", cards: "कार्ड बनाएँ", permission: "अनुमति लें",
+      brandKit: "ब्रांड किट", cards: "कार्ड बनाएँ", permission: "अनुमति लें", library: "त्योहार लाइब्रेरी",
       logout: "लॉग आउट",
     },
     auth: {
@@ -180,7 +180,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       webhooks: "वेबहुक", linksWidget: "लिंक आणि विजेट", agency: "एजन्सी", settings: "सेटिंग्ज", billing: "बिलिंग", sequences: "सीक्वेन्स", deals: "डील्स",
       team: "टीम", channels: "चॅनेल्स", cannedResponses: "सेव्ह केलेली उत्तरे", apiKeys: "API कीज", integrations: "इंटिग्रेशन्स",
       businessHours: "व्यवसाय वेळ", payments: "पेमेंट्स", calling: "कॉलिंग", language: "भाषा", aiAgent: "AI एजंट", reminders: "पेमेंट रिमाइंडर",
-      brandKit: "ब्रँड किट", cards: "कार्ड बनवा", permission: "परवानगी मिळवा",
+      brandKit: "ब्रँड किट", cards: "कार्ड बनवा", permission: "परवानगी मिळवा", library: "सण लायब्ररी",
       logout: "लॉग आउट",
     },
     auth: {
@@ -235,7 +235,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       webhooks: "வெப்ஹூக்குகள்", linksWidget: "இணைப்புகள் & விட்ஜெட்", agency: "ஏஜென்சி", settings: "அமைப்புகள்", billing: "பில்லிங்", sequences: "சீக்வென்ஸ்கள்", deals: "டீல்கள்",
       team: "குழு", channels: "சேனல்கள்", cannedResponses: "சேமித்த பதில்கள்", apiKeys: "API கீகள்", integrations: "இன்டகிரேஷன்கள்",
       businessHours: "வணிக நேரம்", payments: "பணம் செலுத்துதல்", calling: "கால் செய்தல்", language: "மொழி", aiAgent: "AI ஏஜென்ட்", reminders: "பணம் நினைவூட்டல்",
-      brandKit: "பிராண்ட் கிட்", cards: "கார்டு உருவாக்கு", permission: "அனுமதி பெறுங்கள்",
+      brandKit: "பிராண்ட் கிட்", cards: "கார்டு உருவாக்கு", permission: "அனுமதி பெறுங்கள்", library: "பண்டிகை நூலகம்",
       logout: "வெளியேறு",
     },
     auth: {
@@ -290,7 +290,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       webhooks: "వెబ్‌హుక్‌లు", linksWidget: "లింక్‌లు & విడ్జెట్", agency: "ఏజెన్సీ", settings: "సెట్టింగ్‌లు", billing: "బిల్లింగ్", sequences: "సీక్వెన్స్‌లు", deals: "డీల్స్",
       team: "టీమ్", channels: "ఛానెల్‌లు", cannedResponses: "సేవ్ చేసిన రిప్లైలు", apiKeys: "API కీలు", integrations: "ఇంటిగ్రేషన్‌లు",
       businessHours: "వ్యాపార వేళలు", payments: "పేమెంట్స్", calling: "కాలింగ్", language: "భాష", aiAgent: "AI ఏజెంట్", reminders: "చెల్లింపు రిమైండర్లు",
-      brandKit: "బ్రాండ్ కిట్", cards: "కార్డ్ తయారు చేయండి", permission: "అనుమతి పొందండి",
+      brandKit: "బ్రాండ్ కిట్", cards: "కార్డ్ తయారు చేయండి", permission: "అనుమతి పొందండి", library: "పండుగల లైబ్రరీ",
       logout: "లాగ్ అవుట్",
     },
     auth: {
@@ -345,7 +345,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       webhooks: "ವೆಬ್‌ಹುಕ್‌ಗಳು", linksWidget: "ಲಿಂಕ್‌ಗಳು ಮತ್ತು ವಿಡ್ಜೆಟ್", agency: "ಏಜೆನ್ಸಿ", settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು", billing: "ಬಿಲ್ಲಿಂಗ್", sequences: "ಸೀಕ್ವೆನ್ಸ್‌ಗಳು", deals: "ಡೀಲ್‌ಗಳು",
       team: "ತಂಡ", channels: "ಚಾನೆಲ್‌ಗಳು", cannedResponses: "ಉಳಿಸಿದ ಪ್ರತ್ಯುತ್ತರಗಳು", apiKeys: "API ಕೀಗಳು", integrations: "ಇಂಟಿಗ್ರೇಷನ್‌ಗಳು",
       businessHours: "ವ್ಯಾಪಾರ ಸಮಯ", payments: "ಪೇಮೆಂಟ್‌ಗಳು", calling: "ಕಾಲಿಂಗ್", language: "ಭಾಷೆ", aiAgent: "AI ಏಜೆಂಟ್", reminders: "ಪಾವತಿ ಜ್ಞಾಪನೆಗಳು",
-      brandKit: "ಬ್ರ್ಯಾಂಡ್ ಕಿಟ್", cards: "ಕಾರ್ಡ್ ಮಾಡಿ", permission: "ಅನುಮತಿ ಪಡೆಯಿರಿ",
+      brandKit: "ಬ್ರ್ಯಾಂಡ್ ಕಿಟ್", cards: "ಕಾರ್ಡ್ ಮಾಡಿ", permission: "ಅನುಮತಿ ಪಡೆಯಿರಿ", library: "ಹಬ್ಬದ ಲೈಬ್ರರಿ",
       logout: "ಲಾಗ್ ಔಟ್",
     },
     auth: {
@@ -400,7 +400,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       webhooks: "વેબહુક", linksWidget: "લિંક અને વિજેટ", agency: "એજન્સી", settings: "સેટિંગ્સ", billing: "બિલિંગ", sequences: "સિક્વન્સ", deals: "ડીલ",
       team: "ટીમ", channels: "ચેનલ", cannedResponses: "સેવ કરેલા જવાબો", apiKeys: "API કીઝ", integrations: "ઇન્ટિગ્રેશન",
       businessHours: "વ્યવસાયનો સમય", payments: "પેમેન્ટ", calling: "કોલિંગ", language: "ભાષા", aiAgent: "AI એજન્ટ", reminders: "પેમેન્ટ રિમાઇન્ડર",
-      brandKit: "બ્રાન્ડ કિટ", cards: "કાર્ડ બનાવો", permission: "પરવાનગી મેળવો",
+      brandKit: "બ્રાન્ડ કિટ", cards: "કાર્ડ બનાવો", permission: "પરવાનગી મેળવો", library: "તહેવાર લાઇબ્રેરી",
       logout: "લૉગ આઉટ",
     },
     auth: {

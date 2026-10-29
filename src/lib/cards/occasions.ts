@@ -7,6 +7,7 @@ import type { LanguageCode } from "@/lib/i18n/dictionaries";
  */
 export type OccasionId =
   | "diwali" | "dhanteras" | "bhaidooj" | "newyear" | "holi" | "eid" | "navratri" | "ganesh" | "rakhi" | "pongal" | "christmas"
+  | "sankranti" | "uttarayan" | "puthandu" | "ugadi" | "rajyotsava" | "chhath" | "akshaya" | "ramnavami" | "republic" | "independence"
   | "sale" | "thanks";
 
 export type Occasion = {
@@ -76,6 +77,56 @@ export const OCCASIONS: Occasion[] = [
     id: "christmas", label: L("Merry Christmas", "क्रिसमस की हार्दिक शुभकामनाएँ", "नाताळच्या हार्दिक शुभेच्छा", "નાતાલની હાર્દિક શુભેચ્છાઓ", "கிறிஸ்துமஸ் நல்வாழ்த்துகள்", "క్రిస్మస్ శుభాకాంక్షలు", "ಕ್ರಿಸ್ಮಸ್ ಶುಭಾಶಯಗಳು"),
     keywords: ["christmas", "xmas", "क्रिसमस", "नाताळ", "નાતાલ", "கிறிஸ்துமஸ்", "క్రిస్మస్", "ಕ್ರಿಸ್ಮಸ್"],
     scene: "pine branches, red baubles and warm fairy lights",
+  },
+  {
+    id: "sankranti", label: L("Happy Makar Sankranti", "मकर संक्रांति की हार्दिक शुभकामनाएँ", "मकर संक्रांतीच्या हार्दिक शुभेच्छा", "મકરસંક્રાંતિની હાર્દિક શુભેચ્છાઓ", "மகர சங்கராந்தி வாழ்த்துகள்", "మకర సంక్రాంతి శుభాకాంక్షలు", "ಮಕರ ಸಂಕ್ರಾಂತಿಯ ಶುಭಾಶಯಗಳು"),
+    keywords: ["sankranti", "makar", "til gul", "संक्रांति", "संक्रांत", "સંક્રાંતિ", "சங்கராந்தி", "సంక్రాంతి", "ಸಂಕ್ರಾಂತಿ"],
+    scene: "colourful kites in a clear sky, sesame sweets and sugarcane",
+  },
+  {
+    id: "uttarayan", label: L("Happy Uttarayan", "उत्तरायण की हार्दिक शुभकामनाएँ", "उत्तरायणाच्या हार्दिक शुभेच्छा", "ઉત્તરાયણની હાર્દિક શુભેચ્છાઓ", "உத்தராயண வாழ்த்துகள்", "ఉత్తరాయణ శుభాకాంక్షలు", "ಉತ್ತರಾಯಣದ ಶುಭಾಶಯಗಳು"),
+    keywords: ["uttarayan", "kite", "उत्तरायण", "પતંગ", "ઉત્તરાયણ"],
+    scene: "many colourful kites flying in a bright blue sky",
+  },
+  {
+    id: "puthandu", label: L("Happy Tamil New Year", "तमिल नववर्ष की हार्दिक शुभकामनाएँ", "तमिळ नववर्षाच्या हार्दिक शुभेच्छा", "તમિલ નવા વર્ષની હાર્દિક શુભેચ્છાઓ", "புத்தாண்டு நல்வாழ்த்துகள்", "తమిళ నూతన సంవత్సర శుభాకాంక్షలు", "ತಮಿಳು ಹೊಸ ವರ್ಷದ ಶುಭಾಶಯಗಳು"),
+    keywords: ["puthandu", "tamil new year", "புத்தாண்டு", "வருடப்பிறப்பு"],
+    scene: "a kolam pattern, mango leaves and fresh fruit on a banana leaf",
+  },
+  {
+    id: "ugadi", label: L("Happy Ugadi / Gudi Padwa", "गुड़ी पड़वा की हार्दिक शुभकामनाएँ", "गुढीपाडव्याच्या हार्दिक शुभेच्छा", "ગુડી પડવાની હાર્દિક શુભેચ્છાઓ", "உகாதி வாழ்த்துகள்", "ఉగాది శుభాకాంక్షలు", "ಯುಗಾದಿ ಹಬ್ಬದ ಶುಭಾಶಯಗಳು"),
+    keywords: ["ugadi", "gudi padwa", "gudipadwa", "yugadi", "गुड़ी पड़वा", "गुढीपाडवा", "ગુડી પડવો", "ఉగాది", "ಯುಗಾದಿ"],
+    scene: "mango leaf toran, neem flowers and a decorated pot on a pole",
+  },
+  {
+    id: "rajyotsava", label: L("Happy Kannada Rajyotsava", "कर्नाटक राज्योत्सव की शुभकामनाएँ", "कर्नाटक राज्योत्सवाच्या शुभेच्छा", "કર્ણાટક રાજ્યોત્સવની શુભેચ્છાઓ", "கன்னட ராஜ்யோத்சவ வாழ்த்துகள்", "కన్నడ రాజ్యోత్సవ శుభాకాంక్షలు", "ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವದ ಶುಭಾಶಯಗಳು"),
+    keywords: ["rajyotsava", "kannada rajyotsava", "राज्योत्सव", "ರಾಜ್ಯೋತ್ಸವ"],
+    scene: "red and yellow flags and flowers",
+  },
+  {
+    id: "chhath", label: L("Happy Chhath Puja", "छठ पूजा की हार्दिक शुभकामनाएँ", "छठ पूजेच्या हार्दिक शुभेच्छा", "છઠ પૂજાની હાર્દિક શુભેચ્છાઓ", "சத் பூஜை வாழ்த்துகள்", "ఛఠ్ పూజ శుభాకాంక్షలు", "ಛಠ್ ಪೂಜೆಯ ಶುಭಾಶಯಗಳು"),
+    keywords: ["chhath", "chath", "छठ", "છઠ"],
+    scene: "a glowing sun over a river with offerings in bamboo baskets",
+  },
+  {
+    id: "akshaya", label: L("Happy Akshaya Tritiya", "अक्षय तृतीया की हार्दिक शुभकामनाएँ", "अक्षय्य तृतीयेच्या हार्दिक शुभेच्छा", "અક્ષય તૃતીયાની હાર્દિક શુભેચ્છાઓ", "அட்சய திருதியை வாழ்த்துகள்", "అక్షయ తృతీయ శుభాకాంక్షలు", "ಅಕ್ಷಯ ತೃತೀಯದ ಶುಭಾಶಯಗಳು"),
+    keywords: ["akshaya", "akshay", "akha teej", "अक्षय", "અક્ષય", "அட்சய", "అక్షయ", "ಅಕ್ಷಯ"],
+    scene: "gold coins, a kalash and soft golden light",
+  },
+  {
+    id: "ramnavami", label: L("Happy Ram Navami", "रामनवमी की हार्दिक शुभकामनाएँ", "रामनवमीच्या हार्दिक शुभेच्छा", "રામનવમીની હાર્દિક શુભેચ્છાઓ", "ராம நவமி வாழ்த்துகள்", "శ్రీరామ నవమి శుభాకాంక్షలు", "ರಾಮನವಮಿಯ ಶುಭಾಶಯಗಳು"),
+    keywords: ["ram navami", "ramnavami", "राम नवमी", "रामनवमी", "રામનવમી", "ராம நவமி", "రామ నవమి", "ರಾಮನವಮಿ"],
+    scene: "a saffron flag, a bow and marigold flowers",
+  },
+  {
+    id: "republic", label: L("Happy Republic Day", "गणतंत्र दिवस की हार्दिक शुभकामनाएँ", "प्रजासत्ताक दिनाच्या हार्दिक शुभेच्छा", "પ્રજાસત્તાક દિનની હાર્દિક શુભેચ્છાઓ", "குடியரசு தின வாழ்த்துகள்", "గణతంత్ర దినోత్సవ శుభాకాంక్షలు", "ಗಣರಾಜ್ಯೋತ್ಸವದ ಶುಭಾಶಯಗಳು"),
+    keywords: ["republic day", "26 january", "गणतंत्र", "प्रजासत्ताक", "પ્રજાસત્તાક", "குடியரசு", "గణతంత్ర", "ಗಣರಾಜ್ಯ"],
+    scene: "saffron, white and green bands with an Ashoka chakra",
+  },
+  {
+    id: "independence", label: L("Happy Independence Day", "स्वतंत्रता दिवस की हार्दिक शुभकामनाएँ", "स्वातंत्र्य दिनाच्या हार्दिक शुभेच्छा", "સ્વતંત્રતા દિનની હાર્દિક શુભેચ્છાઓ", "சுதந்திர தின வாழ்த்துகள்", "స్వాతంత్ర్య దినోత్సవ శుభాకాంక్షలు", "ಸ್ವಾತಂತ್ರ್ಯ ದಿನದ ಶುಭಾಶಯಗಳು"),
+    keywords: ["independence day", "15 august", "स्वतंत्रता", "स्वातंत्र्य", "સ્વતંત્રતા", "சுதந்திர", "స్వాతంత్ర్య", "ಸ್ವಾತಂತ್ರ್ಯ"],
+    scene: "saffron, white and green bands with an Ashoka chakra",
   },
   {
     id: "sale", label: L("Special Offer", "खास ऑफ़र", "खास ऑफर", "ખાસ ઓફર", "சிறப்பு சலுகை", "ప్రత్యేక ఆఫర్", "ವಿಶೇಷ ಆಫರ್"),

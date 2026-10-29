@@ -9,14 +9,14 @@ describe("festival calendar", () => {
 
   it("lists soonest first and counts days correctly", () => {
     const next = upcomingFestivals("2026-10-29", 3);
-    expect(next.map((f) => f.id)).toEqual(["dhanteras-2026", "diwali-2026", "bestu-2026"]);
-    expect(next[1].daysLeft).toBe(10);
-    expect(next[1].stage).toBe("now");
+    expect(next.map((f) => f.id)).toEqual(["rajyotsava-2026", "dhanteras-2026", "diwali-2026"]);
+    expect(next[2].daysLeft).toBe(10);
+    expect(next[2].stage).toBe("now");
   });
 
   it("never shows an uncertain date as certain", () => {
     for (const f of FESTIVALS.filter((x) => !x.exact)) {
-      const shown = upcomingFestivals(f.date, 1)[0];
+      const shown = upcomingFestivals(f.date, 30).find((x) => x.id === f.id)!;
       expect(shown.dateLabel, f.id).toMatch(/^around /);
     }
     expect(upcomingFestivals("2026-11-06", 1)[0].dateLabel).toBe("6 Nov");
@@ -25,6 +25,32 @@ describe("festival calendar", () => {
   it("drops festivals that have passed, and today's still counts", () => {
     expect(upcomingFestivals("2026-11-08", 1)[0].id).toBe("diwali-2026");
     expect(upcomingFestivals("2026-11-09", 1)[0].id).toBe("bestu-2026");
+  });
+
+  it("shows each language the festivals its speakers keep", () => {
+    const ids = (lang: "en" | "gu" | "ta" | "kn" | "hi", limit = 30) => upcomingFestivals("2026-10-29", limit, lang).map((f) => f.id);
+    expect(ids("gu")).toContain("bestu-2026");
+    expect(ids("gu")).toContain("uttarayan-2027");
+    expect(ids("gu")).not.toContain("pongal-2027");
+    expect(ids("gu")).not.toContain("rajyotsava-2026");
+    expect(ids("ta")).toContain("pongal-2027");
+    expect(ids("ta")).toContain("puthandu-2027");
+    expect(ids("ta")).not.toContain("dhanteras-2026");
+    expect(ids("kn")).toContain("rajyotsava-2026");
+    expect(ids("hi")).toContain("chhath-2026");
+    expect(ids("hi")).not.toContain("bestu-2026");
+    // everyone keeps Diwali, Christmas and the national days
+    for (const l of ["gu", "ta", "kn", "hi"] as const) for (const id of ["diwali-2026", "christmas-2026", "republic-2027"]) expect(ids(l), `${l} ${id}`).toContain(id);
+    // English is the full list
+    expect(ids("en").length).toBe(FESTIVALS.filter((f) => f.date >= "2026-10-29").length);
+  });
+
+  it("puts designs live 45 days ahead, with a coming-soon date before that", () => {
+    const xmas = upcomingFestivals("2026-10-29", 30).find((f) => f.id === "christmas-2026")!;
+    expect(xmas.releaseDate).toBe("2026-11-10");
+    expect(xmas.released).toBe(false);
+    expect(upcomingFestivals("2026-10-29", 30).find((f) => f.id === "diwali-2026")!.released).toBe(true);
+    expect(upcomingFestivals("2026-11-10", 30).find((f) => f.id === "christmas-2026")!.released).toBe(true);
   });
 
   it("is not about to run dry: needs refreshing before the list gets this short", () => {

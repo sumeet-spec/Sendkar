@@ -5,6 +5,7 @@ import { CardMaker } from "./CardMaker";
 import { occasionById, type OccasionId } from "@/lib/cards/occasions";
 import { todayInIndia, upcomingFestivals } from "@/lib/festivals";
 import { APP_COPY, fillN } from "@/lib/i18n/appCopy";
+import { LIBRARY_COPY } from "@/lib/i18n/libraryCopy";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
 
@@ -13,7 +14,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
   const uiLang = await getCurrentLanguage();
   const t = APP_COPY[uiLang].cards;
   const initialOccasion = (occasionById(occasion ?? "")?.id ?? "diwali") as OccasionId;
-  const coming = upcomingFestivals(todayInIndia(), 4);
+  const coming = upcomingFestivals(todayInIndia(), 4, await getCurrentLanguage());
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
@@ -39,7 +40,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
       </p>
       {coming.length > 0 && (
         <div className="mb-6">
-          <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">{t.comingUp}</div>
+          <div className="mb-2 flex items-center justify-between"><span className="text-[11px] font-medium uppercase tracking-wide text-faint">{t.comingUp}</span><Link href="/library" className="text-[12px] text-accent hover:text-accent-hover">{LIBRARY_COPY[uiLang].title} →</Link></div>
           <div className="grid gap-2 sm:grid-cols-2">
             {coming.map((f) => (
               <Link key={f.id} href={`/cards?occasion=${f.occasion}`} className="sk-card flex items-center justify-between gap-3 p-3 hover:border-accent">
