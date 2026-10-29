@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 import { renderCardPng } from "@/lib/cards/renderCard";
-import { brandPalette, designById } from "@/lib/cards/designs";
+import { designById } from "@/lib/cards/designs";
+import { designInput } from "@/lib/cards/designRender";
 import { occasionById } from "@/lib/cards/occasions";
 import { LANGUAGES } from "@/lib/i18n/dictionaries";
 import { FREE_CARD_COLOURS } from "@/lib/freeCard";
@@ -30,7 +31,6 @@ export async function GET(req: NextRequest) {
   const ip = await getClientIp();
   if (await isRateLimited(`freecard:${ip}`, download ? 30 : 200, 3600)) return NextResponse.json({ error: "Too many cards just now. Try again in a little while." }, { status: 429 });
 
-  const palette = colour?.primary ? brandPalette(colour.primary, "#fcd34d") : design.palette;
   const png = renderCardPng({
     lang,
     headline: occasionById(design.occasion)!.label[lang],
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     primaryColor: colour?.primary ?? "#14532d",
     accentColor: "#fcd34d",
     size,
-    design: { motif: design.motif, variant: design.variant, palette },
+    design: designInput(design, colour?.primary ? "brand" : "festival", { primary: colour?.primary ?? "#14532d", accent: "#fcd34d" }),
     watermark: "Made with Sendkar · sendkar.shop",
   });
 

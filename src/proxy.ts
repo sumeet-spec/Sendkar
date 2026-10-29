@@ -25,6 +25,8 @@ const PUBLIC_PATHS = [
   "/join", "/api/join",
   // The free festival card tool for shopkeepers: no account needed.
   "/free-card", "/api/free-card",
+  // How to ask for account deletion: required to be reachable without logging in.
+  "/delete-account",
 ];
 
 // Short-lived cache so a burst of navigations/prefetches from one browser

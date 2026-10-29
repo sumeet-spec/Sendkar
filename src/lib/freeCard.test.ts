@@ -4,7 +4,7 @@ import { FREE_CARD_COLOURS, indianMobile } from "./freeCard";
 import { FREE_CARD_COPY } from "./i18n/freeCardCopy";
 import { LANGUAGES } from "./i18n/dictionaries";
 import { renderCardPng, buildCardSvg } from "./cards/renderCard";
-import { brandPalette, designById } from "./cards/designs";
+import { brandPalette, designsFor } from "./cards/designs";
 
 describe("indianMobile", () => {
   it("accepts the ways a shopkeeper types a number", () => {
@@ -46,7 +46,7 @@ describe("free card colours and watermark", () => {
     expect(FREE_CARD_COLOURS[0].key).toBe("festival");
   });
   it("puts the credit line on the card, and renders a real PNG in every colour", () => {
-    const d = designById("diwali-1")!;
+    const d = designsFor("diwali")[0];
     const svg = buildCardSvg({ lang: "gu", headline: "x", businessName: "શર્મા ટ્રેડર્સ", primaryColor: "#14532d", accentColor: "#fcd34d", design: { motif: d.motif, variant: d.variant, palette: d.palette }, watermark: "Made with Sendkar · sendkar.shop" });
     expect(svg.length).toBeGreaterThan(3000);
     for (const c of FREE_CARD_COLOURS) {
@@ -55,7 +55,7 @@ describe("free card colours and watermark", () => {
     }
   }, 30_000);
   it("a name with markup or odd characters stays plain text on the card", () => {
-    const d = designById("diwali-1")!;
+    const d = designsFor("diwali")[0];
     const svg = buildCardSvg({ lang: "en", headline: "Hi", businessName: '<script>alert(1)</script> "&', primaryColor: "#14532d", accentColor: "#fcd34d", design: { motif: d.motif, variant: d.variant, palette: d.palette } });
     expect(svg).not.toContain("<script");
   });

@@ -180,7 +180,7 @@ export function LibraryBrowser({ workspaceId, lang, langFromUrl, state, festival
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={preview(d.id, 360, false)} alt={d.name} loading="lazy" className="aspect-square w-full bg-[var(--surface-2)] object-cover" />
-                  <span className="block px-2 py-1.5 text-[12px] text-muted">{d.name}</span>
+                  {d.name && <span className="block px-2 py-1.5 text-[12px] text-muted">{d.name}</span>}
                 </button>
               ))}
             </div>

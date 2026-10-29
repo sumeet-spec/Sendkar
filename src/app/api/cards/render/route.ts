@@ -5,7 +5,8 @@ import { isRateLimited } from "@/lib/rateLimit";
 import { generateWorkspaceImage } from "@/lib/aiImage";
 import { renderCardPng } from "@/lib/cards/renderCard";
 import { occasionById } from "@/lib/cards/occasions";
-import { brandPalette, designById } from "@/lib/cards/designs";
+import { designById } from "@/lib/cards/designs";
+import { designInput } from "@/lib/cards/designRender";
 import { contactLine, nameFor, DEFAULT_ACCENT, DEFAULT_PRIMARY, sniffImage, type BrandKit } from "@/lib/brandKit";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
 import { translateLine } from "@/lib/translateLine";
@@ -136,7 +137,7 @@ export async function POST(req: NextRequest) {
         accentColor: kit.accent_color || DEFAULT_ACCENT,
         logo,
         background,
-        design: design ? { motif: design.motif, variant: design.variant, palette: body.colourMode === "brand" ? brandPalette(kit.primary_color, kit.accent_color) : design.palette } : undefined,
+        design: design ? designInput(design, body.colourMode === "brand" ? "brand" : "festival", { primary: kit.primary_color || DEFAULT_PRIMARY, accent: kit.accent_color || DEFAULT_ACCENT }) : undefined,
       });
       const path = `cards/${workspaceId}/${stamp}-${lang}.png`;
       const { error: uploadError } = await admin.storage.from("campaign-images").upload(path, png, { contentType: "image/png", upsert: false });

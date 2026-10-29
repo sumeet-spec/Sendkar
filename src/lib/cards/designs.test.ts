@@ -4,6 +4,10 @@ import { DESIGNS, brandPalette, designById, designsFor } from "./designs";
 import { FESTIVALS } from "../festivals";
 import { occasionById, OCCASIONS } from "./occasions";
 import { renderCardPng, buildCardSvg } from "./renderCard";
+import { designInput } from "./designRender";
+import { ART } from "./artManifest";
+import fs from "node:fs";
+import path from "node:path";
 
 describe("festival library designs", () => {
   it("every festival has at least three designs to choose from", () => {
@@ -21,10 +25,20 @@ describe("festival library designs", () => {
   });
   it("renders every design as a PNG in every language, without errors", () => {
     for (const d of DESIGNS) {
-      const png = renderCardPng({ lang: "hi", headline: occasionById(d.occasion)!.label.hi, businessName: "शर्मा ट्रेडर्स", primaryColor: "#14532d", accentColor: "#fcd34d", size: 270, design: { motif: d.motif, variant: d.variant, palette: d.palette } });
+      const png = renderCardPng({ lang: "hi", headline: occasionById(d.occasion)!.label.hi, businessName: "शर्मा ट्रेडर्स", primaryColor: "#14532d", accentColor: "#fcd34d", size: 270, design: designInput(d, "festival", { primary: "#14532d", accent: "#fcd34d" }) });
       expect(png.subarray(0, 4).toString("hex"), d.id).toBe("89504e47");
     }
   }, 60_000);
+  it("every picture in the manifest exists on disk, is a real JPEG, and has a design", () => {
+    for (const a of ART) {
+      const file = path.join(process.cwd(), "src", "assets", "art", a.file);
+      expect(fs.existsSync(file), a.file).toBe(true);
+      const head = fs.readFileSync(file).subarray(0, 3);
+      expect(head[0] === 0xff && head[1] === 0xd8, a.file).toBe(true);
+      expect(designById(a.id), a.id).toBeDefined();
+      expect(a.avg).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
   it("the same design can be shown in a shop's own colours", () => {
     const p = brandPalette("#0f4c81", "#f59e0b");
     for (const c of Object.values(p)) expect(c).toMatch(/^#[0-9a-f]{6}$/);

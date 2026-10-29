@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   // Card maker: HarfBuzz (WASM) and resvg (native) must load from node_modules as-is,
   // and the Noto font files are read from disk at render time so must ship with the function.
   serverExternalPackages: ["harfbuzzjs", "@resvg/resvg-js"],
-  outputFileTracingIncludes: { "/api/**": ["./src/assets/fonts/**"] },
+  outputFileTracingIncludes: { "/api/**": ["./src/assets/fonts/**", "./src/assets/art/**"] },
   // Pins the workspace root to this project — without it, Turbopack walks up
   // and finds an unrelated package-lock.json at the Windows user-profile
   // root and warns about treating that as the monorepo root.
@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
   // Supabase realtime; a CSP needs a nonce-based setup wired through
   // middleware and real per-page testing, not a value guessed under time
   // pressure that could silently break hydration on every page.
+  // Short addresses printed in newspapers and pamphlets: sendkar.shop/gu, /hi, /mr, /ta, /te, /kn open the free card
+  // page in that language. The tag shows how many people came from print.
+  async redirects() {
+    return ["gu", "hi", "mr", "ta", "te", "kn"].map((lang) => ({
+      source: `/${lang}`,
+      destination: `/free-card?lang=${lang}&src=print`,
+      permanent: false,
+    }));
+  },
   async headers() {
     return [
       {

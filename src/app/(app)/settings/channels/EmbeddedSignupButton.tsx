@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { completeEmbeddedSignup, type EmbeddedSignupResult } from "./embeddedSignupActions";
 
 declare global {
@@ -14,6 +14,19 @@ declare global {
     };
     fbAsyncInit?: () => void;
   }
+}
+
+/**
+ * True inside the installed Android app (Sendkar's app is the website in a full-screen shell). Meta's connect window is a
+ * popup, and popups can behave differently inside that shell, so the page offers a way out to the normal browser there.
+ * Always false on the server and on first render, so nothing differs between the two.
+ */
+function useInstalledAndroidApp(): boolean {
+  return useSyncExternalStore(
+    () => () => {},
+    () => window.matchMedia("(display-mode: standalone)").matches && /Android/i.test(navigator.userAgent),
+    () => false,
+  );
 }
 
 interface SignupData {
@@ -53,6 +66,7 @@ export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspace
   // A ref, not state: FB.login's callback runs long after the render that created it, so
   // state read inside it would still be the pre-popup value (always empty).
   const signupRef = useRef<SignupData | null>(null);
+  const inApp = useInstalledAndroidApp();
 
   useEffect(() => {
     if (!configured || typeof window === "undefined" || window.FB) {
@@ -179,6 +193,12 @@ export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspace
       {blockedReason && (
         <p className="mt-2 text-[12.5px] text-warn">
           {blockedReason} <a href="/settings/billing" className="text-accent hover:text-accent-hover">See plans</a>
+        </p>
+      )}
+      {inApp && (
+        <p className="mt-2 text-[12px] text-faint">
+          Using the Sendkar app and the connect window does not open?{" "}
+          <a href="intent://www.sendkar.shop/settings/channels#Intent;scheme=https;package=com.android.chrome;end" className="text-accent hover:text-accent-hover">Open this page in Chrome</a>, connect there, then come back.
         </p>
       )}
       {status?.error && <p className="mt-2 text-[12.5px] text-danger">{status.error}</p>}

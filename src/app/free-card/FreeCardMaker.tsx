@@ -54,7 +54,7 @@ export function FreeCardMaker({ lang, t, festivals, initialFestival, src }: { la
         </div>
         <div className="flex flex-wrap justify-end gap-1.5">
           {LANGUAGES.map((l) => (
-            <button key={l.code} type="button" onClick={() => chooseLang(l.code)} className={`rounded-full border px-2.5 py-1 text-[12.5px] ${l.code === lang ? "border-accent bg-accent/10 text-accent" : "border-border text-muted"}`}>{l.label}</button>
+            <button key={l.code} type="button" onClick={() => chooseLang(l.code)} className={`min-h-9 rounded-full border px-3 py-1 text-[13px] ${l.code === lang ? "border-accent bg-accent/10 text-accent" : "border-border text-muted"}`}>{l.label}</button>
           ))}
         </div>
       </div>
@@ -67,7 +67,7 @@ export function FreeCardMaker({ lang, t, festivals, initialFestival, src }: { la
           <label className="sk-label">{t.festival}</label>
           <div className="flex flex-wrap gap-2">
             {festivals.map((f) => (
-              <button key={f.id} type="button" onClick={() => { setFestivalId(f.id); setDesignId(null); }} className={`rounded-full border px-3 py-1.5 text-[13px] ${f.id === festival.id ? "border-accent bg-accent/10 text-accent" : "border-border text-muted"}`}>{f.name}</button>
+              <button key={f.id} type="button" onClick={() => { setFestivalId(f.id); setDesignId(null); }} className={`min-h-10 rounded-full border px-3.5 py-1.5 text-[13.5px] ${f.id === festival.id ? "border-accent bg-accent/10 text-accent" : "border-border text-muted"}`}>{f.name}</button>
             ))}
           </div>
         </div>

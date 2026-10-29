@@ -50,7 +50,7 @@ export default function PrivacyPage() {
           <h2 className="mb-2 text-[15px] font-medium text-foreground">Your data, your control</h2>
           <p>
             You can export your contacts at any time from Sendkar, and you can ask us to delete your workspace and
-            everything in it. Reach out using the contact below.
+            everything in it. See <a href="/delete-account" className="text-accent hover:text-accent-hover">how to ask for deletion</a>, or reach out using the contact below.
           </p>
         </section>
 

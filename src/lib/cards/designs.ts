@@ -1,5 +1,6 @@
 import type { OccasionId } from "./occasions";
 import type { MotifId, Palette, Variant } from "./motifs";
+import { ART } from "./artManifest";
 
 /**
  * The festival library: ready-made designs a shop picks, adds its own logo and words to, and sends.
@@ -10,9 +11,13 @@ export type Design = {
   id: string;
   occasion: OccasionId;
   name: string;
-  motif: MotifId;
-  variant: Variant;
+  /** Vector artwork, used only for a festival that has no pictures yet. */
+  motif?: MotifId;
+  variant?: Variant;
   palette: Palette;
+  /** A background picture in src/assets/art, with its average colour. */
+  art?: string;
+  avg?: string;
 };
 
 const P = (bg1: string, bg2: string, accent: string, art1: string, art2: string): Palette => ({ bg1, bg2, accent, art1, art2 });
@@ -68,9 +73,20 @@ const CATALOG: Partial<Record<OccasionId, Def[]>> = {
   thanks: [["Thank you lotus", "lotus", 2, PINK_PURPLE], ["Warm marigold", "marigold", 1, ROSE_GOLD], ["Soft mandala", "mandala", 1, TEAL_GOLD]],
 };
 
-export const DESIGNS: Design[] = (Object.entries(CATALOG) as Array<[OccasionId, Def[]]>).flatMap(([occasion, defs]) =>
-  defs.map(([name, motif, variant, palette], i) => ({ id: `${occasion}-${i + 1}`, occasion, name, motif, variant, palette })),
+const VECTOR_DESIGNS: Design[] = (Object.entries(CATALOG) as Array<[OccasionId, Def[]]>).flatMap(([occasion, defs]) =>
+  defs.map(([name, motif, variant, palette], i) => ({ id: `${occasion}-v${i + 1}`, occasion, name, motif, variant, palette })),
 );
+
+/** The panel and footer take a dark version of the picture's own colour, and the shop name a warm gold. */
+function artPalette(avg: string): Palette {
+  return { bg1: mix(avg, "#000000", 0.5), bg2: mix(avg, "#000000", 0.8), accent: "#fcd34d", art1: mix(avg, "#ffffff", 0.4), art2: mix(avg, "#ffffff", 0.7) };
+}
+
+const ART_DESIGNS: Design[] = ART.map((a, i) => ({ id: a.id, occasion: a.occasion, name: "", art: a.file, avg: a.avg, palette: artPalette(a.avg) }));
+const OCCASIONS_WITH_ART = new Set(ART_DESIGNS.map((d) => d.occasion));
+
+/** Pictures where a festival has them, the older vector artwork only where it does not. */
+export const DESIGNS: Design[] = [...ART_DESIGNS, ...VECTOR_DESIGNS.filter((d) => !OCCASIONS_WITH_ART.has(d.occasion))];
 
 export const designById = (id: string): Design | undefined => DESIGNS.find((d) => d.id === id);
 export const designsFor = (occasion: OccasionId): Design[] => DESIGNS.filter((d) => d.occasion === occasion);

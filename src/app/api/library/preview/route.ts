@@ -3,7 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { memberOf } from "@/lib/brandLogoStore";
 import { isRateLimited } from "@/lib/rateLimit";
 import { renderCardPng } from "@/lib/cards/renderCard";
-import { brandPalette, designById } from "@/lib/cards/designs";
+import { designById } from "@/lib/cards/designs";
+import { designInput } from "@/lib/cards/designRender";
 import { occasionById } from "@/lib/cards/occasions";
 import { contactLine, nameFor, sniffImage, DEFAULT_ACCENT, DEFAULT_PRIMARY, type BrandKit } from "@/lib/brandKit";
 import { LANGUAGES } from "@/lib/i18n/dictionaries";
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
     accentColor: accent,
     logo: await logoFor(kit?.logo_url ?? null),
     size,
-    design: { motif: design.motif, variant: design.variant, palette: q.get("mode") === "brand" ? brandPalette(primary, accent) : design.palette },
+    design: designInput(design, q.get("mode") === "brand" ? "brand" : "festival", { primary, accent }),
   });
   return new NextResponse(new Uint8Array(png), { headers: { "Content-Type": "image/png", "Cache-Control": "private, max-age=120" } });
 }

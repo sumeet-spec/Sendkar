@@ -91,6 +91,10 @@ export default async function BillingPage() {
           />
         ))}
       </div>
+
+      <p className="mt-8 text-[12.5px] text-faint">
+        Want to leave? <a href="/delete-account" className="text-accent hover:text-accent-hover">Delete my account and data</a>
+      </p>
     </div>
   );
 }
