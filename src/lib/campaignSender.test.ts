@@ -165,4 +165,24 @@ describe("campaign sender", () => {
     await runCampaignSends();
     expect((sendMock.mock.calls[0][0] as { headerImageUrl?: string }).headerImageUrl).toBeUndefined();
   });
+
+  it("holds a campaign when no WhatsApp number is connected, leaving everyone queued", async () => {
+    seed({ recipients: 5 });
+    db.workspaces[0].whatsapp_access_token = null;
+    const res = await runCampaignSends();
+    expect(sendMock).not.toHaveBeenCalled();
+    expect(count("queued")).toBe(5);
+    expect(count("failed")).toBe(0);
+    expect(res.camp1).toMatch(/no WhatsApp number/);
+    expect(db.campaigns[0].status).toBe("sending");
+  });
+
+  it("carries on once a number is connected", async () => {
+    seed({ recipients: 5 });
+    db.workspaces[0].whatsapp_access_token = null;
+    await runCampaignSends();
+    db.workspaces[0].whatsapp_access_token = "tok";
+    await runCampaignSends();
+    expect(count("sent")).toBe(5);
+  });
 });

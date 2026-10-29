@@ -67,7 +67,7 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
         )}
 
         <p className="text-[12px] text-faint">
-          Messages go out in the next daily sending window (once every 24h), not instantly — this keeps everyone safely under Meta&apos;s per-number sending limits.
+          Send now starts straight away. A scheduled campaign goes out in the first daily sending run after the time you pick (about 8:30 AM India time). Sending always stays within Meta&apos;s daily limit for your number.
         </p>
         {error && <p className="text-[12px] text-danger">{error}</p>}
       </div>
@@ -100,7 +100,7 @@ export function CampaignControls({ campaignId, status, scheduledAt }: { campaign
     return (
       <button
         disabled={pending}
-        onClick={() => startTransition(async () => { await resumeCampaign(campaignId); })}
+        onClick={() => startTransition(async () => { setError(null); const result = await resumeCampaign(campaignId); if (result.error) setError(result.error); })}
         className="sk-btn sk-btn-primary disabled:opacity-60"
       >
         Resume

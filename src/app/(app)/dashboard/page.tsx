@@ -4,6 +4,8 @@ import { isWhatsAppConfigured } from "@/lib/whatsapp";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { ActivationChecklist } from "./ActivationChecklist";
+import { effectivePlan } from "@/lib/plans";
+import { GATE_COPY } from "@/lib/i18n/gateCopy";
 import { DayChart } from "./DayChart";
 import { RecentCampaigns } from "./RecentCampaigns";
 import {
@@ -28,7 +30,8 @@ export default async function DashboardPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const t = getDictionary(await getCurrentLanguage()).dashboard;
+  const lang = await getCurrentLanguage();
+  const t = getDictionary(lang).dashboard;
 
   const now = new Date().getTime();
   const thirtyDaysAgo = new Date(now - 30 * DAY_MS).toISOString();
@@ -111,7 +114,10 @@ export default async function DashboardPage() {
   const configured = isWhatsAppConfigured(workspace);
 
   // Activation checklist
+  // Once the trial is over (or a plan was cancelled), choosing a plan comes first: nothing can be sent or connected without one.
+  const needsPlan = effectivePlan(workspace) === "free";
   const checklistSteps = [
+    ...(needsPlan ? [{ label: GATE_COPY[lang].seePlans, done: false, href: "/settings/billing" }] : []),
     { label: t.checklistConnect, done: configured, href: "/onboarding" },
     { label: t.checklistTemplate, done: approvedTemplateCount > 0, href: "/templates" },
     { label: t.checklistContacts, done: (contactCount ?? 0) > 0, href: "/contacts" },

@@ -1,31 +1,25 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import type { GateCopy } from "@/lib/i18n/gateCopy";
 
 /**
- * When a workspace has no active plan (its trial ended, or a subscription was cancelled) every page
- * except Billing shows this instead. Nothing is deleted: contacts, templates and messages are all
- * still there and come straight back when a plan is chosen.
+ * When a workspace has no active plan (its trial ended, or a subscription was cancelled) every page stays open
+ * to look around, with a banner saying a plan is needed to send and to connect a number. Nothing is deleted,
+ * and what is held (sending, connecting) is refused with a plain message where it is tried.
  */
-export function ExpiredGate({ expired, wasTrial, children }: { expired: boolean; wasTrial: boolean; children: React.ReactNode }) {
+export function ExpiredGate({ expired, wasTrial, copy, children }: { expired: boolean; wasTrial: boolean; copy: GateCopy; children: React.ReactNode }) {
   const pathname = usePathname();
-  if (!expired || pathname.startsWith("/settings/billing")) return <>{children}</>;
-
+  const onBilling = pathname.startsWith("/settings/billing");
   return (
-    <div className="mx-auto mt-10 max-w-lg">
-      <div className="sk-card p-6">
-        <h1 className="text-lg font-semibold tracking-tight">
-          {wasTrial ? "Your 7-day free trial has ended" : "Choose a plan to get started"}
-        </h1>
-        <p className="mt-2 text-[13.5px] text-muted">
-          {wasTrial
-            ? "Thank you for trying Sendkar. Your contacts, templates and messages are all safe. Choose a plan and everything picks up where you left off."
-            : "Pick the plan that fits how many WhatsApp numbers you use. Your account and data stay as they are."}
-        </p>
-        <div className="mt-5">
-          <a href="/settings/billing" className="sk-btn sk-btn-primary">See plans</a>
+    <>
+      {expired && !onBilling && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-[13.5px]">
+          <span className="min-w-0 flex-1">{wasTrial ? copy.trialEnded : copy.noPlan}</span>
+          <a href="/settings/billing" className="sk-btn sk-btn-primary flex-shrink-0">{copy.seePlans}</a>
         </div>
-      </div>
-    </div>
+      )}
+      {children}
+    </>
   );
 }

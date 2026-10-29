@@ -10,6 +10,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { effectivePlan, trialDaysLeft, trialExpired } from "@/lib/plans";
 import { TrialBanner } from "@/components/TrialBanner";
 import { ExpiredGate } from "@/components/ExpiredGate";
+import { GATE_COPY } from "@/lib/i18n/gateCopy";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerified, otpRequired } from "@/lib/phoneVerify";
 
@@ -31,7 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar workspaceId={workspace.id} workspaces={workspaces} nav={dict.nav} lang={lang} />
       <main className="min-w-0 flex-1 overflow-y-auto p-4 md:p-8">
         {daysLeft !== null && daysLeft > 0 && <TrialBanner daysLeft={daysLeft} />}
-        <ExpiredGate expired={noPlan} wasTrial={trialExpired(workspace)}>
+        <ExpiredGate expired={noPlan} wasTrial={trialExpired(workspace)} copy={GATE_COPY[lang]}>
           <PageTransition>{children}</PageTransition>
         </ExpiredGate>
       </main>

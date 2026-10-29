@@ -77,6 +77,10 @@ async function runOneCampaign(
   }
 
   const sender = await resolveSender(admin, workspace, campaign.whatsapp_number_id as string | null);
+  // No connected number: leave everyone queued, so connecting one lets the campaign carry on instead of failing every message.
+  if (!sender.creds.whatsapp_phone_number_id || !sender.creds.whatsapp_access_token) {
+    return { result: "held — no WhatsApp number connected" };
+  }
 
   let dailySendCount = sender.dailySendCount;
   if (now >= new Date(sender.dailyResetAt)) {

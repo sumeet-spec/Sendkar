@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { workspaceCanSend } from "@/lib/plans";
 
@@ -29,4 +30,25 @@ export async function workspaceCanSendById(admin: Admin, workspaceId: string): P
   if (cache.size > 500) cache.clear();
   cache.set(workspaceId, { ok, until: Date.now() + CACHE_MS });
   return ok;
+}
+
+/** What a person sees when something is refused because no WhatsApp number is connected yet. */
+export const NO_NUMBER_MESSAGE = "Connect your WhatsApp number first. Open Settings, then Channels, connect your number, and try again.";
+
+type NumberCreds = { id?: string; whatsapp_phone_number_id?: string | null; whatsapp_access_token?: string | null };
+
+/** True when the workspace's own number is connected. */
+export function hasConnectedNumber(ws: NumberCreds): boolean {
+  return Boolean(ws.whatsapp_phone_number_id && ws.whatsapp_access_token);
+}
+
+/** True when the workspace has its own connected number, or at least one extra number added under Channels. */
+export async function canSendFromWorkspace(
+  supabase: SupabaseClient,
+  ws: NumberCreds,
+): Promise<boolean> {
+  if (hasConnectedNumber(ws)) return true;
+  if (!ws.id) return false;
+  const { count } = await supabase.from("whatsapp_numbers").select("id", { count: "exact", head: true }).eq("workspace_id", ws.id);
+  return (count ?? 0) > 0;
 }
