@@ -126,6 +126,7 @@ export function NewTemplateForm({ canSubmitToMeta, workspaceId, aiImageEnabled }
   const [imgDescription, setImgDescription] = useState("");
   const [imgPending, setImgPending] = useState(false);
   const [imgError, setImgError] = useState<string | null>(null);
+  const [imgLeft, setImgLeft] = useState<{ remaining: number; limit: number } | null>(null);
   const [imgPreview, setImgPreview] = useState<string | null>(null);
 
   // Auto-derive meta name from internal name unless user has manually edited it
@@ -143,7 +144,8 @@ export function NewTemplateForm({ canSubmitToMeta, workspaceId, aiImageEnabled }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: imgDescription, workspaceId }),
       });
-      const data = await res.json() as { url?: string; error?: string };
+      const data = await res.json() as { url?: string; error?: string; remaining?: number; limit?: number };
+      if (typeof data.remaining === "number" && typeof data.limit === "number") setImgLeft({ remaining: data.remaining, limit: data.limit });
       if (!res.ok || data.error) { setImgError(data.error ?? "Generation failed."); return; }
       setImgPreview(data.url!);
       setHeaderImageUrl(data.url!);
@@ -299,6 +301,7 @@ export function NewTemplateForm({ canSubmitToMeta, workspaceId, aiImageEnabled }
                     {imgPending ? "Generating…" : imgPreview ? "Regenerate" : "Generate"}
                   </button>
                 </div>
+                {imgLeft && !imgError && <p className="text-[12px] text-faint">{imgLeft.remaining} of {imgLeft.limit} AI images left this month.</p>}
                 {imgError && <p className="text-[12px] text-danger">{imgError}</p>}
                 {imgPending && (
                   <div className="flex items-center gap-2 text-[12px] text-muted">

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
+import { getNumberAllowance } from "@/lib/planUsage";
 import { WhatsAppForm, InstagramForm, MessengerForm } from "./ChannelForms";
 import { AdditionalNumbers } from "./AdditionalNumbers";
 import { EmbeddedSignupButton } from "./EmbeddedSignupButton";
@@ -17,6 +18,8 @@ export default async function ChannelsPage() {
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false });
 
+  const allowance = await getNumberAllowance(supabase, workspace);
+
   const { data: qualityHistory } = await supabase
     .from("quality_rating_history")
     .select("quality_rating, checked_at")
@@ -27,9 +30,14 @@ export default async function ChannelsPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-6 text-xl font-semibold tracking-tight">Channels</h1>
+      <h1 className="mb-1 text-xl font-semibold tracking-tight">Channels</h1>
+      <p className="mb-6 text-[12.5px] text-faint">
+        WhatsApp numbers: {allowance.connected} of {allowance.allowed} on your {workspace.plan} plan.{" "}
+        {!allowance.canAdd && <a href="/settings/billing" className="text-accent hover:text-accent-hover">See plans</a>}
+      </p>
       <div className="flex flex-col gap-5">
-        <EmbeddedSignupButton workspaceId={workspace.id} />
+        {/* Swapping the number that is already connected is always allowed; only a new connection needs room. */}
+        <EmbeddedSignupButton workspaceId={workspace.id} blockedReason={workspace.whatsapp_phone_number_id ? null : allowance.blockedReason} />
         <WhatsAppForm workspace={workspace} />
         {qualityHistory && qualityHistory.length > 0 && (
           <div className="sk-card overflow-hidden">

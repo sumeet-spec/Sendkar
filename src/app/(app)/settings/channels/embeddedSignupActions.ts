@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { listWabaPhoneNumbers, requestSmbAppDataSync, subscribeAppToWaba, verifyPhoneNumberCreds } from "@/lib/whatsapp";
 import { revalidatePath } from "next/cache";
 import { COEXISTENCE_EVENT } from "@/lib/coexistence";
+import { checkCanConnectNumber } from "@/lib/planUsage";
+import { getCurrentWorkspace } from "@/lib/workspace";
 
 const GRAPH_API_VERSION = "v22.0";
 
@@ -45,6 +47,13 @@ export async function completeEmbeddedSignup(
   if (!appId || !appSecret) return { error: "Embedded Signup isn't configured on this server yet." };
   if (!wabaId) return { error: "Meta didn't report a WhatsApp Business Account — try again." };
   const coexistence = event === COEXISTENCE_EVENT;
+
+  // The button is disabled when a plan has no room, so this should only trip if someone bypasses
+  // the page. It also guards against a workspace id that isn't the one the user is actually in.
+  const workspace = await getCurrentWorkspace();
+  if (!workspace || workspace.id !== workspaceId) return { error: "No workspace found." };
+  const limitCheck = await checkCanConnectNumber(await createClient(), workspace, { replacingDefault: true });
+  if (!limitCheck.ok) return { error: limitCheck.error };
 
   // The code expires 30 seconds after the popup returns, so this goes first.
   const tokenRes = await fetch(

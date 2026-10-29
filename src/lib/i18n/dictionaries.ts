@@ -80,7 +80,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     auth: {
       loginTitle: "Log in", loginSubtitle: "Welcome back.", whatsappNumber: "WhatsApp number", password: "Password",
       loginButton: "Log in", noAccount: "New here? Create your business account", signupTitle: "Set up your business",
-      signupSubtitle: "Free to start, real Cloud API from day one.", workspaceName: "Business name",
+      signupSubtitle: "Free to explore, real Cloud API when you connect your number.", workspaceName: "Business name",
       signupButton: "Create workspace", haveAccount: "Already have an account?", logIn: "Log in",
     },
     dashboard: {
@@ -106,7 +106,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       navPricing: "Pricing", navMcp: "MCP", navLogin: "Log in", navGetStarted: "Get started",
       heroEyebrow: "AI-Powered WhatsApp Marketing", heroLine1: "One message.", heroLine2: "Every customer gets it", heroLine3: "in their own language.",
       heroSubhead: "This is Priya Textiles' actual order, start to finish — an Instagram ad, a reply in her customer's own language, a payment collected without leaving WhatsApp, and revenue traced back to the ad that earned it.",
-      badgeReseller: "⚡ Meta's official Cloud API — not a reseller", badgeFree: "🆓 Free plan, forever — not a 14-day trial",
+      badgeReseller: "⚡ Meta's official Cloud API — not a reseller", badgeFree: "🆓 Explore free — connect your number when you're ready",
       ctaGetStarted: "Get started free →", ctaSeePricing: "See pricing",
       statChannels: "Channels", statMcp: "AI automation tools", statPrice: "Languages built in",
     },
@@ -142,7 +142,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     auth: {
       loginTitle: "लॉग इन करें", loginSubtitle: "वापसी पर स्वागत है।", whatsappNumber: "WhatsApp नंबर", password: "पासवर्ड",
       loginButton: "लॉग इन करें", noAccount: "नए हैं? अपना बिज़नेस बनाएं", signupTitle: "अपना बिज़नेस सेट अप करें",
-      signupSubtitle: "शुरू करना मुफ़्त है, पहले दिन से असली Cloud API।", workspaceName: "बिज़नेस का नाम",
+      signupSubtitle: "देखना मुफ़्त है, नंबर जोड़ते ही असली Cloud API।", workspaceName: "बिज़नेस का नाम",
       signupButton: "वर्कस्पेस बनाएं", haveAccount: "पहले से खाता है?", logIn: "लॉग इन करें",
     },
     dashboard: {
@@ -168,7 +168,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       navPricing: "प्राइसिंग", navMcp: "MCP", navLogin: "लॉग इन", navGetStarted: "शुरू करें",
       heroEyebrow: "व्हाट्सएप मार्केटिंग सॉफ्टवेयर", heroLine1: "एक मैसेज।", heroLine2: "हर ग्राहक तक पहुंचे", heroLine3: "उसकी अपनी भाषा में।",
       heroSubhead: "यह प्रिया टेक्सटाइल्स का असली ऑर्डर है, शुरू से आखिर तक — एक इंस्टाग्राम विज्ञापन, ग्राहक की अपनी भाषा में जवाब, व्हाट्सएप छोड़े बिना लिया गया पेमेंट, और उस बिक्री तक वापस जोड़ा गया रेवेन्यू जिसने इसे दिलाया।",
-      badgeReseller: "⚡ Meta का असली Cloud API — रीसेलर नहीं", badgeFree: "🆓 हमेशा के लिए फ्री प्लान — 14-दिन का ट्रायल नहीं",
+      badgeReseller: "⚡ Meta का असली Cloud API — रीसेलर नहीं", badgeFree: "🆓 मुफ़्त में देखें — तैयार होने पर अपना नंबर जोड़ें",
       ctaGetStarted: "मुफ़्त में शुरू करें →", ctaSeePricing: "प्राइसिंग देखें",
       statChannels: "चैनल", statMcp: "Claude के लिए MCP टूल्स", statPrice: "भारतीय भाषाएं",
     },
@@ -204,7 +204,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     auth: {
       loginTitle: "लॉग इन करा", loginSubtitle: "पुन्हा स्वागत आहे.", whatsappNumber: "WhatsApp नंबर", password: "पासवर्ड",
       loginButton: "लॉग इन करा", noAccount: "नवीन आहात? तुमचा व्यवसाय तयार करा", signupTitle: "तुमचा व्यवसाय सेट करा",
-      signupSubtitle: "सुरुवात मोफत आहे, पहिल्या दिवसापासून खरे Cloud API.", workspaceName: "व्यवसायाचे नाव",
+      signupSubtitle: "पाहणे मोफत आहे, नंबर जोडताच खरा Cloud API.", workspaceName: "व्यवसायाचे नाव",
       signupButton: "वर्कस्पेस तयार करा", haveAccount: "आधीच खाते आहे?", logIn: "लॉग इन करा",
     },
     dashboard: {
@@ -230,7 +230,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       navPricing: "किंमत", navMcp: "MCP", navLogin: "लॉग इन", navGetStarted: "सुरू करा",
       heroEyebrow: "व्हॉट्सअ‍ॅप मार्केटिंग सॉफ्टवेअर", heroLine1: "एक मेसेज.", heroLine2: "प्रत्येक ग्राहकापर्यंत पोहोचेल", heroLine3: "त्याच्याच भाषेत.",
       heroSubhead: "ही प्रिया टेक्सटाइल्सची खरी ऑर्डर आहे, सुरुवातीपासून शेवटपर्यंत — एक इंस्टाग्राम जाहिरात, ग्राहकाच्या स्वतःच्या भाषेत उत्तर, व्हॉट्सअ‍ॅप न सोडता घेतलेले पेमेंट, आणि ती विक्री मिळवून देणाऱ्या जाहिरातीपर्यंत जोडलेले रेव्हेन्यू.",
-      badgeReseller: "⚡ Meta चे अधिकृत Cloud API — रिसेलर नाही", badgeFree: "🆓 कायमचा मोफत प्लॅन — 14-दिवसांची ट्रायल नाही",
+      badgeReseller: "⚡ Meta चे अधिकृत Cloud API — रिसेलर नाही", badgeFree: "🆓 मोफत पहा — तयार झाल्यावर तुमचा नंबर जोडा",
       ctaGetStarted: "मोफत सुरू करा →", ctaSeePricing: "किंमत पहा",
       statChannels: "चॅनेल्स", statMcp: "Claude साठी MCP टूल्स", statPrice: "भारतीय भाषा",
     },
@@ -266,7 +266,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     auth: {
       loginTitle: "உள்நுழையவும்", loginSubtitle: "மீண்டும் வருக.", whatsappNumber: "WhatsApp எண்", password: "கடவுச்சொல்",
       loginButton: "உள்நுழையவும்", noAccount: "புதியவரா? உங்கள் வணிகத்தை உருவாக்குங்கள்", signupTitle: "உங்கள் வணிகத்தை அமைக்கவும்",
-      signupSubtitle: "தொடங்குவது இலவசம், முதல் நாளிலிருந்தே உண்மையான Cloud API.", workspaceName: "வணிகத்தின் பெயர்",
+      signupSubtitle: "பார்ப்பது இலவசம், எண்ணை இணைத்ததும் உண்மையான Cloud API.", workspaceName: "வணிகத்தின் பெயர்",
       signupButton: "வேலைத்தளம் உருவாக்கவும்", haveAccount: "ஏற்கனவே கணக்கு உள்ளதா?", logIn: "உள்நுழையவும்",
     },
     dashboard: {
@@ -292,7 +292,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       navPricing: "விலை", navMcp: "MCP", navLogin: "உள்நுழை", navGetStarted: "தொடங்குங்கள்",
       heroEyebrow: "வாட்ஸ்அப் மார்க்கெட்டிங் மென்பொருள்", heroLine1: "ஒரே ஒரு மெசேஜ்.", heroLine2: "ஒவ்வொரு வாடிக்கையாளரையும்", heroLine3: "அவரவர் மொழியில் சென்றடையும்.",
       heroSubhead: "இது பிரியா டெக்ஸ்டைல்ஸின் உண்மையான ஆர்டர், தொடக்கத்திலிருந்து முடிவு வரை — ஒரு இன்ஸ்டாகிராம் விளம்பரம், வாடிக்கையாளரின் சொந்த மொழியில் பதில், வாட்ஸ்அப்பை விட்டு வெளியேறாமல் பெறப்பட்ட பணம், மற்றும் அந்த விற்பனையைத் தந்த விளம்பரத்திற்கு திரும்ப இணைக்கப்பட்ட வருவாய்.",
-      badgeReseller: "⚡ Meta-வின் அதிகாரப்பூர்வ Cloud API — மறுவிற்பனையாளர் அல்ல", badgeFree: "🆓 எப்போதும் இலவச திட்டம் — 14-நாள் சோதனை அல்ல",
+      badgeReseller: "⚡ Meta-வின் அதிகாரப்பூர்வ Cloud API — மறுவிற்பனையாளர் அல்ல", badgeFree: "🆓 இலவசமாகப் பாருங்கள் — தயாரானதும் உங்கள் எண்ணை இணைக்கவும்",
       ctaGetStarted: "இலவசமாகத் தொடங்குங்கள் →", ctaSeePricing: "விலையைப் பார்க்க",
       statChannels: "சேனல்கள்", statMcp: "Claude-க்கான MCP கருவிகள்", statPrice: "இந்திய மொழிகள்",
     },
@@ -328,7 +328,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     auth: {
       loginTitle: "లాగిన్ చేయండి", loginSubtitle: "తిరిగి రావడం సంతోషం.", whatsappNumber: "WhatsApp నంబర్", password: "పాస్‌వర్డ్",
       loginButton: "లాగిన్ చేయండి", noAccount: "కొత్తగా వచ్చారా? మీ వ్యాపారాన్ని సృష్టించండి", signupTitle: "మీ వ్యాపారాన్ని సెటప్ చేయండి",
-      signupSubtitle: "ప్రారంభించడం ఉచితం, మొదటి రోజు నుండే నిజమైన Cloud API.", workspaceName: "వ్యాపార పేరు",
+      signupSubtitle: "చూడటం ఉచితం, నంబర్ జోడించగానే నిజమైన Cloud API.", workspaceName: "వ్యాపార పేరు",
       signupButton: "వర్క్‌స్పేస్ సృష్టించండి", haveAccount: "ఇప్పటికే ఖాతా ఉందా?", logIn: "లాగిన్ చేయండి",
     },
     dashboard: {
@@ -354,7 +354,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       navPricing: "ధర", navMcp: "MCP", navLogin: "లాగిన్", navGetStarted: "ప్రారంభించండి",
       heroEyebrow: "వాట్సాప్ మార్కెటింగ్ సాఫ్ట్‌వేర్", heroLine1: "ఒక్క మెసేజ్.", heroLine2: "ప్రతి కస్టమర్‌కి", heroLine3: "వారి సొంత భాషలో చేరుతుంది.",
       heroSubhead: "ఇది ప్రియా టెక్స్‌టైల్స్ యొక్క నిజమైన ఆర్డర్, మొదటి నుండి చివరి వరకు — ఒక ఇన్‌స్టాగ్రామ్ ప్రకటన, కస్టమర్ సొంత భాషలో సమాధానం, వాట్సాప్ వదలకుండా తీసుకున్న చెల్లింపు, మరియు ఆ అమ్మకాన్ని తెచ్చిన ప్రకటనకు తిరిగి అనుసంధానించబడిన ఆదాయం.",
-      badgeReseller: "⚡ Meta యొక్క అధికారిక Cloud API — రీసెల్లర్ కాదు", badgeFree: "🆓 ఎప్పటికీ ఉచిత ప్లాన్ — 14-రోజుల ట్రయల్ కాదు",
+      badgeReseller: "⚡ Meta యొక్క అధికారిక Cloud API — రీసెల్లర్ కాదు", badgeFree: "🆓 ఉచితంగా చూడండి — సిద్ధమైనప్పుడు మీ నంబర్‌ను జోడించండి",
       ctaGetStarted: "ఉచితంగా ప్రారంభించండి →", ctaSeePricing: "ధర చూడండి",
       statChannels: "ఛానెల్‌లు", statMcp: "Claude కోసం MCP టూల్స్", statPrice: "భారతీయ భాషలు",
     },
@@ -390,7 +390,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     auth: {
       loginTitle: "ಲಾಗಿನ್ ಮಾಡಿ", loginSubtitle: "ಮತ್ತೆ ಸ್ವಾಗತ.", whatsappNumber: "WhatsApp ಸಂಖ್ಯೆ", password: "ಪಾಸ್‌ವರ್ಡ್",
       loginButton: "ಲಾಗಿನ್ ಮಾಡಿ", noAccount: "ಹೊಸಬರೇ? ನಿಮ್ಮ ವ್ಯಾಪಾರವನ್ನು ರಚಿಸಿ", signupTitle: "ನಿಮ್ಮ ವ್ಯಾಪಾರವನ್ನು ಹೊಂದಿಸಿ",
-      signupSubtitle: "ಪ್ರಾರಂಭಿಸಲು ಉಚಿತ, ಮೊದಲ ದಿನದಿಂದಲೇ ನಿಜವಾದ Cloud API.", workspaceName: "ವ್ಯಾಪಾರದ ಹೆಸರು",
+      signupSubtitle: "ನೋಡುವುದು ಉಚಿತ, ಸಂಖ್ಯೆ ಸೇರಿಸಿದ ತಕ್ಷಣ ನಿಜವಾದ Cloud API.", workspaceName: "ವ್ಯಾಪಾರದ ಹೆಸರು",
       signupButton: "ವರ್ಕ್‌ಸ್ಪೇಸ್ ರಚಿಸಿ", haveAccount: "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ?", logIn: "ಲಾಗಿನ್ ಮಾಡಿ",
     },
     dashboard: {
@@ -416,7 +416,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       navPricing: "ಬೆಲೆ", navMcp: "MCP", navLogin: "ಲಾಗಿನ್", navGetStarted: "ಪ್ರಾರಂಭಿಸಿ",
       heroEyebrow: "ವಾಟ್ಸಾಪ್ ಮಾರ್ಕೆಟಿಂಗ್ ಸಾಫ್ಟ್‌ವೇರ್", heroLine1: "ಒಂದೇ ಸಂದೇಶ.", heroLine2: "ಪ್ರತಿ ಗ್ರಾಹಕರಿಗೂ", heroLine3: "ಅವರದೇ ಭಾಷೆಯಲ್ಲಿ ತಲುಪುತ್ತದೆ.",
       heroSubhead: "ಇದು ಪ್ರಿಯಾ ಟೆಕ್ಸ್‌ಟೈಲ್ಸ್‌ನ ನಿಜವಾದ ಆರ್ಡರ್, ಆರಂಭದಿಂದ ಅಂತ್ಯದವರೆಗೆ — ಒಂದು ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಜಾಹೀರಾತು, ಗ್ರಾಹಕರ ಸ್ವಂತ ಭಾಷೆಯಲ್ಲಿ ಪ್ರತ್ಯುತ್ತರ, ವಾಟ್ಸಾಪ್ ಬಿಡದೆ ಪಡೆದ ಪಾವತಿ, ಮತ್ತು ಆ ಮಾರಾಟವನ್ನು ತಂದ ಜಾಹೀರಾತಿಗೆ ಮರಳಿ ಜೋಡಿಸಲಾದ ಆದಾಯ.",
-      badgeReseller: "⚡ Meta ನ ಅಧಿಕೃತ Cloud API — ಮರುಮಾರಾಟಗಾರರಲ್ಲ", badgeFree: "🆓 ಶಾಶ್ವತ ಉಚಿತ ಯೋಜನೆ — 14-ದಿನಗಳ ಟ್ರಯಲ್ ಅಲ್ಲ",
+      badgeReseller: "⚡ Meta ನ ಅಧಿಕೃತ Cloud API — ಮರುಮಾರಾಟಗಾರರಲ್ಲ", badgeFree: "🆓 ಉಚಿತವಾಗಿ ನೋಡಿ — ಸಿದ್ಧರಾದಾಗ ನಿಮ್ಮ ಸಂಖ್ಯೆಯನ್ನು ಸೇರಿಸಿ",
       ctaGetStarted: "ಉಚಿತವಾಗಿ ಪ್ರಾರಂಭಿಸಿ →", ctaSeePricing: "ಬೆಲೆ ನೋಡಿ",
       statChannels: "ಚಾನೆಲ್‌ಗಳು", statMcp: "Claude ಗಾಗಿ MCP ಟೂಲ್‌ಗಳು", statPrice: "ಭಾರತೀಯ ಭಾಷೆಗಳು",
     },
@@ -452,7 +452,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
     auth: {
       loginTitle: "લૉગ ઇન કરો", loginSubtitle: "ફરી સ્વાગત છે.", whatsappNumber: "WhatsApp નંબર", password: "પાસવર્ડ",
       loginButton: "લૉગ ઇન કરો", noAccount: "નવા છો? તમારું બિઝનેસ એકાઉન્ટ બનાવો", signupTitle: "તમારો બિઝનેસ સેટ કરો",
-      signupSubtitle: "શરૂ કરવું મફત છે, પહેલા દિવસથી અસલી Cloud API.", workspaceName: "બિઝનેસનું નામ",
+      signupSubtitle: "જોવું મફત છે, નંબર જોડતાં જ અસલી Cloud API.", workspaceName: "બિઝનેસનું નામ",
       signupButton: "વર્કસ્પેસ બનાવો", haveAccount: "પહેલેથી એકાઉન્ટ છે?", logIn: "લૉગ ઇન કરો",
     },
     dashboard: {
@@ -478,7 +478,7 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       navPricing: "પ્રાઇસિંગ", navMcp: "MCP", navLogin: "લૉગ ઇન", navGetStarted: "શરૂ કરો",
       heroEyebrow: "વોટ્સએપ માર્કેટિંગ સોફ્ટવેર", heroLine1: "એક મેસેજ.", heroLine2: "દરેક ગ્રાહક સુધી પહોંચે", heroLine3: "તેની પોતાની ભાષામાં.",
       heroSubhead: "આ પ્રિયા ટેક્સટાઇલ્સનો અસલી ઓર્ડર છે, શરૂથી અંત સુધી — એક ઇન્સ્ટાગ્રામ જાહેરાત, ગ્રાહકની પોતાની ભાષામાં જવાબ, વોટ્સએપ છોડ્યા વિના લીધેલું પેમેન્ટ, અને જે જાહેરાતે વેચાણ અપાવ્યું તેની સાથે જોડાયેલી કમાણી.",
-      badgeReseller: "⚡ Metaનું અસલી Cloud API — રિસેલર નહીં", badgeFree: "🆓 કાયમ માટે ફ્રી પ્લાન — 14 દિવસનું ટ્રાયલ નહીં",
+      badgeReseller: "⚡ Metaનું અસલી Cloud API — રિસેલર નહીં", badgeFree: "🆓 મફતમાં જુઓ — તૈયાર થાઓ ત્યારે તમારો નંબર જોડો",
       ctaGetStarted: "મફતમાં શરૂ કરો →", ctaSeePricing: "પ્રાઇસિંગ જુઓ",
       statChannels: "ચેનલ", statMcp: "Claude માટે MCP ટૂલ્સ", statPrice: "ભારતીય ભાષાઓ",
     },

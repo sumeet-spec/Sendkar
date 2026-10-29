@@ -45,7 +45,7 @@ const POLL_MS = 150;
  * once it's approved, not a way around needing it. Renders nothing if the env
  * vars aren't set.
  */
-export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
+export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspaceId: string; blockedReason?: string | null }) {
   const configured = Boolean(process.env.NEXT_PUBLIC_META_APP_ID && process.env.NEXT_PUBLIC_META_EMBEDDED_SIGNUP_CONFIG_ID);
   const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && Boolean(window.FB));
   const [status, setStatus] = useState<EmbeddedSignupResult | null>(null);
@@ -111,7 +111,9 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
   }
 
   function handleLogin() {
-    if (!window.FB) return;
+    // Checked before the popup on purpose: Meta converts the number the moment the popup finishes,
+    // so refusing afterwards would leave someone with a number we will not accept.
+    if (!window.FB || blockedReason) return;
     setPending(true);
     setStatus(null);
     signupRef.current = null;
@@ -169,11 +171,16 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
       </p>
       <button
         onClick={handleLogin}
-        disabled={!sdkReady || pending}
+        disabled={!sdkReady || pending || Boolean(blockedReason)}
         className="sk-btn sk-btn-primary disabled:opacity-60"
       >
         {pending ? "Connecting…" : sdkReady ? "Continue with Facebook" : "Loading…"}
       </button>
+      {blockedReason && (
+        <p className="mt-2 text-[12.5px] text-warn">
+          {blockedReason} <a href="/settings/billing" className="text-accent hover:text-accent-hover">See plans</a>
+        </p>
+      )}
       {status?.error && <p className="mt-2 text-[12.5px] text-danger">{status.error}</p>}
       {status?.success && (
         <p className="mt-2 text-[12.5px] text-accent">

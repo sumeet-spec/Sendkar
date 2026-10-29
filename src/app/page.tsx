@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PLAN_LIMITS } from "@/lib/plans";
+import { PLAN_LIMITS, allowanceLines } from "@/lib/plans";
 import { Logo } from "@/components/Logo";
 import { Reveal } from "@/components/Reveal";
 import { StoryCarousel, type StoryMoment } from "@/components/StoryCarousel";
@@ -120,11 +120,13 @@ const MORE_BUILT = [
   },
 ];
 
+// The number and image lines come from the plan limits themselves, so this page cannot promise
+// something the product does not enforce.
 const PLAN_FEATURES: Record<string, string[]> = {
-  free:    ["1 WhatsApp number", "Unlimited contacts", "Real Meta Cloud API", "Basic broadcast campaigns"],
-  starter: ["Everything in Free", "Unlimited team seats", "Branching chatbot flows", "Multi-language broadcasts", "Keyword automations"],
-  growth:  ["Everything in Starter", "Instagram & Messenger", "WhatsApp Catalog + cart recovery", "AI copilot", "Revenue attribution"],
-  scale:   ["Everything in Growth", "Higher message volume", "Outbound webhooks", "Priority support"],
+  free:    ["Look around the whole dashboard", ...allowanceLines("free")],
+  starter: [...allowanceLines("starter"), "Unlimited contacts", "Unlimited team seats", "Branching chatbot flows", "Multi-language broadcasts", "Keyword automations"],
+  growth:  [...allowanceLines("growth"), "Instagram & Messenger", "WhatsApp Catalog + cart recovery", "AI copilot", "Revenue attribution"],
+  scale:   [...allowanceLines("scale"), "Outbound webhooks", "Priority support"],
 };
 
 const FAQS = [
@@ -155,7 +157,7 @@ const FAQS = [
 ];
 
 const PLANS = [
-  { key: "free",    name: "Free"    as const, blurb: "One number, one seat — try it for real." },
+  { key: "free",    name: "Free"    as const, blurb: "Look around first — connect a number on any paid plan." },
   { key: "starter", name: "Starter" as const, blurb: "Automations + branching chatbot flows, unlimited seats." },
   { key: "growth",  name: "Growth"  as const, blurb: "Catalog, Instagram, Messenger, webhooks, unlimited seats.", featured: true },
   { key: "scale",   name: "Scale"   as const, blurb: "Everything, unlimited seats." },
@@ -255,7 +257,7 @@ export default async function RootPage() {
         <div className="sk-trust-div" />
         <div className="sk-trust-item">
           <div className="sk-trust-num">₹0</div>
-          <div className="sk-trust-label">To start</div>
+          <div className="sk-trust-label">To explore</div>
         </div>
         <div className="sk-trust-div" />
         <div className="sk-trust-item">

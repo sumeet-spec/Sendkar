@@ -5,6 +5,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
 import { verifyPhoneNumberCreds, subscribeAppToWaba } from "@/lib/whatsapp";
 import { revalidatePath } from "next/cache";
+import { checkCanConnectNumber } from "@/lib/planUsage";
 
 export async function saveInstagramCreds(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
@@ -63,6 +64,8 @@ export async function addWhatsAppNumber(_prevState: unknown, formData: FormData)
   if (!label || !phoneNumberId || !accessToken) return { error: "Label, phone number ID, and access token are required." };
 
   const supabase = await createClient();
+  const limitCheck = await checkCanConnectNumber(supabase, workspace, { replacingDefault: false });
+  if (!limitCheck.ok) return { error: limitCheck.error };
   const { error } = await supabase.from("whatsapp_numbers").insert({
     workspace_id: workspace.id,
     label,
@@ -92,6 +95,13 @@ export async function saveWhatsAppCredsFromChannels(_prevState: unknown, formDat
   const displayNumber = String(formData.get("displayNumber") ?? "").replace(/[^\d]/g, "");
   const catalogId = String(formData.get("catalogId") ?? "").trim();
   const accessToken = String(formData.get("accessToken") ?? "").trim();
+
+  // Saving a number onto a workspace that has none is a NEW connection and needs room on the plan.
+  // (Changing the number already there, or just saving the catalog id, is not.)
+  if (phoneNumberId && !workspace.whatsapp_phone_number_id) {
+    const limitCheck = await checkCanConnectNumber(await createClient(), workspace, { replacingDefault: false });
+    if (!limitCheck.ok) return { error: limitCheck.error };
+  }
 
   // Only verify when a real token+phone number pair was actually submitted —
   // a save that only changes catalogId, for instance, with the token field

@@ -8,7 +8,6 @@ const rate = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFractionDig
 const inr = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
 const PLAN_CHOICES = [
-  { key: "free", name: "Free" },
   { key: "starter", name: "Starter" },
   { key: "growth", name: "Growth" },
   { key: "scale", name: "Scale" },

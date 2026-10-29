@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enhanceImagePrompt } from "@/lib/ai";
 import { isRateLimited } from "@/lib/rateLimit";
+import { imageAllowance } from "@/lib/plans";
+import { countImagesThisMonth } from "@/lib/planUsage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -38,6 +40,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Image generation limit reached for this workspace. Try again in an hour." }, { status: 429 });
   }
 
+  // Monthly allowance by plan. Every image is a real Gemini charge (about ₹3.5), so the cap is hard:
+  // a slot is reserved BEFORE generating, handed back if generation fails, and re-counted after
+  // reserving so two requests arriving together cannot both slip under the limit.
+  const admin = createAdminClient();
+  const { data: workspaceRow } = await admin.from("workspaces").select("plan").eq("id", workspaceId).maybeSingle();
+  const plan = workspaceRow?.plan ?? "free";
+
+  const usedBefore = await countImagesThisMonth(admin, workspaceId);
+  if (usedBefore === null) {
+    // Fail closed: if usage can't be read, spending money on an image is the wrong default.
+    return NextResponse.json({ error: "Image generation is temporarily unavailable. Please try again shortly." }, { status: 503 });
+  }
+  const before = imageAllowance(plan, usedBefore);
+  if (before.exhausted) return NextResponse.json({ error: before.blockedReason, limit: before.limit, remaining: 0 }, { status: 402 });
+
+  const { data: reservation, error: reserveError } = await admin.from("ai_image_usage").insert({ workspace_id: workspaceId }).select("id").single();
+  if (reserveError || !reservation) {
+    return NextResponse.json({ error: "Image generation is temporarily unavailable. Please try again shortly." }, { status: 503 });
+  }
+  const refund = async () => { await admin.from("ai_image_usage").delete().eq("id", reservation.id); };
+
+  const usedAfter = await countImagesThisMonth(admin, workspaceId);
+  if (usedAfter === null || usedAfter > before.limit) {
+    await refund();
+    return NextResponse.json({ error: before.blockedReason ?? "Image allowance reached for this month.", limit: before.limit, remaining: 0 }, { status: 402 });
+  }
+
   // Enhance prompt with Claude
   let enhancedPrompt: string;
   try {
@@ -63,6 +92,7 @@ export async function POST(req: NextRequest) {
 
   if (!geminiRes.ok) {
     const err = await geminiRes.json().catch(() => ({})) as { error?: { message?: string } };
+    await refund();
     return NextResponse.json({ error: err.error?.message ?? "Image generation failed." }, { status: 502 });
   }
 
@@ -70,12 +100,14 @@ export async function POST(req: NextRequest) {
     candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }> } }>;
   };
   const inlineData = geminiData.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;
-  if (!inlineData?.data) return NextResponse.json({ error: "No image returned from AI." }, { status: 502 });
+  if (!inlineData?.data) {
+    await refund();
+    return NextResponse.json({ error: "No image returned from AI." }, { status: 502 });
+  }
 
   const imgBuffer = Buffer.from(inlineData.data, "base64");
 
   // Upload to Supabase Storage
-  const admin = createAdminClient();
   const filename = `${workspaceId}/${Date.now()}.jpg`;
 
   // Ensure bucket exists (idempotent)
@@ -85,9 +117,12 @@ export async function POST(req: NextRequest) {
     .from("campaign-images")
     .upload(filename, imgBuffer, { contentType: inlineData.mimeType ?? "image/jpeg", upsert: false });
 
-  if (uploadError) return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 });
+  if (uploadError) {
+    await refund();
+    return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 });
+  }
 
   const { data: { publicUrl } } = admin.storage.from("campaign-images").getPublicUrl(filename);
 
-  return NextResponse.json({ url: publicUrl, revisedPrompt: enhancedPrompt });
+  return NextResponse.json({ url: publicUrl, revisedPrompt: enhancedPrompt, limit: before.limit, remaining: Math.max(before.limit - usedAfter, 0) });
 }

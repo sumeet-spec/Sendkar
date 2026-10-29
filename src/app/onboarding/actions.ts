@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { verifyPhoneNumberCreds, subscribeAppToWaba } from "@/lib/whatsapp";
 import { redirect } from "next/navigation";
+import { checkCanConnectNumber } from "@/lib/planUsage";
 
 export interface OnboardingResult {
   error?: string;
@@ -22,6 +23,9 @@ export async function saveWhatsAppCreds(_prevState: unknown, formData: FormData)
 
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found for this account." };
+
+  const limitCheck = await checkCanConnectNumber(await createClient(), workspace, { replacingDefault: true });
+  if (!limitCheck.ok) return { error: limitCheck.error };
 
   // Verify BEFORE saving — entering a typo'd token used to save silently and
   // only surface as a failure the next time a real campaign tried to send.
