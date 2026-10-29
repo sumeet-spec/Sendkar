@@ -2,16 +2,16 @@ import type { SiteCopy } from "./site";
 
 export const siteEn: SiteCopy = {
   meta: {
-    title: "Sendkar — WhatsApp offers, payment reminders and follow-ups for your shop",
+    title: "Sendkar — Bring your business to WhatsApp: bills, reminders, follow-ups and festival cards",
     description:
-      "Send festival offers to all your customers on WhatsApp, remind them to pay, and thank them after every sale. In Hindi, Gujarati and more. Start 7 days free.",
+      "Send bills on WhatsApp, collect payments, thank customers and bring them back, and see who bought and who owes. In Hindi, Gujarati and more. Start 7 days free.",
   },
   nav: { how: "How it works", pricing: "Pricing", faq: "Questions", login: "Log in", start: "Start 7 days free" },
   hero: {
     badge: "For shops and small businesses",
-    titleA: "Send your offer to every customer.",
-    titleB: "In one tap, on WhatsApp.",
-    sub: "Send festival offers, remind customers to pay, and thank them after every sale. It all happens on WhatsApp, in their own language.",
+    titleA: "Bring your business",
+    titleB: "to WhatsApp.",
+    sub: "Every bill, reminder, thank-you and festival wish goes to your customers on WhatsApp, and you see who bought and who owes.",
     cta: "Start 7 days free",
     ctaSecondary: "See how it works",
     note: "No card needed. Set up in a few minutes.",
@@ -23,9 +23,9 @@ export const siteEn: SiteCopy = {
     delivered: "Delivered",
     caption: "This is what your customer sees on their phone.",
     messages: [
-      { side: "in", text: "Hello Rajesh ji! 🪔 Diwali offer at Sharma Traders: 15% off on everything till Sunday." },
-      { side: "out", text: "Please send me the price list 🙏" },
-      { side: "in", text: "Of course! Here it is. Visit us or reply to book your order." },
+      { side: "in", text: "Hello Rajesh ji! Thank you for shopping at Sharma Traders. Your bill B12 for ₹1,328 is attached 🧾" },
+      { side: "out", text: "Received, thank you 🙏" },
+      { side: "in", text: "Come again soon! This Diwali, 15% off for our regular customers 🪔" },
     ],
   },
   jobs: {
