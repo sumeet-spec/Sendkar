@@ -4,6 +4,7 @@ import { Logo } from "@/components/Logo";
 import { Reveal } from "@/components/Reveal";
 import { StoryCarousel, type StoryMoment } from "@/components/StoryCarousel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { BillCalculator } from "@/components/BillCalculator";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { getDictionary, LANGUAGES } from "@/lib/i18n/dictionaries";
 
@@ -125,6 +126,33 @@ const PLAN_FEATURES: Record<string, string[]> = {
   growth:  ["Everything in Starter", "Instagram & Messenger", "WhatsApp Catalog + cart recovery", "AI copilot", "Revenue attribution"],
   scale:   ["Everything in Growth", "Higher message volume", "Outbound webhooks", "Priority support"],
 };
+
+const FAQS = [
+  {
+    q: "Do I need a new WhatsApp number?",
+    a: "Connecting a number to Sendkar moves it onto Meta's WhatsApp Business Platform, which logs it out of the regular WhatsApp and WhatsApp Business apps on your phone. Your old chats stay on the phone, but you will manage that number from Sendkar from then on. If you want to keep using the app on your main number, connect a separate number to Sendkar.",
+  },
+  {
+    q: "Who pays Meta's message fees?",
+    a: "Meta charges WhatsApp message fees to your own WhatsApp Business account, separately from your Sendkar plan. Use the estimate above to see roughly what a month of messages costs.",
+  },
+  {
+    q: "Can Sendkar chase unpaid bills for me?",
+    a: "Yes. Paste your outstanding list from Excel or Tally and Sendkar sends each customer a polite reminder with a payment link before the due date, on it and after it. Reminders stop when the customer pays or replies STOP.",
+  },
+  {
+    q: "Is this the official WhatsApp API?",
+    a: "Yes. Sendkar connects to Meta's own Cloud API directly, not through a reseller, and only messages people who have agreed to hear from you.",
+  },
+  {
+    q: "Which languages does it support?",
+    a: "The Sendkar dashboard is available in English, Hindi, Marathi, Tamil, Telugu, Kannada and Gujarati. You can write and send message templates in any language Meta supports, and Sendkar keeps each customer's language on their contact.",
+  },
+  {
+    q: "Can customers pay inside the chat?",
+    a: "Yes. Connect Razorpay or PayU and send a payment link in any conversation, then see which messages led to paid orders.",
+  },
+];
 
 const PLANS = [
   { key: "free",    name: "Free"    as const, blurb: "One number, one seat — try it for real." },
@@ -428,6 +456,21 @@ export default async function RootPage() {
             );
           })}
         </Reveal>
+        <BillCalculator />
+      </section>
+
+      <section id="faq" className="mx-auto max-w-3xl px-6 pb-24">
+        <Reveal>
+          <h2 className="mb-6 text-center text-2xl font-semibold tracking-tight">Questions, answered</h2>
+        </Reveal>
+        <div className="flex flex-col gap-2">
+          {FAQS.map((item) => (
+            <details key={item.q} className="sk-card group p-4">
+              <summary className="cursor-pointer list-none font-medium marker:hidden">{item.q}</summary>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-muted">{item.a}</p>
+            </details>
+          ))}
+        </div>
       </section>
 
       <section className="sk-cta-band relative px-6 py-24">
