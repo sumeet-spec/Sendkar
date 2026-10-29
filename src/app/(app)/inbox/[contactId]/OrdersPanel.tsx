@@ -41,6 +41,7 @@ export function OrdersPanel({ contactId, orders, currency = "USD" }: { contactId
         <input type="hidden" name="contactId" value={contactId} />
         <div className="flex gap-2">
           <input name="amount" type="number" step="0.01" min="0" className="sk-input w-24 text-[12.5px]" placeholder="Amount" required />
+          <input name="billNo" maxLength={40} className="sk-input w-24 text-[12.5px]" placeholder="Bill no." />
           <input name="note" className="sk-input flex-1 text-[12.5px]" placeholder="What did they buy? (optional)" />
         </div>
         <button type="submit" disabled={pending} className="sk-btn sk-btn-ghost self-start disabled:opacity-60">

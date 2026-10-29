@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWooWebhookSignature, extractWooOrderPhone, type WooOrderPayload } from "@/lib/woocommerce";
 import { sendTemplateMessage } from "@/lib/whatsapp";
 import { attributeOrder } from "@/lib/attribution";
+import { enrollOnOrderPlaced } from "@/lib/sequences";
 
 /** The workspace id in the URL isn't secret by itself — the HMAC signature, keyed by a secret only that workspace's merchant set, is the actual auth. */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const totalAmount = Number.parseFloat(order.total ?? "0") || 0;
   if (contact?.id) {
     const attributedCampaignId = await attributeOrder(admin, contact.id, orderDate);
-    await admin.from("orders").upsert(
+    const { data: insertedOrder } = await admin.from("orders").upsert(
       {
         workspace_id: workspace.id,
         contact_id: contact.id,
@@ -61,7 +62,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         attributed_campaign_id: attributedCampaignId,
       },
       { onConflict: "workspace_id,source,external_order_id", ignoreDuplicates: true },
-    );
+    ).select("id");
+    if (insertedOrder?.length) {
+      await enrollOnOrderPlaced(admin, { workspaceId: workspace.id, contactId: contact.id, amount: totalAmount, orderLabel: order.number ? `#${order.number}` : null });
+    }
   }
 
   if (!workspace.order_confirmation_template_id) return NextResponse.json({ received: true });

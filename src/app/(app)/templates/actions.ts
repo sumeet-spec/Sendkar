@@ -6,6 +6,7 @@ import { submitTemplateToMeta } from "@/lib/whatsapp";
 import { generateTemplateDraft, type GeneratedTemplateDraft } from "@/lib/ai";
 import { parseCarouselCards } from "@/lib/carouselCards";
 import { revalidatePath } from "next/cache";
+import { PACK_LANGUAGES, buildPackTemplate, selectPackTemplates, type PackLang } from "@/lib/templatePack";
 
 export async function generateTemplateWithAi(description: string, language: string): Promise<{ draft?: GeneratedTemplateDraft; error?: string }> {
   if (!description.trim()) return { error: "Describe what the message should say." };
@@ -183,4 +184,110 @@ export async function deleteTemplate(templateId: string) {
   const supabase = await createClient();
   await supabase.from("templates").delete().eq("id", templateId);
   revalidatePath("/templates");
+}
+
+export interface StarterPackResult {
+  error?: string;
+  submitted?: number;
+  alreadyThere?: number;
+  rejected?: number;
+  savedAsDrafts?: number;
+  problems?: string[];
+}
+
+const PACK_CONCURRENCY = 6;
+
+/**
+ * Adds the starter pack to this workspace: each template is submitted to the
+ * business's OWN Meta account (approval is per account, so it can't be done
+ * ahead of time) and saved here with the same status Meta reports. Templates
+ * already present are left alone, so running it twice is harmless.
+ */
+export async function installStarterPack(languages: string[], keys?: string[]): Promise<StarterPackResult> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace found." };
+
+  const valid = new Set<string>(PACK_LANGUAGES.map((l) => l.code));
+  const chosen = [...new Set(languages)].filter((l): l is PackLang => valid.has(l));
+  if (chosen.length === 0) return { error: "Pick at least one language." };
+
+  const built = selectPackTemplates({ keys }).flatMap((t) => chosen.map((lang) => buildPackTemplate(t, lang)));
+  if (built.length === 0) return { error: "Nothing to add." };
+
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("templates")
+    .select("meta_template_name")
+    .eq("workspace_id", workspace.id)
+    .in("meta_template_name", built.map((b) => b.metaName));
+  const have = new Set((existing ?? []).map((e) => e.meta_template_name));
+  const todo = built.filter((b) => !have.has(b.metaName));
+
+  const canSubmitToMeta = Boolean(workspace.whatsapp_waba_id && workspace.whatsapp_access_token);
+  const rows: Array<Record<string, unknown>> = [];
+  const problems: string[] = [];
+  let rejected = 0;
+
+  for (let i = 0; i < todo.length; i += PACK_CONCURRENCY) {
+    const batch = todo.slice(i, i + PACK_CONCURRENCY);
+    const outcomes = await Promise.all(
+      batch.map(async (t) => {
+        let status = "pending";
+        let metaResponse: unknown = null;
+        let submitError: string | null = null;
+        if (canSubmitToMeta) {
+          try {
+            metaResponse = await submitTemplateToMeta({
+              wabaId: workspace.whatsapp_waba_id!,
+              token: workspace.whatsapp_access_token!,
+              name: t.metaName,
+              language: t.language,
+              category: t.category,
+              components: { headerType: "none", bodyText: t.bodyText, footerText: t.footerText, buttons: t.buttons, bodyExamples: t.examples },
+            });
+          } catch (err) {
+            submitError = err instanceof Error ? err.message : "Meta rejected the submission.";
+            status = "rejected";
+          }
+        }
+        return { t, status, metaResponse, submitError };
+      }),
+    );
+    for (const { t, status, metaResponse, submitError } of outcomes) {
+      if (submitError) { rejected++; problems.push(`${t.displayName}: ${submitError}`); }
+      rows.push({
+        workspace_id: workspace.id,
+        name: t.displayName,
+        language: t.language,
+        meta_template_name: t.metaName,
+        category: t.category,
+        header_type: "none",
+        header_text: null,
+        header_image_url: null,
+        body_text: t.bodyText,
+        body_preview: t.bodyText,
+        footer_text: t.footerText ?? null,
+        buttons: t.buttons ?? null,
+        carousel_cards: null,
+        meta_response: metaResponse,
+        rejection_reason: submitError,
+        template_group: t.templateGroup,
+        status,
+      });
+    }
+  }
+
+  if (rows.length > 0) {
+    const { error } = await supabase.from("templates").insert(rows);
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/templates");
+  return {
+    submitted: canSubmitToMeta ? rows.length - rejected : 0,
+    savedAsDrafts: canSubmitToMeta ? 0 : rows.length,
+    alreadyThere: built.length - todo.length,
+    rejected,
+    problems: problems.slice(0, 6),
+  };
 }

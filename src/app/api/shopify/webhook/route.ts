@@ -7,6 +7,7 @@ import {
 } from "@/lib/shopify";
 import { sendTemplateMessage } from "@/lib/whatsapp";
 import { attributeOrder } from "@/lib/attribution";
+import { enrollOnOrderPlaced } from "@/lib/sequences";
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
     await admin.from("carts").update({ status: "recovered" }).eq("workspace_id", workspace.id).eq("contact_id", contact.id).eq("status", "open");
 
     const attributedCampaignId = await attributeOrder(admin, contact.id, orderDate);
-    await admin.from("orders").upsert(
+    const { data: insertedOrder } = await admin.from("orders").upsert(
       {
         workspace_id: workspace.id,
         contact_id: contact.id,
@@ -123,7 +124,10 @@ export async function POST(request: NextRequest) {
         attributed_campaign_id: attributedCampaignId,
       },
       { onConflict: "workspace_id,source,external_order_id", ignoreDuplicates: true },
-    );
+    ).select("id");
+    if (insertedOrder?.length) {
+      await enrollOnOrderPlaced(admin, { workspaceId: workspace.id, contactId: contact.id, amount: totalAmount, orderLabel: order.name ?? (order.order_number != null ? `#${order.order_number}` : null) });
+    }
   }
 
   if (!workspace.order_confirmation_template_id) return NextResponse.json({ received: true }); // no confirmation template picked yet

@@ -5,6 +5,10 @@ import { NewTemplateForm } from "./NewTemplateForm";
 import { TemplateActions } from "./TemplateActions";
 import { TemplateFilters } from "./TemplateFilters";
 import { explainRejection } from "@/lib/templateRejectionReasons";
+import { StarterPack } from "./StarterPack";
+
+// The starter pack submits ~40 templates to Meta in one action.
+export const maxDuration = 60;
 
 const LANGUAGE_LABEL: Record<string, string> = {
   hi: "Hindi", mr: "Marathi", ta: "Tamil", te: "Telugu", kn: "Kannada", en: "English",
@@ -55,6 +59,8 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Se
         </div>
         <NewTemplateForm canSubmitToMeta={canSubmitToMeta} workspaceId={workspace.id} aiImageEnabled={aiImageEnabled} />
       </div>
+
+      <StarterPack canSubmitToMeta={canSubmitToMeta} installedCount={(templates ?? []).filter((t) => String(t.meta_template_name).startsWith("sk_")).length} />
 
       <Suspense>
         <TemplateFilters />

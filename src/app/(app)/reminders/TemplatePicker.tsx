@@ -9,7 +9,7 @@ interface TemplateOption { id: string; name: string; language: string }
 const EXAMPLE_ENGLISH =
   "Hello {{1}}, a friendly reminder: ₹{{2}} is due on {{3}}. You can pay here: {{4}}. If you have already paid, please ignore this message. Thank you!";
 const EXAMPLE_GUJARATI =
-  "નમસ્તે {{1}}, એક નમ્ર યાદ: ₹{{2}} {{3}} ના રોજ બાકી છે. અહીં ચૂકવો: {{4}}. જો તમે ચૂકવી દીધું હોય તો આ મેસેજ અવગણશો. આભાર!";
+  "નમસ્તે {{1}}, એક નમ્ર યાદ: ₹{{2}} ની રકમ {{3}} ના રોજ બાકી છે. અહીં ચૂકવો: {{4}}. જો તમે ચૂકવી દીધું હોય તો આ મેસેજ અવગણશો. આભાર!";
 
 export function TemplatePicker({ templates, currentId }: { templates: TemplateOption[]; currentId: string | null }) {
   const [value, setValue] = useState(currentId ?? "");

@@ -20,6 +20,42 @@ export interface EnrollInput {
   context?: Record<string, unknown>;
 }
 
+/** What a sequence step can read about the sale that started it ("ctx:amount_display", "ctx:bill"). */
+export function buildOrderContext(input: { amount: number; orderLabel?: string | null }): Record<string, unknown> {
+  return {
+    amount: input.amount,
+    amount_display: input.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 }),
+    bill: input.orderLabel?.trim() || "",
+  };
+}
+
+/**
+ * Starts every active "order placed" sequence for a contact who just bought.
+ * The trigger existed in the schema and the sequence form but nothing ever
+ * called it, so those sequences could never fire. Never throws: logging a
+ * sale must not fail because a follow-up could not be scheduled.
+ */
+export async function enrollOnOrderPlaced(
+  admin: SupabaseClient,
+  input: { workspaceId: string; contactId: string; amount: number; orderLabel?: string | null },
+): Promise<number> {
+  try {
+    const { data: sequences } = await admin
+      .from("sequences")
+      .select("id")
+      .eq("workspace_id", input.workspaceId)
+      .eq("trigger_type", "order_placed")
+      .eq("is_active", true);
+    const context = buildOrderContext(input);
+    for (const sequence of sequences ?? []) {
+      await enrollContactInSequence(admin, { sequenceId: sequence.id, contactId: input.contactId, workspaceId: input.workspaceId, context });
+    }
+    return sequences?.length ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 /** Enrolls a contact at step 0, scheduled for step 1's own delay from now. No-ops if the sequence has no steps. */
 export async function enrollContactInSequence(admin: SupabaseClient, input: EnrollInput): Promise<void> {
   const { data: firstStep } = await admin

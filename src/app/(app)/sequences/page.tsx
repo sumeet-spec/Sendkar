@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { getPlanLimits } from "@/lib/plans";
 import { NewSequenceForm } from "./NewSequenceForm";
 import { SequenceRow } from "./SequenceRow";
+import { JourneyCard } from "./JourneyCard";
 
 export default async function SequencesPage() {
   const workspace = await getCurrentWorkspace();
@@ -50,6 +51,8 @@ export default async function SequencesPage() {
           </p>
         </div>
       )}
+
+      {limits.automationsEnabled && <JourneyCard />}
 
       <div className="flex flex-col gap-3">
         {rows.map((s) => <SequenceRow key={s.id} sequence={s} />)}

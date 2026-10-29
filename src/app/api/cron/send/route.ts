@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage, type WorkspaceCreds } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { sendEmail } from "@/lib/email";
+import { resolveTemplateParam } from "@/lib/templateVars";
 
 const MAX_PER_RUN = 100;
 const DELAY_BETWEEN_SENDS_MS = 250;
@@ -50,13 +51,6 @@ async function getWorkspaceOwnerEmail(admin: ReturnType<typeof createAdminClient
   if (!member) return null;
   const { data: { user } } = await admin.auth.admin.getUserById(member.user_id);
   return user?.email ?? null;
-}
-
-function resolveParam(field: string, contact: { name?: string | null; phone?: string; email?: string | null }): string {
-  if (field === "name") return contact.name || "there";
-  if (field === "phone") return contact.phone || "";
-  if (field === "email") return contact.email || "";
-  return contact.name || "there";
 }
 
 export async function GET(request: NextRequest) {
@@ -207,10 +201,8 @@ export async function GET(request: NextRequest) {
 
       const placeholderCount = (template.body_text?.match(/\{\{\d+\}\}/g) ?? []).length;
       const bodyParams = placeholderCount > 0
-        ? Array.from({ length: placeholderCount }, (_, i) => {
-            const field = variableMapping[String(i + 1)];
-            return field ? resolveParam(field, { name: contactRow?.name, phone: contactRow?.phone, email: contactRow?.email }) : (contactRow?.name || "there");
-          })
+        ? Array.from({ length: placeholderCount }, (_, i) =>
+            resolveTemplateParam(variableMapping[String(i + 1)], { name: contactRow?.name, phone: contactRow?.phone, email: contactRow?.email }, template.language))
         : undefined;
 
       try {

@@ -20,9 +20,16 @@ export default async function SequenceDetailPage({ params }: { params: Promise<{
 
   const { data: steps } = await supabase
     .from("sequence_steps")
-    .select("id, step_order, delay_minutes, message_body, include_payment_link")
+    .select("*")
     .eq("sequence_id", id)
     .order("step_order", { ascending: true });
+
+  const { data: templates } = await supabase
+    .from("templates")
+    .select("id, name, language, body_text, status")
+    .eq("workspace_id", workspace.id)
+    .neq("status", "rejected")
+    .order("created_at", { ascending: false });
 
   return (
     <div className="max-w-2xl">
@@ -51,7 +58,7 @@ export default async function SequenceDetailPage({ params }: { params: Promise<{
         )}
       </div>
 
-      <AddStepForm sequenceId={id} />
+      <AddStepForm sequenceId={id} templates={templates ?? []} saleTriggered={sequence.trigger_type === "order_placed"} />
     </div>
   );
 }

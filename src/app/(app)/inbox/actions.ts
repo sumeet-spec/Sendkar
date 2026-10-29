@@ -8,6 +8,8 @@ import { sendMessengerMessage } from "@/lib/messenger";
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { draftReply, summarizeThread } from "@/lib/ai";
 import { attributeOrder } from "@/lib/attribution";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { enrollOnOrderPlaced } from "@/lib/sequences";
 import { revalidatePath } from "next/cache";
 
 export async function replyToContact(_prevState: unknown, formData: FormData) {
@@ -231,6 +233,7 @@ export async function logOrder(_prevState: unknown, formData: FormData) {
   const contactId = String(formData.get("contactId") ?? "");
   const amountRaw = String(formData.get("amount") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
+  const billNo = String(formData.get("billNo") ?? "").trim().slice(0, 40);
   const amount = Number.parseFloat(amountRaw);
   if (!contactId || !amountRaw || !Number.isFinite(amount) || amount <= 0) {
     return { error: "Enter a sale amount greater than 0." };
@@ -249,12 +252,16 @@ export async function logOrder(_prevState: unknown, formData: FormData) {
     workspace_id: workspace.id,
     contact_id: contactId,
     source: "manual",
+    order_label: billNo || null,
     total_amount: amount,
     note: note || null,
     attributed_campaign_id: attributedCampaignId,
     created_by: userId,
   });
   if (error) return { error: error.message };
+
+  // Start any "order placed" follow-up journey (thank-you, tips, win-back) for this customer.
+  await enrollOnOrderPlaced(createAdminClient(), { workspaceId: workspace.id, contactId, amount, orderLabel: billNo || null });
 
   revalidatePath(`/inbox/${contactId}`);
   revalidatePath("/analytics");

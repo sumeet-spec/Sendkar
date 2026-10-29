@@ -37,7 +37,7 @@ export function VariableMappingForm({
         <div>
           <div className="text-[13px] font-semibold">Personalise message variables</div>
           <div className="mt-0.5 text-[12px] text-faint">
-            Map each template placeholder to a contact field so every recipient gets their own details.
+            Fill each placeholder from a contact field, or with one fixed line for everyone — like the festival name, your shop name or the offer.
           </div>
         </div>
         {saved && <span className="text-[12.5px] text-accent">Saved ✓</span>}
@@ -55,22 +55,38 @@ export function VariableMappingForm({
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--faint)" strokeWidth="1.5" strokeLinecap="round">
               <path d="M2 7h10M8.5 4l3.5 3-3.5 3" />
             </svg>
-            <select
-              className="sk-input flex-1 text-[13px]"
-              disabled={disabled}
-              value={mapping[idx] ?? ""}
-              onChange={(e) => {
-                setSaved(false);
-                setMapping((prev) => ({ ...prev, [idx]: e.target.value }));
-              }}
-            >
-              <option value="">— leave as-is (fills with contact name) —</option>
-              {Object.entries(CONTACT_FIELDS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <select
+                className="sk-input text-[13px]"
+                disabled={disabled}
+                value={mapping[idx]?.startsWith("text:") ? "text" : (mapping[idx] ?? "")}
+                onChange={(e) => {
+                  setSaved(false);
+                  setMapping((prev) => ({ ...prev, [idx]: e.target.value === "text" ? "text:" : e.target.value }));
+                }}
+              >
+                <option value="">— leave as-is (fills with contact name) —</option>
+                {Object.entries(CONTACT_FIELDS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+                <option value="text">Same text for everyone…</option>
+              </select>
+              {mapping[idx]?.startsWith("text:") && (
+                <input
+                  className="sk-input text-[13px]"
+                  disabled={disabled}
+                  maxLength={200}
+                  placeholder="e.g. Diwali, Maheshwari Steel House, or the offer line"
+                  value={mapping[idx].slice(5)}
+                  onChange={(e) => {
+                    setSaved(false);
+                    setMapping((prev) => ({ ...prev, [idx]: `text:${e.target.value}` }));
+                  }}
+                />
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -83,6 +99,11 @@ export function VariableMappingForm({
               startTransition(async () => {
                 setError(null);
                 setSaved(false);
+                const emptyFixed = Object.entries(mapping).find(([, v]) => v === "text:" || v.slice(5).trim() === "" && v.startsWith("text:"));
+                if (emptyFixed) {
+                  setError(`Type the text for {{${emptyFixed[0]}}}, or pick a contact field.`);
+                  return;
+                }
                 const result = await saveVariableMapping(campaignId, mapping);
                 if (result.error) setError(result.error);
                 else setSaved(true);

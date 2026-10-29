@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendSessionMessage, type WorkspaceCreds } from "@/lib/whatsapp";
+import { sendSessionMessage, sendTemplateMessage, type WorkspaceCreds } from "@/lib/whatsapp";
+import { resolveTemplateParam } from "@/lib/templateVars";
 import { interpolate, enrollContactInSequence } from "@/lib/sequences";
 import { createRazorpayPaymentLink } from "@/lib/payments";
 
@@ -23,7 +24,32 @@ const ABANDON_AFTER_MINUTES = 60;
 
 interface SequenceRow { id: string; workspace_id: string; is_active: boolean }
 interface ContactRow { phone?: string; name?: string; opted_out?: boolean }
-interface StepRow { step_order: number; delay_minutes: number; message_body: string; include_payment_link: boolean }
+interface StepRow {
+  step_order: number; delay_minutes: number; message_body: string; include_payment_link: boolean;
+  template_id: string | null; variable_mapping: Record<string, string> | null;
+}
+
+const TEMPLATE_WAIT_MS = 24 * 60 * 60_000;
+
+interface AdminClient { from: ReturnType<typeof createAdminClient>["from"] }
+
+/** Moves an enrollment past a step: schedules the next one, or completes the journey. */
+async function advanceEnrollment(admin: AdminClient, enrollmentId: string, sequenceId: string, stepOrder: number) {
+  const { data: laterStep } = await admin
+    .from("sequence_steps")
+    .select("delay_minutes")
+    .eq("sequence_id", sequenceId)
+    .eq("step_order", stepOrder + 1)
+    .maybeSingle();
+  if (laterStep) {
+    await admin
+      .from("sequence_enrollments")
+      .update({ current_step_order: stepOrder, next_send_at: new Date(Date.now() + laterStep.delay_minutes * 60_000).toISOString() })
+      .eq("id", enrollmentId);
+  } else {
+    await admin.from("sequence_enrollments").update({ current_step_order: stepOrder, status: "completed" }).eq("id", enrollmentId);
+  }
+}
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -89,7 +115,9 @@ export async function GET(request: NextRequest) {
     const nextStepOrder = enrollment.current_step_order + 1;
     const { data: step } = await admin
       .from("sequence_steps")
-      .select("step_order, delay_minutes, message_body, include_payment_link")
+      // select("*"): the template columns come from a later migration, and naming them would make this query error — and
+      // read as "no more steps" — on a database that has not run it yet, completing every journey.
+      .select("*")
       .eq("sequence_id", sequence.id)
       .eq("step_order", nextStepOrder)
       .maybeSingle<StepRow>();
@@ -107,6 +135,59 @@ export async function GET(request: NextRequest) {
     }
 
     const context = (enrollment.context ?? {}) as Record<string, unknown>;
+
+    // A template step goes out as an approved Meta template, so it is delivered no matter how long
+    // ago the customer last wrote — free text only works inside WhatsApp's 24-hour window, which
+    // is why a journey that spans days or weeks has to use templates.
+    if (step.template_id) {
+      const { data: template } = await admin
+        .from("templates")
+        .select("meta_template_name, language, body_text, status")
+        .eq("id", step.template_id)
+        .maybeSingle();
+
+      if (!template || template.status === "rejected") {
+        // Skip just this touch so the rest of the journey still runs.
+        await advanceEnrollment(admin, enrollment.id, sequence.id, nextStepOrder);
+        results[enrollment.id] = "skipped — template missing or rejected";
+        continue;
+      }
+      if (template.status !== "approved") {
+        await admin.from("sequence_enrollments").update({ next_send_at: new Date(Date.now() + TEMPLATE_WAIT_MS).toISOString() }).eq("id", enrollment.id);
+        results[enrollment.id] = "waiting for template approval";
+        continue;
+      }
+
+      const mapping = step.variable_mapping ?? {};
+      const placeholderCount = (template.body_text?.match(/{{d+}}/g) ?? []).length;
+      const params = Array.from({ length: placeholderCount }, (_, i) =>
+        resolveTemplateParam(mapping[String(i + 1)], { name: contactRow.name, phone: contactRow.phone }, template.language, context));
+
+      try {
+        const { metaMessageId } = await sendTemplateMessage({
+          workspace: workspace as WorkspaceCreds,
+          to: contactRow.phone,
+          templateName: template.meta_template_name,
+          language: template.language,
+          bodyParams: placeholderCount > 0 ? params : undefined,
+        });
+        await admin.from("messages").insert({
+          workspace_id: workspace.id,
+          contact_id: enrollment.contact_id,
+          direction: "outbound",
+          body: (template.body_text ?? "").replace(/{{(d+)}}/g, (_m: string, n: string) => params[Number(n) - 1] ?? ""),
+          meta_message_id: metaMessageId,
+          status: "sent",
+        });
+        await advanceEnrollment(admin, enrollment.id, sequence.id, nextStepOrder);
+        results[enrollment.id] = "sent (template)";
+      } catch (err) {
+        await admin.from("sequence_enrollments").update({ status: "cancelled" }).eq("id", enrollment.id);
+        results[enrollment.id] = err instanceof Error ? `failed: ${err.message}` : "failed";
+      }
+      continue;
+    }
+
     let body = interpolate(step.message_body, context);
 
     if (step.include_payment_link && workspace.razorpay_key_id) {

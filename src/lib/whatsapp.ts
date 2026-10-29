@@ -9,6 +9,8 @@
  * posture as Continuum's lib/ses.ts.
  */
 
+import { buildTemplateComponents } from "@/lib/templateBuild";
+
 const GRAPH_API_VERSION = "v22.0";
 
 export class WhatsAppNotConfiguredError extends Error {
@@ -480,6 +482,7 @@ export interface TemplateComponents {
   footerText?: string;
   buttons?: Array<{ type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER"; text: string; url?: string; phone_number?: string }>;
   carouselCards?: CarouselCard[]; // 2-10 cards — when present, this becomes a carousel template
+  bodyExamples?: string[]; // one realistic example per {{n}} in the body — Meta refuses variables without them
 }
 
 export interface SubmitTemplateInput {
@@ -492,42 +495,7 @@ export interface SubmitTemplateInput {
 }
 
 export async function submitTemplateToMeta(input: SubmitTemplateInput) {
-  const components: Array<Record<string, unknown>> = [];
-
-  if (input.components.headerType === "text" && input.components.headerText) {
-    components.push({ type: "HEADER", format: "TEXT", text: input.components.headerText });
-  } else if (input.components.headerType === "image") {
-    components.push({ type: "HEADER", format: "IMAGE" });
-  }
-
-  components.push({ type: "BODY", text: input.components.bodyText });
-
-  if (input.components.footerText) {
-    components.push({ type: "FOOTER", text: input.components.footerText });
-  }
-  if (input.components.buttons?.length) {
-    components.push({ type: "BUTTONS", buttons: input.components.buttons });
-  }
-
-  // A carousel replaces the body/header above with per-card versions of the
-  // same idea — Meta's top-level BODY is still required as the intro text
-  // shown above the scrollable cards.
-  if (input.components.carouselCards?.length) {
-    if (input.components.carouselCards.length < 2 || input.components.carouselCards.length > 10) {
-      throw new Error("A carousel template needs between 2 and 10 cards.");
-    }
-    components.push({
-      type: "CAROUSEL",
-      cards: input.components.carouselCards.map((card, i) => ({
-        card_index: i,
-        components: [
-          { type: "HEADER", format: "IMAGE", example: { header_handle: [card.headerHandle] } },
-          { type: "BODY", text: card.bodyText },
-          ...(card.buttons?.length ? [{ type: "BUTTONS", buttons: card.buttons }] : []),
-        ],
-      })),
-    });
-  }
+  const components = buildTemplateComponents(input.components);
 
   const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${input.wabaId}/message_templates`, {
     method: "POST",

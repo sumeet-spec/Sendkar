@@ -93,11 +93,13 @@ export async function startCampaign(campaignId: string): Promise<{ error?: strin
       .select("language")
       .eq("workspace_id", campaign.workspace_id)
       .eq("template_group", campaign.template_group);
-    const coveredLanguages = [...new Set((groupTemplates ?? []).map((t) => t.language))];
-    query = query.in("language", coveredLanguages);
+    const coveredLanguages = [...new Set((groupTemplates ?? []).map((t) => t.language))].filter(isLanguageCode);
+    // Contacts with no language set (phone-book imports, people who messaged first) are included
+    // too: the send job gives them the campaign's own template instead of silently skipping them.
+    query = query.or([coveredLanguages.length ? `language.in.(${coveredLanguages.join(",")})` : null, "language.is.null"].filter(Boolean).join(","));
   } else {
     const language = (campaign.templates as { language?: string } | null)?.language;
-    query = query.eq("language", language);
+    query = query.or(language && isLanguageCode(language) ? `language.eq.${language},language.is.null` : "language.is.null");
   }
   if (campaign.segment_tag) query = query.contains("tags", [campaign.segment_tag]);
   if (campaign.segment_id) {
@@ -257,6 +259,9 @@ export async function scheduleCampaign(campaignId: string, scheduledAt: string):
   revalidatePath(`/campaigns/${campaignId}`);
   return {};
 }
+
+// Language codes are interpolated into a PostgREST filter string, so only plain codes ("hi", "pt_BR") are allowed in.
+const isLanguageCode = (s: string) => /^[A-Za-z]{2,3}(_[A-Za-z]{2,4})?$/.test(s);
 
 export async function saveVariableMapping(campaignId: string, mapping: Record<string, string>): Promise<{ error?: string }> {
   const workspace = await getCurrentWorkspace();
