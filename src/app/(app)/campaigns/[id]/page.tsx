@@ -8,6 +8,10 @@ import { VariableMappingForm } from "./VariableMappingForm";
 import { notFound } from "next/navigation";
 import { estimateCampaignCostInr, type TemplateCategory } from "@/lib/metaRates";
 import { formatCurrency } from "@/lib/dashboardMetrics";
+import { buildReport, type Counts } from "@/lib/deliveryReport";
+import { CampaignProgress } from "./CampaignProgress";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { APP_COPY } from "@/lib/i18n/appCopy";
 
 // Starting a campaign sends in the background of this page's request, for up to four minutes.
 export const maxDuration = 300;
@@ -52,10 +56,14 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     name?: string; language?: string; meta_template_name?: string; category?: string; body_text?: string;
   } | null;
 
-  const counts = (recipients ?? []).reduce<Record<string, number>>((acc, r) => {
-    acc[r.status] = (acc[r.status] ?? 0) + 1;
-    return acc;
-  }, {});
+  // Exact totals for the whole campaign: the table below only holds the latest 200 rows.
+  const statuses = ["queued", "sent", "delivered", "read", "failed"] as const;
+  const [statusCounts, { data: failedRows }] = await Promise.all([
+    Promise.all(statuses.map((st) => supabase.from("campaign_recipients").select("id", { count: "exact", head: true }).eq("campaign_id", id).eq("status", st))),
+    supabase.from("campaign_recipients").select("error").eq("campaign_id", id).eq("status", "failed").limit(3000),
+  ]);
+  const counts = Object.fromEntries(statuses.map((st, i) => [st, statusCounts[i].count ?? 0])) as Counts;
+  const report = buildReport(counts, (failedRows ?? []).map((r) => r.error as string | null));
 
   const concluded = (counts.sent ?? 0) + (counts.delivered ?? 0) + (counts.read ?? 0) + (counts.failed ?? 0);
   const deliveredOrRead = (counts.delivered ?? 0) + (counts.read ?? 0);
@@ -74,7 +82,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     const { count } = await countQuery;
     audienceCount = count ?? 0;
   } else {
-    audienceCount = recipients?.length ?? 0;
+    audienceCount = report.total;
   }
 
   const estimatedCost = template?.category
@@ -135,16 +143,18 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             </div>
             <p className="mt-1 text-[12px] text-faint">
               {audienceCount.toLocaleString("en-IN")} recipient{audienceCount === 1 ? "" : "s"} × {template?.category ?? "—"} rate — India,
-              checked against Interakt&apos;s published card. Not your Sendkar subscription fee, this is what Meta itself charges.
+              at Meta&apos;s published rates. Not your Sendkar subscription fee, this is what Meta itself charges.
             </p>
           </div>
           <div className="text-xl font-semibold text-accent">{formatCurrency(estimatedCost, currency)}</div>
         </div>
       )}
 
+      <CampaignProgress report={report} status={campaign.status} t={APP_COPY[await getCurrentLanguage()].report} />
+
       {/* ── Status grid ── */}
       <div className="mb-6 grid grid-cols-6 gap-3">
-        {["queued", "sent", "delivered", "read", "failed"].map((s) => (
+        {statuses.map((s) => (
           <div key={s} className="sk-card p-4">
             <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">{s}</div>
             <div

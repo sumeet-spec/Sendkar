@@ -46,6 +46,16 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
   // Only a picture we stored ourselves (a card from the card maker) may be attached.
   const cardUrl = String(formData.get("imageUrl") ?? "").trim();
   const imageUrl = cardUrl && cardUrl.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`) ? cardUrl : null;
+  // One card per language, as JSON { "hi": url }; every address must be one of our own stored pictures.
+  const ownStorage = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`;
+  let imageUrls: Record<string, string> | null = null;
+  try {
+    const raw = JSON.parse(String(formData.get("imageUrls") ?? "null")) as Record<string, unknown> | null;
+    if (raw && typeof raw === "object") {
+      const clean = Object.fromEntries(Object.entries(raw).filter(([k, v]) => /^[a-z]{2}$/.test(k) && typeof v === "string" && v.startsWith(ownStorage)));
+      if (Object.keys(clean).length > 0) imageUrls = clean as Record<string, string>;
+    }
+  } catch { /* no per-language cards */ }
   if (!name || !templateId) return { error: "Name and template are required." };
 
   const supabase = await createClient();
@@ -64,7 +74,8 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
       segment_tag: segmentTag,
       segment_id: segmentId,
       whatsapp_number_id: whatsappNumberId,
-      image_url: imageUrl,
+      image_url: imageUrl ?? (imageUrls ? Object.values(imageUrls)[0] : null),
+      image_urls: imageUrls,
       status: "draft",
     })
     .select("id")

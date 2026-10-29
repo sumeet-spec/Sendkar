@@ -21,6 +21,8 @@ const PUBLIC_PATHS = [
   "/api/woocommerce/webhook",
   "/api/v1/send",
   "/pay", "/api/payu/return",
+  // Customers scanning a shop's counter QR: they have no account.
+  "/join", "/api/join",
 ];
 
 // Short-lived cache so a burst of navigations/prefetches from one browser

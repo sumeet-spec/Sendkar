@@ -42,6 +42,7 @@ const SETTINGS_NAV_KEYS = [
   { href: "/settings/billing", key: "billing" },
   { href: "/settings/ai-agent", key: "aiAgent" },
   { href: "/settings/brand", key: "brandKit" },
+  { href: "/settings/join", key: "permission" },
   { href: "/settings/team", key: "team" },
   { href: "/settings/business-hours", key: "businessHours" },
   { href: "/settings/payments", key: "payments" },

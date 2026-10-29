@@ -7,6 +7,7 @@ import { renderCardPng } from "@/lib/cards/renderCard";
 import { occasionById } from "@/lib/cards/occasions";
 import { contactLine, nameFor, DEFAULT_ACCENT, DEFAULT_PRIMARY, sniffImage, type BrandKit } from "@/lib/brandKit";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
+import { translateLine } from "@/lib/translateLine";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -14,7 +15,10 @@ export const maxDuration = 60;
 type Body = {
   workspaceId?: string;
   occasion?: string;
+  /** One language, for a single card. */
   lang?: string;
+  /** Several languages, for one card per customer language (same occasion, offer translated for each). */
+  langs?: string[];
   headline?: string;
   line?: string;
   withBackground?: boolean;
@@ -35,6 +39,8 @@ async function fetchOwnImage(url: string | null): Promise<{ bytes: Buffer; mime:
   }
 }
 
+const codeOf = (v: string | undefined) => LANGUAGES.find((l) => l.code === v)?.code as LanguageCode | undefined;
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -48,12 +54,19 @@ export async function POST(req: NextRequest) {
     .from("workspace_members").select("id").eq("workspace_id", workspaceId).eq("user_id", user.id).maybeSingle();
   if (!member) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
-  const lang = LANGUAGES.find((l) => l.code === body.lang)?.code as LanguageCode | undefined;
-  if (!lang) return NextResponse.json({ error: "Choose a language." }, { status: 400 });
+  const multi = Array.isArray(body.langs) && body.langs.length > 0;
+  const langs: LanguageCode[] = multi
+    ? [...new Set(body.langs!.map(codeOf).filter((l): l is LanguageCode => Boolean(l)))].slice(0, LANGUAGES.length)
+    : [codeOf(body.lang)].filter((l): l is LanguageCode => Boolean(l));
+  if (langs.length === 0) return NextResponse.json({ error: "Choose a language." }, { status: 400 });
 
   const occasion = body.occasion ? occasionById(body.occasion) : undefined;
-  const headline = (body.headline?.trim() || occasion?.label[lang] || "").slice(0, 80);
-  if (!headline) return NextResponse.json({ error: "Pick an occasion or write what the card should say." }, { status: 400 });
+  const customHeadline = body.headline?.trim().slice(0, 80) || "";
+  // A heading typed by the shop is in one language only, so it cannot be used for several languages.
+  if (multi && langs.length > 1 && customHeadline) {
+    return NextResponse.json({ error: "Pick an occasion for cards in several languages. A heading you write yourself works for one language." }, { status: 400 });
+  }
+  if (!customHeadline && !occasion) return NextResponse.json({ error: "Pick an occasion or write what the card should say." }, { status: 400 });
   const line = body.line?.trim().slice(0, 120) || undefined;
 
   // Cards without a picture cost nothing, but each render still uses server time.
@@ -68,13 +81,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Set up your brand kit first: add your shop name, logo and colours.", needsBrandKit: true }, { status: 409 });
   }
 
+  // The offer is written in one language; for several cards it is translated, and any language that cannot be
+  // translated reliably is left out and reported, never shown with the wrong script.
+  const lines: Partial<Record<LanguageCode, string | undefined>> = {};
+  const skipped: LanguageCode[] = [];
+  if (line && langs.length > 1) {
+    const translated = await translateLine(line, langs);
+    for (const l of langs) {
+      if (translated[l]) lines[l] = translated[l];
+      else skipped.push(l);
+    }
+  } else {
+    for (const l of langs) lines[l] = line;
+  }
+  const makeFor = langs.filter((l) => !skipped.includes(l));
+  if (makeFor.length === 0) return NextResponse.json({ error: "Could not translate your offer. Make the cards one language at a time instead." }, { status: 502 });
+
   const logo = await fetchOwnImage(kit.logo_url);
 
+  // One picture behind all the cards: a single image charge however many languages.
   let background: { bytes: Buffer; mime: string } | undefined;
   let imagesRemaining: number | undefined;
   let refund: (() => Promise<void>) | undefined;
   if (body.withBackground) {
-    // The picture model only ever paints a background. Every word on the card is drawn by us.
     const scene = occasion?.scene ?? "soft abstract colour shapes";
     const prompt = `A square, text-free background picture for a shop's greeting card: ${scene}. Leave the centre calm and uncluttered. No text, no letters, no numbers, no logos, no people.`;
     const result = await generateWorkspaceImage(admin, workspaceId, prompt, "1:1");
@@ -84,32 +113,32 @@ export async function POST(req: NextRequest) {
     refund = result.refund;
   }
 
-  let png: Buffer;
+  const urls: Partial<Record<LanguageCode, string>> = {};
   try {
-    png = renderCardPng({
-      lang,
-      headline,
-      line,
-      businessName: nameFor(kit, lang),
-      tagline: kit.tagline || undefined,
-      contact: contactLine(kit) || undefined,
-      primaryColor: kit.primary_color || DEFAULT_PRIMARY,
-      accentColor: kit.accent_color || DEFAULT_ACCENT,
-      logo,
-      background,
-    });
+    const stamp = Date.now();
+    for (const lang of makeFor) {
+      const png = renderCardPng({
+        lang,
+        headline: customHeadline || occasion!.label[lang],
+        line: lines[lang],
+        businessName: nameFor(kit, lang),
+        tagline: kit.tagline || undefined,
+        contact: contactLine(kit) || undefined,
+        primaryColor: kit.primary_color || DEFAULT_PRIMARY,
+        accentColor: kit.accent_color || DEFAULT_ACCENT,
+        logo,
+        background,
+      });
+      const path = `cards/${workspaceId}/${stamp}-${lang}.png`;
+      const { error: uploadError } = await admin.storage.from("campaign-images").upload(path, png, { contentType: "image/png", upsert: false });
+      if (uploadError) throw new Error("upload");
+      urls[lang] = admin.storage.from("campaign-images").getPublicUrl(path).data.publicUrl;
+    }
   } catch {
     await refund?.();
-    return NextResponse.json({ error: "Could not draw the card. Please try again." }, { status: 500 });
+    return NextResponse.json({ error: "Could not make the cards. Please try again." }, { status: 500 });
   }
 
-  const path = `cards/${workspaceId}/${Date.now()}.png`;
-  const { error: uploadError } = await admin.storage.from("campaign-images").upload(path, png, { contentType: "image/png", upsert: false });
-  if (uploadError) {
-    await refund?.();
-    return NextResponse.json({ error: "Could not save the card. Please try again." }, { status: 500 });
-  }
-  const { data: { publicUrl } } = admin.storage.from("campaign-images").getPublicUrl(path);
-
-  return NextResponse.json({ url: publicUrl, imagesRemaining });
+  // `url` stays for the single-card screen; `urls` and `lines` are for the one-per-language mode.
+  return NextResponse.json({ url: urls[makeFor[0]], urls, lines, skipped, imagesRemaining });
 }

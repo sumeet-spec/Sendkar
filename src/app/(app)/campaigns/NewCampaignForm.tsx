@@ -28,15 +28,17 @@ export function NewCampaignForm({
   segments,
   availableTags,
   cardUrl,
+  cardUrls,
 }: {
   templates: Template[];
   numbers: WhatsAppNumber[];
   segments: Segment[];
   availableTags: string[];
   cardUrl?: string;
+  cardUrls?: Record<string, string> | null;
 }) {
   const [state, formAction, pending] = useActionState(createCampaign, null);
-  const [open, setOpen] = useState(Boolean(cardUrl));
+  const [open, setOpen] = useState(Boolean(cardUrl || cardUrls));
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [segmentTag, setSegmentTag] = useState("");
   const [selectedSegmentId, setSelectedSegmentId] = useState("");
@@ -78,7 +80,19 @@ export function NewCampaignForm({
         </button>
       </div>
 
-      {cardUrl && (
+      {cardUrls && (
+        <div className="rounded-md border border-border bg-[var(--surface-2)] p-3">
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(cardUrls).map(([code, url]) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={code} src={url} alt={`Card in ${code}`} className="h-16 w-16 rounded-md object-cover" />
+            ))}
+          </div>
+          <p className="mt-2 text-[12.5px] text-muted">Each customer gets the card in their own language. Pick a template that has an image at the top.</p>
+          <input type="hidden" name="imageUrls" value={JSON.stringify(cardUrls)} />
+        </div>
+      )}
+      {cardUrl && !cardUrls && (
         <div className="flex items-center gap-3 rounded-md border border-border bg-[var(--surface-2)] p-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cardUrl} alt="Your card" className="h-20 w-20 rounded-md object-cover" />
@@ -108,7 +122,7 @@ export function NewCampaignForm({
             <option key={t.id} value={t.id}>{t.name} ({t.language}){t.header_type === "image" ? " · with picture" : ""}</option>
           ))}
         </select>
-        {cardUrl && selectedTemplate && selectedTemplate.header_type !== "image" && (
+        {(cardUrl || cardUrls) && selectedTemplate && selectedTemplate.header_type !== "image" && (
           <p className="mt-2 text-[12.5px] text-danger">This template has no picture at the top, so your card would not be sent. Pick one marked &quot;with picture&quot;.</p>
         )}
         {selectedTemplate?.body_preview && (

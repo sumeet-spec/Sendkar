@@ -6,7 +6,7 @@ import type { LanguageCode } from "@/lib/i18n/dictionaries";
  * way Gujarati speakers say it. Order is the order shown to the shopkeeper.
  */
 export type OccasionId =
-  | "diwali" | "newyear" | "holi" | "eid" | "navratri" | "ganesh" | "rakhi" | "pongal" | "christmas"
+  | "diwali" | "dhanteras" | "bhaidooj" | "newyear" | "holi" | "eid" | "navratri" | "ganesh" | "rakhi" | "pongal" | "christmas"
   | "sale" | "thanks";
 
 export type Occasion = {
@@ -26,6 +26,16 @@ export const OCCASIONS: Occasion[] = [
     id: "diwali", label: L("Happy Diwali", "दिवाली की हार्दिक शुभकामनाएँ", "दिवाळीच्या हार्दिक शुभेच्छा", "દિવાળીની હાર્દિક શુભેચ્છાઓ", "தீபாவளி நல்வாழ்த்துகள்", "దీపావళి శుభాకాంక్షలు", "ದೀಪಾವಳಿಯ ಶುಭಾಶಯಗಳು"),
     keywords: ["diwali", "deepavali", "dipawali", "दिवाली", "दीपावली", "दिवाळी", "દિવાળી", "தீபாவளி", "దీపావళి", "ದೀಪಾವಳಿ"],
     scene: "glowing brass diyas, marigold flowers and soft golden light on a dark background",
+  },
+  {
+    id: "dhanteras", label: L("Happy Dhanteras", "धनतेरस की हार्दिक शुभकामनाएँ", "धनत्रयोदशीच्या हार्दिक शुभेच्छा", "ધનતેરસની હાર્દિક શુભેચ્છાઓ", "தன்தேரஸ் நல்வாழ்த்துகள்", "ధన్‌తేరస్ శుభాకాంక్షలు", "ಧನತೇರಸ್ ಶುಭಾಶಯಗಳು"),
+    keywords: ["dhanteras", "dhanatrayodashi", "धनतेरस", "धनत्रयोदशी", "ધનતેરસ", "தன்தேரஸ்", "ధన్‌తేరస్", "ಧನತೇರಸ್"],
+    scene: "gold coins, a brass kalash and marigold flowers with soft golden light",
+  },
+  {
+    id: "bhaidooj", label: L("Happy Bhai Dooj", "भाई दूज की हार्दिक शुभकामनाएँ", "भाऊबीजेच्या हार्दिक शुभेच्छा", "ભાઈ બીજની હાર્દિક શુભેચ્છાઓ", "பாய் தூஜ் வாழ்த்துகள்", "భాయ్ దూజ్ శుభాకాంక్షలు", "ಭಾಯಿ ದೂಜ್ ಶುಭಾಶಯಗಳು"),
+    keywords: ["bhai dooj", "bhaidooj", "bhau beej", "bhai beej", "भाई दूज", "भाऊबीज", "ભાઈ બીજ", "பாய் தூஜ்", "భాయ్ దూజ్", "ಭಾಯಿ ದೂಜ್"],
+    scene: "a decorated puja thali with a tilak, rose petals and sweets",
   },
   {
     id: "newyear", label: L("Happy New Year", "नववर्ष की हार्दिक शुभकामनाएँ", "नववर्षाच्या हार्दिक शुभेच्छा", "નવા વર્ષની હાર્દિક શુભેચ્છાઓ", "புத்தாண்டு நல்வாழ்த்துகள்", "నూతన సంవత్సర శుభాకాంక్షలు", "ಹೊಸ ವರ್ಷದ ಶುಭಾಶಯಗಳು"),

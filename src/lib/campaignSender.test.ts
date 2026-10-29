@@ -144,4 +144,25 @@ describe("campaign sender", () => {
     expect(sendMock).not.toHaveBeenCalled();
     expect(count("queued")).toBe(5);
   });
+
+  it("sends each customer the card in their own language, falling back to the main card", async () => {
+    seed({ recipients: 3 });
+    db.templates[0].header_type = "image";
+    db.contacts[0].language = "hi";
+    db.contacts[1].language = "gu";
+    db.contacts[2].language = "ta";
+    Object.assign(db.campaigns[0], { image_url: "https://x/main.png", image_urls: { hi: "https://x/hi.png", gu: "https://x/gu.png" } });
+    await runCampaignSends();
+    const sentTo = (idx: number) => sendMock.mock.calls.find((c) => (c[0] as { to: string }).to === db.contacts[idx].phone)?.[0] as { headerImageUrl?: string };
+    expect(sentTo(0).headerImageUrl).toBe("https://x/hi.png");
+    expect(sentTo(1).headerImageUrl).toBe("https://x/gu.png");
+    expect(sentTo(2).headerImageUrl).toBe("https://x/main.png");
+  });
+
+  it("does not send a picture when the template has no image header", async () => {
+    seed({ recipients: 1 });
+    Object.assign(db.campaigns[0], { image_url: "https://x/main.png" });
+    await runCampaignSends();
+    expect((sendMock.mock.calls[0][0] as { headerImageUrl?: string }).headerImageUrl).toBeUndefined();
+  });
 });

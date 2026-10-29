@@ -230,3 +230,58 @@ export function renderMonogramPng(input: { text: string; shape: MonogramShape; f
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">${shape}${text}</svg>`;
   return Buffer.from(new Resvg(svg, { fitTo: { mode: "width", value: S } }).render().asPng());
 }
+
+// ── Counter poster (QR) ─────────────────────────────────────────────────────
+
+export type PosterInput = {
+  lang: LanguageCode;
+  /** "Scan to get offers on WhatsApp", in the poster's language. */
+  scanText: string;
+  businessName: string;
+  /** QR code as rows of dark/light modules. */
+  qr: boolean[][];
+  primaryColor: string;
+  accentColor: string;
+  logo?: { bytes: Buffer; mime: string };
+};
+
+/** A printable portrait poster for the shop counter: big words, the logo and a QR code that opens the join page. */
+export function renderPosterPng(input: PosterInput): Buffer {
+  const W = 1080;
+  const primary = safeColor(input.primaryColor, "#0f766e");
+  const accent = safeColor(input.accentColor, "#f59e0b");
+  const onPrimary = luminance(primary) > 0.45 ? "#14110f" : "#ffffff";
+  const parts: string[] = [];
+
+  let y = 80;
+  if (input.logo) {
+    parts.push(`<rect x="${W / 2 - 80}" y="${y}" width="160" height="160" rx="26" fill="#ffffff"/>`);
+    parts.push(`<image href="${dataUri(input.logo)}" x="${W / 2 - 66}" y="${y + 14}" width="132" height="132" preserveAspectRatio="xMidYMid meet"/>`);
+    y += 200;
+  }
+  const title = block(input.scanText, input.lang, { bold: true, size: 84, minSize: 48, maxWidth: W - 180, maxLines: 3, cx: W / 2, top: y, fill: onPrimary });
+  parts.push(title.svg);
+  y += title.height + 30;
+
+  // QR on a white panel, with the quiet border scanners need.
+  const n = input.qr.length;
+  const panel = 640, pad = 40;
+  const cell = (panel - pad * 2) / n;
+  const px = (W - panel) / 2;
+  parts.push(`<rect x="${px}" y="${y}" width="${panel}" height="${panel}" rx="28" fill="#ffffff"/>`);
+  const mods: string[] = [];
+  input.qr.forEach((row, r) => row.forEach((dark, c) => {
+    if (dark) mods.push(`<rect x="${(px + pad + c * cell).toFixed(2)}" y="${(y + pad + r * cell).toFixed(2)}" width="${(cell + 0.6).toFixed(2)}" height="${(cell + 0.6).toFixed(2)}"/>`);
+  }));
+  parts.push(`<g fill="#000000">${mods.join("")}</g>`);
+  y += panel + 50;
+
+  const name = block(input.businessName, input.lang, { bold: true, size: 72, minSize: 36, maxWidth: W - 180, maxLines: 2, cx: W / 2, top: y, fill: accent });
+  parts.push(name.svg);
+
+  // The sheet is as tall as its content, so there is no empty space at the bottom.
+  const H = Math.round(y + name.height + 90);
+  const frame = `<rect width="${W}" height="${H}" fill="${primary}"/><rect x="28" y="28" width="${W - 56}" height="${H - 56}" rx="28" fill="none" stroke="${accent}" stroke-width="6"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${frame}${parts.join("")}</svg>`;
+  return Buffer.from(new Resvg(svg, { fitTo: { mode: "width", value: W } }).render().asPng());
+}

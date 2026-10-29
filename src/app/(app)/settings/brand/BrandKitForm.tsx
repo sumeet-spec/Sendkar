@@ -4,8 +4,9 @@ import { useActionState, useRef, useState } from "react";
 import { saveBrandKit } from "./actions";
 import { LANGUAGES } from "@/lib/i18n/dictionaries";
 import { DEFAULT_ACCENT, DEFAULT_PRIMARY, type BrandKit } from "@/lib/brandKit";
+import type { AppCopy } from "@/lib/i18n/appCopy";
 
-export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceName: string; workspaceId: string; kit: BrandKit | null }) {
+export function BrandKitForm({ t, workspaceName, workspaceId, kit }: { t: AppCopy["brand"]; workspaceName: string; workspaceId: string; kit: BrandKit | null }) {
   const [state, formAction, pending] = useActionState(saveBrandKit, null);
   const [logo, setLogo] = useState<string | null>(kit?.logo_url ?? null);
   const [logoError, setLogoError] = useState<string | null>(null);
@@ -60,14 +61,14 @@ export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceNam
   return (
     <form action={formAction} className="flex flex-col gap-5">
       <div>
-        <label className="sk-label">Shop or business name</label>
+        <label className="sk-label">{t.shopName}</label>
         <input name="name" value={name} onChange={(e) => setName(e.target.value)} className="sk-input" maxLength={60} />
       </div>
 
       <div className="sk-card p-4">
-        <div className="mb-1 text-sm font-medium">Your name in each language</div>
+        <div className="mb-1 text-sm font-medium">{t.namesTitle}</div>
         <p className="mb-3 text-[12.5px] text-faint">
-          Optional. When you send a Gujarati card, it shows the Gujarati name. Leave a language empty to use the name above.
+          {t.namesHelp}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {LANGUAGES.filter((l) => l.code !== "en").map((l) => (
@@ -85,24 +86,24 @@ export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceNam
           {logo ? <img src={logo} alt="Your logo" className="h-full w-full object-contain p-1" /> : <span className="text-[11px] text-faint">No logo</span>}
         </div>
         <div className="flex-1">
-          <div className="text-sm font-medium">Logo</div>
-          <p className="text-[12.5px] text-faint">Three ways: upload yours, take it from your website, or make a simple one from your name.</p>
+          <div className="text-sm font-medium">{t.logo}</div>
+          <p className="text-[12.5px] text-faint">{t.logoHelp}</p>
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => onLogo(e.target.files?.[0])} />
           <div className="mt-2 flex flex-wrap gap-2">
             <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className="sk-btn disabled:opacity-60">
-              {uploading ? "Uploading…" : logo ? "Upload a different logo" : "Upload logo"}
+              {uploading ? t.uploading : logo ? t.uploadAnother : t.upload}
             </button>
             <button type="button" disabled={working !== null || !site.trim()} onClick={() => callLogo("logo-from-site", { website: site })} className="sk-btn disabled:opacity-60" title={site.trim() ? undefined : "Type your website below first"}>
-              {working === "site" ? "Looking…" : "Get it from my website"}
+              {working === "site" ? t.looking : t.fromWebsite}
             </button>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-            <span className="text-[12.5px] text-muted">No logo? Make one:</span>
+            <span className="text-[12.5px] text-muted">{t.makeOne}</span>
             {(["circle", "rounded", "square"] as const).map((sh) => (
               <button key={sh} type="button" onClick={() => setShape(sh)} aria-label={sh} className={`h-7 w-7 border ${sh === "circle" ? "rounded-full" : sh === "rounded" ? "rounded-md" : ""} ${shape === sh ? "border-accent bg-accent/20" : "border-border"}`} />
             ))}
             <button type="button" disabled={working !== null || !name.trim()} onClick={() => callLogo("logo-make", { name, shape, fill: primary, ink: "#ffffff" })} className="sk-btn disabled:opacity-60">
-              {working === "make" ? "Making…" : "Make my logo"}
+              {working === "make" ? t.making : t.makeLogo}
             </button>
           </div>
           {logoError && <p className="mt-2 text-sm text-danger">{logoError}</p>}
@@ -111,38 +112,38 @@ export function BrandKitForm({ workspaceName, workspaceId, kit }: { workspaceNam
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="sk-label">Main colour</label>
+          <label className="sk-label">{t.mainColour}</label>
           <input type="color" name="primary_color" value={primary} onChange={(e) => setPrimary(e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-border bg-transparent" />
         </div>
         <div>
-          <label className="sk-label">Highlight colour</label>
+          <label className="sk-label">{t.highlightColour}</label>
           <input type="color" name="accent_color" value={accent} onChange={(e) => setAccent(e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-border bg-transparent" />
         </div>
       </div>
 
       <div>
-        <label className="sk-label">Tagline (optional)</label>
+        <label className="sk-label">{t.tagline}</label>
         <input name="tagline" defaultValue={kit?.tagline ?? ""} className="sk-input" maxLength={60} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="sk-label">Phone shown on cards</label>
+          <label className="sk-label">{t.phone}</label>
           <input name="phone" defaultValue={kit?.phone ?? ""} className="sk-input" maxLength={30} />
         </div>
         <div>
-          <label className="sk-label">Website (optional)</label>
+          <label className="sk-label">{t.website}</label>
           <input name="website" value={site} onChange={(e) => setSite(e.target.value)} className="sk-input" maxLength={60} />
         </div>
       </div>
       <div>
-        <label className="sk-label">Address or area (optional)</label>
+        <label className="sk-label">{t.address}</label>
         <input name="address" defaultValue={kit?.address ?? ""} className="sk-input" maxLength={80} />
       </div>
 
       <div className="flex items-center gap-3">
-        <button type="submit" disabled={pending} className="sk-btn sk-btn-primary disabled:opacity-60">{pending ? "Saving…" : "Save brand kit"}</button>
+        <button type="submit" disabled={pending} className="sk-btn sk-btn-primary disabled:opacity-60">{pending ? t.saving : t.save}</button>
         {state && "error" in state && state.error && <p className="text-sm text-danger">{state.error}</p>}
-        {state && "success" in state && state.success && <p className="text-sm text-accent">Saved. Now make a card with it.</p>}
+        {state && "success" in state && state.success && <p className="text-sm text-accent">{t.saved}</p>}
       </div>
     </form>
   );

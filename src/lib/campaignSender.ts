@@ -125,7 +125,9 @@ async function runOneCampaign(
       : undefined;
 
     // A template with an image header needs a picture every time: the campaign's own card first, else the template's.
-    const headerImageUrl = template.header_type === "image" ? (campaign.image_url as string | null) || template.header_image_url || undefined : undefined;
+    const perLanguage = (campaign.image_urls ?? {}) as Record<string, string>;
+    const cardForContact = (contactRow?.language && perLanguage[contactRow.language]) || (campaign.image_url as string | null);
+    const headerImageUrl = template.header_type === "image" ? cardForContact || template.header_image_url || undefined : undefined;
     if (template.header_type === "image" && !headerImageUrl) return fail("This template needs a picture. Add a card to the campaign.");
 
     try {

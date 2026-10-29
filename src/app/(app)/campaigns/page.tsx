@@ -18,11 +18,18 @@ const STATUS_STYLE: Record<string, string> = {
 export default async function CampaignsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; card?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; card?: string; cards?: string }>;
 }) {
-  const { q = "", status = "", card = "" } = await searchParams;
+  const { q = "", status = "", card = "", cards = "" } = await searchParams;
   // A card made in the card maker arrives as ?card=<url>; only our own storage is accepted.
   const cardUrl = card.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`) ? card : "";
+  // One card per language arrives as ?cards={"hi":url,...}; keep only our own pictures.
+  let cardUrls: Record<string, string> | null = null;
+  try {
+    const raw = cards ? (JSON.parse(cards) as Record<string, unknown>) : null;
+    const own = Object.entries(raw ?? {}).filter(([k, v]) => /^[a-z]{2}$/.test(k) && typeof v === "string" && v.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`));
+    if (own.length > 0) cardUrls = Object.fromEntries(own) as Record<string, string>;
+  } catch { /* ignore a malformed link */ }
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
@@ -101,6 +108,7 @@ export default async function CampaignsPage({
           segments={segments ?? []}
           availableTags={availableTags}
           cardUrl={cardUrl}
+          cardUrls={cardUrls}
         />
       </div>
 
