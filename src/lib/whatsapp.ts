@@ -593,3 +593,47 @@ export async function verifyWebhookSignature(rawBody: string, signatureHeader: s
 // the UI can show accurate remaining-quota and the sender can stop cleanly
 // instead of discovering the cap via a stream of failed sends.
 export const MESSAGING_TIERS = [250, 1_000, 10_000, 100_000] as const;
+
+// ── Coexistence (WhatsApp Business app + Cloud API on one number) ────────────
+// Per Meta's "Onboard WhatsApp Business app users" guide. The completion
+// event carries a waba_id but no phone_number_id, so the number is looked up.
+
+export interface WabaPhoneNumber {
+  id: string;
+  displayPhoneNumber: string | null;
+}
+
+export async function listWabaPhoneNumbers(wabaId: string, token: string): Promise<WabaPhoneNumber[]> {
+  const res = await fetch(
+    `https://graph.facebook.com/${GRAPH_API_VERSION}/${wabaId}/phone_numbers?fields=id,display_phone_number`,
+    { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15_000) },
+  );
+  const json = (await res.json()) as { data?: Array<{ id?: string; display_phone_number?: string }>; error?: { message?: string } };
+  if (!res.ok || json.error) throw new Error(json.error?.message ?? `Couldn't list the numbers on this WhatsApp account (HTTP ${res.status})`);
+  return (json.data ?? [])
+    .filter((n): n is { id: string; display_phone_number?: string } => Boolean(n.id))
+    .map((n) => ({ id: n.id, displayPhoneNumber: n.display_phone_number ?? null }));
+}
+
+export type SmbSyncType = "smb_app_state_sync" | "history";
+
+/**
+ * Asks Meta to send the phone's contacts, or its chat history, to our webhook.
+ * Meta allows each sync ONCE per onboarding, within 24 hours of it — a second
+ * request, or a late one, means the customer must offboard and onboard again.
+ * Success here only means the request was accepted: for history it does not
+ * mean the business agreed to share (that arrives later, as a webhook error).
+ */
+export async function requestSmbAppDataSync(phoneNumberId: string, token: string, syncType: SmbSyncType): Promise<string> {
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${phoneNumberId}/smb_app_data`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", sync_type: syncType }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const json = (await res.json()) as { request_id?: string; error?: { message?: string } };
+  if (!res.ok || json.error || !json.request_id) {
+    throw new Error(json.error?.message ?? `Meta rejected the ${syncType} request (HTTP ${res.status})`);
+  }
+  return json.request_id;
+}

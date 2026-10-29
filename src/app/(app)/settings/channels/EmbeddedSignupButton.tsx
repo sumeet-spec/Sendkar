@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { completeEmbeddedSignup } from "./embeddedSignupActions";
+import { useEffect, useRef, useState } from "react";
+import { completeEmbeddedSignup, type EmbeddedSignupResult } from "./embeddedSignupActions";
 
 declare global {
   interface Window {
@@ -16,25 +16,43 @@ declare global {
   }
 }
 
+interface SignupData {
+  wabaId: string | null;
+  phoneNumberId: string | null;
+  event: string;
+}
+
+// Meta's popup reports the new account through a postMessage that can land
+// before OR after FB.login's own callback, so the callback waits briefly for it.
+const SIGNUP_EVENT_WAIT_MS = 10_000;
+const POLL_MS = 150;
+
 /**
  * Meta's Embedded Signup — a self-serve alternative to the manual
  * phone-number-id + access-token form below, so a non-technical business
  * owner never has to open Meta Business Manager or copy a token by hand.
  *
+ * It also offers Meta's "connect an existing WhatsApp Business app account"
+ * option (coexistence): the same number keeps working in the phone app while
+ * Sendkar sends and receives through the Cloud API.
+ *
  * Needs a real Meta App (NEXT_PUBLIC_META_APP_ID) with a WhatsApp Embedded
  * Signup configuration (META_EMBEDDED_SIGNUP_CONFIG_ID) set up in Meta
- * Business Manager, and — to work for anyone other than the app's own test
- * users — Meta App Review approval for whatsapp_business_management and
- * whatsapp_business_messaging. That review is an external, asynchronous
- * process on Meta's side; this component is what runs once it's approved,
- * not a way around needing it. Renders nothing if the env vars aren't set.
+ * Business Manager, Tech Provider status, and — to work for anyone other than
+ * the app's own test users — Meta App Review approval for
+ * whatsapp_business_management and whatsapp_business_messaging. That review is
+ * an external, asynchronous process on Meta's side; this component is what runs
+ * once it's approved, not a way around needing it. Renders nothing if the env
+ * vars aren't set.
  */
 export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
   const configured = Boolean(process.env.NEXT_PUBLIC_META_APP_ID && process.env.NEXT_PUBLIC_META_EMBEDDED_SIGNUP_CONFIG_ID);
   const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && Boolean(window.FB));
-  const [status, setStatus] = useState<{ error?: string; success?: boolean } | null>(null);
+  const [status, setStatus] = useState<EmbeddedSignupResult | null>(null);
   const [pending, setPending] = useState(false);
-  const [signupData, setSignupData] = useState<{ wabaId: string | null; phoneNumberId: string | null }>({ wabaId: null, phoneNumberId: null });
+  // A ref, not state: FB.login's callback runs long after the render that created it, so
+  // state read inside it would still be the pre-popup value (always empty).
+  const signupRef = useRef<SignupData | null>(null);
 
   useEffect(() => {
     if (!configured || typeof window === "undefined" || window.FB) {
@@ -52,14 +70,28 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
     document.body.appendChild(script);
 
     const onMessage = (event: MessageEvent) => {
-      if (event.origin !== "https://www.facebook.com") return;
+      if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") return;
+      let data: { type?: string; event?: string; data?: Record<string, unknown> };
       try {
-        const data = JSON.parse(event.data);
-        if (data.type === "WA_EMBEDDED_SIGNUP" && data.event === "FINISH") {
-          setSignupData({ wabaId: data.data?.waba_id ?? null, phoneNumberId: data.data?.phone_number_id ?? null });
-        }
+        data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
       } catch {
-        // Not every message on the page is Meta's signup payload — ignore anything that isn't valid JSON for us.
+        return; // Not every message on the page is Meta's signup payload.
+      }
+      if (data?.type !== "WA_EMBEDDED_SIGNUP") return;
+
+      const name = String(data.event ?? "");
+      if (name.startsWith("FINISH")) {
+        signupRef.current = {
+          wabaId: typeof data.data?.waba_id === "string" ? data.data.waba_id : null,
+          phoneNumberId: typeof data.data?.phone_number_id === "string" ? data.data.phone_number_id : null,
+          event: name,
+        };
+      } else if (name === "CANCEL") {
+        setStatus({ error: "Signup was cancelled before it finished." });
+        setPending(false);
+      } else if (name === "ERROR") {
+        setStatus({ error: typeof data.data?.error_message === "string" ? data.data.error_message : "Meta reported an error during signup." });
+        setPending(false);
       }
     };
     window.addEventListener("message", onMessage);
@@ -69,10 +101,20 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
 
   if (!configured) return null;
 
+  async function waitForSignupData(): Promise<SignupData | null> {
+    const deadline = Date.now() + SIGNUP_EVENT_WAIT_MS;
+    while (Date.now() < deadline) {
+      if (signupRef.current) return signupRef.current;
+      await new Promise((r) => setTimeout(r, POLL_MS));
+    }
+    return signupRef.current;
+  }
+
   function handleLogin() {
     if (!window.FB) return;
     setPending(true);
     setStatus(null);
+    signupRef.current = null;
     window.FB.login(
       // Must be a plain (non-async) function — Facebook's own SDK rejects an
       // async callback outright ("Expression is of type asyncfunction, not
@@ -85,16 +127,21 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
           setPending(false);
           return;
         }
-        completeEmbeddedSignup(workspaceId, code, signupData.wabaId, signupData.phoneNumberId).then((result) => {
-          setStatus(result);
-          setPending(false);
-        });
+        waitForSignupData()
+          .then((signup) =>
+            signup
+              ? completeEmbeddedSignup(workspaceId, code, signup.wabaId, signup.phoneNumberId, signup.event)
+              : ({ error: "Meta didn't report a WhatsApp Business Account — try again." } satisfies EmbeddedSignupResult),
+          )
+          .then((result) => setStatus(result))
+          .catch(() => setStatus({ error: "Something went wrong while connecting — please try again." }))
+          .finally(() => setPending(false));
       },
       {
         config_id: process.env.NEXT_PUBLIC_META_EMBEDDED_SIGNUP_CONFIG_ID,
         response_type: "code",
         override_default_response_type: true,
-        extras: { setup: {}, sessionInfoVersion: "3" },
+        extras: { setup: {}, featureType: "whatsapp_business_app_onboarding", sessionInfoVersion: "3" },
       },
     );
   }
@@ -106,10 +153,19 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
         The recommended path — no phone-number-id or access token to find and paste. Opens Meta&apos;s own signup
         flow in a popup.
       </p>
+      <div className="mb-3 rounded-md border border-accent/30 bg-accent/5 p-2.5 text-[12px] text-foreground">
+        <div className="mb-1 font-medium">Already use the WhatsApp Business app?</div>
+        <p>
+          Choose <strong>connect your existing WhatsApp Business account</strong> in the popup. Your number keeps
+          working in the app, recent chats and contacts come across, and Sendkar adds reminders, broadcasts and a
+          shared inbox on top. You need app version 2.24.17 or newer and a number that has been in use on the app for
+          at least 7 days. Groups, status and calls stay in the app, and broadcast lists there become read-only.
+        </p>
+      </div>
       <p className="mb-3 rounded-md border border-warn/30 bg-warn/5 p-2.5 text-[12px] text-foreground">
-        Use a number you don&apos;t already use in the regular WhatsApp app — connecting it here moves it to Sendkar
-        and logs it out of the app. Your chats stay on your phone, but you&apos;ll manage this number from Sendkar
-        going forward.
+        Using the regular WhatsApp (not Business) app? Switch to the Business app first — your chats move with you —
+        or connect a separate number here instead. Connecting a number that isn&apos;t on the Business app moves it to
+        Sendkar and logs it out of the app.
       </p>
       <button
         onClick={handleLogin}
@@ -119,7 +175,19 @@ export function EmbeddedSignupButton({ workspaceId }: { workspaceId: string }) {
         {pending ? "Connecting…" : sdkReady ? "Continue with Facebook" : "Loading…"}
       </button>
       {status?.error && <p className="mt-2 text-[12.5px] text-danger">{status.error}</p>}
-      {status?.success && <p className="mt-2 text-[12.5px] text-accent">Connected — refresh to see it below.</p>}
+      {status?.success && (
+        <p className="mt-2 text-[12.5px] text-accent">
+          {status.coexistence
+            ? "Connected — your app keeps working. Recent chats and contacts will appear in the inbox over the next few minutes."
+            : "Connected — refresh to see it below."}
+        </p>
+      )}
+      {status?.syncWarning && (
+        <p className="mt-1 text-[12px] text-warn">
+          Connected, but Meta didn&apos;t accept the request to bring your existing chats across: {status.syncWarning}.
+          Meta only allows that within 24 hours of connecting, so reconnect the number if you want them.
+        </p>
+      )}
     </div>
   );
 }

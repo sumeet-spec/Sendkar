@@ -18,6 +18,7 @@ import { pickAssignee } from "@/lib/assignment";
 import { enrollContactInSequence } from "@/lib/sequences";
 import { parseCallWebhookEvent } from "@/lib/calling";
 import { matchFlowBranch, type FlowBranch } from "@/lib/flowBranching";
+import { COEXISTENCE_FIELDS, ingestCoexistenceEvent } from "@/lib/coexistenceIngest";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -288,6 +289,11 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      if (!workspaceId && entry.id && COEXISTENCE_FIELDS.has(change.field ?? "")) {
+        const { data: ws } = await admin.from("workspaces").select("id").eq("whatsapp_waba_id", entry.id).maybeSingle();
+        workspaceId = ws?.id ?? null;
+      }
+
       // Log the raw event regardless — untrusted-but-verified data, kept for
       // debugging, never treated as an instruction.
       await admin.from("webhook_events").insert({
@@ -297,6 +303,13 @@ export async function POST(request: NextRequest) {
       });
 
       if (!workspaceId) continue; // event for a phone number we don't recognize — nothing more to do
+
+      // ── WhatsApp Business app coexistence: app-typed messages, contact sync,
+      // chat-history backfill, and account changes (see lib/coexistence.ts). ──
+      if (COEXISTENCE_FIELDS.has(change.field ?? "")) {
+        await ingestCoexistenceEvent(admin, workspaceId, change.field!, value);
+        continue;
+      }
 
       // ── Call events — log-only for now; see lib/calling.ts for why placing
       // or answering a call with real audio isn't implemented. ─────────────
