@@ -37,7 +37,7 @@ export default function TermsPage() {
           <h2 className="mb-2 text-[15px] font-medium text-foreground">Plans and billing</h2>
           <p>
             Paid plans renew monthly and can be cancelled at any time from Settings — cancelling stops the next
-            renewal, it doesn&apos;t refund the current period. The Free plan has no payment method attached.
+            renewal, it doesn&apos;t refund the current period. The free trial has no payment method attached.
           </p>
         </section>
 

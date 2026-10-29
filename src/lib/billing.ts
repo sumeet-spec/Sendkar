@@ -1,5 +1,5 @@
 import type { Workspace } from "@/lib/workspace";
-import { PAID_PLANS, type Plan } from "@/lib/plans";
+import { PAID_PLANS, findImagePack, type ImagePack, type Plan } from "@/lib/plans";
 
 function productIdFor(plan: Plan): string | undefined {
   switch (plan) {
@@ -38,6 +38,52 @@ export async function createDodoCheckout(
   const data = (await res.json()) as { checkout_url?: string; url?: string; payment_link?: string };
   if (!res.ok) return { error: "Billing provider error", status: 502 };
 
+  const url = data.checkout_url ?? data.url ?? data.payment_link;
+  if (!url) return { error: "Billing provider returned no checkout URL", status: 502 };
+  return { url, status: 200 };
+}
+
+/** The pack a Dodo payment's metadata says was bought, or null if it isn't a valid image-pack purchase. */
+export function imagePackFromMetadata(metadata: Record<string, string> | undefined): ImagePack | null {
+  if (!metadata || metadata["kind"] !== "image_pack") return null;
+  return findImagePack(metadata["pack"] ?? "") ?? null;
+}
+
+/** Is a Dodo product configured for this pack? Packs without one are not offered for sale. */
+export function isPackConfigured(pack: ImagePack): boolean {
+  return Boolean(process.env[pack.envVar]);
+}
+
+/**
+ * A one-time payment for extra AI images. The webhook credits the images when the payment
+ * succeeds; the count comes from our own pack table, never from anything the buyer sends.
+ */
+export async function createImagePackCheckout(
+  workspace: Pick<Workspace, "id">,
+  packKey: string,
+  appUrl: string,
+): Promise<{ url?: string; error?: string; status: number }> {
+  const pack = findImagePack(packKey);
+  if (!pack) return { error: "Unknown image pack.", status: 422 };
+
+  const apiKey = process.env.DODO_PAYMENTS_API_KEY;
+  if (!apiKey) return { error: "Billing is not configured yet", status: 503 };
+  const productId = process.env[pack.envVar];
+  if (!productId) return { error: "This image pack isn't available yet.", status: 503 };
+
+  const res = await fetch("https://live.dodopayments.com/checkouts", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      product_cart: [{ product_id: productId, quantity: 1 }],
+      return_url: `${appUrl}/settings/billing?pack=1`,
+      metadata: { workspace_id: workspace.id, kind: "image_pack", pack: pack.key },
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  const data = (await res.json()) as { checkout_url?: string; url?: string; payment_link?: string };
+  if (!res.ok) return { error: "Billing provider error", status: 502 };
   const url = data.checkout_url ?? data.url ?? data.payment_link;
   if (!url) return { error: "Billing provider returned no checkout URL", status: 502 };
   return { url, status: 200 };

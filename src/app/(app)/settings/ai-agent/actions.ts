@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
 
 export async function saveAiAgent(_prevState: unknown, formData: FormData) {
@@ -10,7 +10,7 @@ export async function saveAiAgent(_prevState: unknown, formData: FormData) {
   if (!workspace) return { error: "No workspace found." };
 
   const enabled = formData.get("enabled") === "on";
-  if (enabled && !getPlanLimits(workspace.plan).aiAgentEnabled) {
+  if (enabled && !getPlanLimits(effectivePlan(workspace)).aiAgentEnabled) {
     return { error: "The AI agent needs the Growth plan or above — every reply it sends is a real AI request." };
   }
   const knowledge = String(formData.get("knowledge") ?? "").trim();

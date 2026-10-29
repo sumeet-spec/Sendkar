@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { NewFlowForm } from "./NewFlowForm";
 import { FlowRow } from "./FlowRow";
 
@@ -8,7 +8,7 @@ export default async function FlowsPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
 
   const { data: flows } = await supabase
     .from("flows")

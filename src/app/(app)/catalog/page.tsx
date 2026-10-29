@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { NewProductForm } from "./NewProductForm";
 import { ProductCard } from "./ProductCard";
 import Link from "next/link";
@@ -9,7 +9,7 @@ export default async function CatalogPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
 
   const { data: products } = await supabase
     .from("products")

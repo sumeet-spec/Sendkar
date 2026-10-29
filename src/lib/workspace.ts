@@ -59,6 +59,8 @@ export interface Workspace {
   daily_send_count: number;
   daily_reset_at: string;
   plan: string;
+  /** When a free trial ends. Only meaningful while plan is "trial"; read it through effectivePlan(). */
+  trial_ends_at: string | null;
   dodo_customer_id: string | null;
   shopify_shop_domain: string | null;
   shopify_access_token: string | null;

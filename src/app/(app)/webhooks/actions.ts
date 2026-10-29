@@ -3,7 +3,7 @@
 import crypto from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { assertPublicHttpsUrl, UnsafeWebhookUrlError } from "@/lib/ssrf";
 import { revalidatePath } from "next/cache";
 
@@ -13,7 +13,7 @@ export async function createOutboundWebhook(_prevState: unknown, formData: FormD
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
 
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
   if (!limits.outboundWebhooksEnabled) return { error: "Outbound webhooks need the Growth plan or above." };
 
   const url = String(formData.get("url") ?? "").trim();

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { parseBranches } from "@/lib/flowBranching";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -12,7 +12,7 @@ export async function createFlow(_prevState: unknown, formData: FormData) {
   if (!workspace) return { error: "No workspace found." };
 
   // Flows reuse the automations plan gate — both are "reply logic beyond the free tier".
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
   if (!limits.automationsEnabled) return { error: "Chatbot flows need the Starter plan or above." };
 
   const name = String(formData.get("name") ?? "").trim();

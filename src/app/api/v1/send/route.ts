@@ -3,6 +3,8 @@ import { resolveApiKey } from "@/lib/apiKeys";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplateMessage } from "@/lib/whatsapp";
 import { isRateLimited } from "@/lib/rateLimit";
+import { workspaceCanSend } from "@/lib/plans";
+import { NO_PLAN_MESSAGE } from "@/lib/planGate";
 
 /**
  * Plain REST/JSON send endpoint — the piece that makes Zapier/Make/Pabbly
@@ -42,10 +44,11 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient();
   const { data: workspace } = await admin
     .from("workspaces")
-    .select("whatsapp_phone_number_id, whatsapp_access_token, daily_send_count, daily_reset_at, messaging_tier")
+    .select("whatsapp_phone_number_id, whatsapp_access_token, daily_send_count, daily_reset_at, messaging_tier, plan, trial_ends_at")
     .eq("id", auth.workspaceId)
     .single();
   if (!workspace) return NextResponse.json({ error: "Workspace not found." }, { status: 404 });
+  if (!workspaceCanSend(workspace)) return NextResponse.json({ error: NO_PLAN_MESSAGE }, { status: 402 });
 
   // Same daily-tier accounting as cron/send.ts — this endpoint bypasses the
   // campaign cron entirely, so without this check a leaked key (or a

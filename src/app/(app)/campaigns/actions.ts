@@ -8,6 +8,8 @@ import { applySegmentConditions, type SegmentCondition } from "@/lib/segments";
 import { draftCampaignStrategy, type CampaignStrategyDraft } from "@/lib/ai";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { workspaceCanSend } from "@/lib/plans";
+import { NO_PLAN_MESSAGE } from "@/lib/planGate";
 
 export async function generateCampaignStrategy(goal: string): Promise<{ draft?: CampaignStrategyDraft; error?: string }> {
   const workspace = await getCurrentWorkspace();
@@ -73,6 +75,9 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
  * under it if contacts are imported mid-send.
  */
 export async function startCampaign(campaignId: string): Promise<{ error?: string }> {
+  const owner = await getCurrentWorkspace();
+  if (owner && !workspaceCanSend(owner)) return { error: NO_PLAN_MESSAGE };
+
   const supabase = await createClient();
 
   const { data: campaign } = await supabase

@@ -19,6 +19,8 @@ import { enrollContactInSequence } from "@/lib/sequences";
 import { parseCallWebhookEvent } from "@/lib/calling";
 import { matchFlowBranch, type FlowBranch } from "@/lib/flowBranching";
 import { COEXISTENCE_FIELDS, ingestCoexistenceEvent } from "@/lib/coexistenceIngest";
+import { workspaceCanSendById } from "@/lib/planGate";
+import { isRateLimited } from "@/lib/rateLimit";
 
 /**
  * Meta's WhatsApp webhook — receives delivery-status updates, inbound
@@ -135,7 +137,10 @@ async function sendAndLog(
   body: string,
   numberId: string | null = null,
   sentByAi = false,
+  allowWhenInactive = false,
 ): Promise<boolean> {
+  // A workspace with no active plan (trial over, subscription cancelled) sends nothing automatically.
+  if (!allowWhenInactive && !(await workspaceCanSendById(admin, workspaceId))) return false;
   const { data: ws } = await admin
     .from("workspaces")
     .select("id, whatsapp_phone_number_id, whatsapp_access_token")
@@ -198,6 +203,7 @@ async function sendFlowStepAndLog(
   step: FlowStepRow,
   numberId: string | null = null,
 ): Promise<boolean> {
+  if (!(await workspaceCanSendById(admin, workspaceId))) return false;
   const { data: ws } = await admin
     .from("workspaces")
     .select("id, whatsapp_phone_number_id, whatsapp_access_token")
@@ -568,7 +574,7 @@ export async function POST(request: NextRequest) {
         let handledAsComplianceKeyword = false;
         if (matchableBody && isOptOutMessage(matchableBody)) {
           await admin.from("contacts").update({ opted_out: true }).eq("id", contactId);
-          await sendAndLog(admin, workspaceId, contactId, msg.from, OPT_OUT_CONFIRMATION, matchedNumberId);
+          await sendAndLog(admin, workspaceId, contactId, msg.from, OPT_OUT_CONFIRMATION, matchedNumberId, false, true);
           handledAsComplianceKeyword = true;
         } else if (matchableBody && isOptInMessage(matchableBody)) {
           await admin.from("contacts").update({ opted_out: false }).eq("id", contactId);
@@ -759,7 +765,10 @@ export async function POST(request: NextRequest) {
             .select("ai_agent_enabled, ai_agent_knowledge")
             .eq("id", workspaceId)
             .single();
-          if (wsAgent?.ai_agent_enabled) {
+          // The per-customer limit is a loop guard, not a plan limit: two auto-repliers answering each
+          // other (or one stuck customer) would otherwise reply forever. 30 an hour is far above any
+          // real conversation.
+          if (wsAgent?.ai_agent_enabled && (await workspaceCanSendById(admin, workspaceId)) && !(await isRateLimited(`aireply:${contactId}`, 30, 3600))) {
             try {
               const { data: recentMessages } = await admin
                 .from("messages")

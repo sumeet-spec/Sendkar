@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { NewAutomationForm } from "./NewAutomationForm";
 import { AutomationRow } from "./AutomationRow";
 import { SuggestAutomations } from "./SuggestAutomations";
@@ -9,7 +9,7 @@ export default async function AutomationsPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
 
   const { data: automations } = await supabase
     .from("automations")

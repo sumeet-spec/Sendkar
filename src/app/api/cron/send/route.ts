@@ -5,6 +5,7 @@ import { sendTemplateMessage, type WorkspaceCreds } from "@/lib/whatsapp";
 import { dispatchOutboundWebhooks } from "@/lib/outboundWebhooks";
 import { sendEmail } from "@/lib/email";
 import { resolveTemplateParam } from "@/lib/templateVars";
+import { workspaceCanSend } from "@/lib/plans";
 
 const MAX_PER_RUN = 100;
 const DELAY_BETWEEN_SENDS_MS = 250;
@@ -76,6 +77,12 @@ export async function GET(request: NextRequest) {
       id: string; whatsapp_phone_number_id: string | null; whatsapp_access_token: string | null;
       messaging_tier: number; daily_send_count: number; daily_reset_at: string;
     };
+
+    // No active plan: leave the campaign queued, so it carries on if they subscribe.
+    if (!workspaceCanSend(campaign.workspaces as { plan: string; trial_ends_at?: string | null })) {
+      results[campaign.id] = "held — workspace has no active plan";
+      continue;
+    }
 
     const sender = await resolveSender(admin, workspace, campaign.whatsapp_number_id);
 

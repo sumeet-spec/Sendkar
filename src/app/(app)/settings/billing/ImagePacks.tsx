@@ -1,0 +1,54 @@
+"use client";
+
+import { useState } from "react";
+import { startImagePackCheckout } from "./actions";
+
+interface PackOption {
+  key: string;
+  images: number;
+  priceInr: number;
+  available: boolean;
+}
+
+export function ImagePacks({ packs }: { packs: PackOption[] }) {
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function buy(key: string) {
+    setPending(key);
+    setError(null);
+    const result = await startImagePackCheckout(key);
+    if (result.error) {
+      setError(result.error);
+      setPending(null);
+      return;
+    }
+    if (result.url) window.location.href = result.url;
+  }
+
+  return (
+    <div className="sk-card mb-6 p-4">
+      <div className="text-[13px] font-semibold">Need more AI images?</div>
+      <p className="mt-0.5 text-[12px] text-faint">
+        One-time packs. They are used after your monthly images run out, and they never expire.
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        {packs.map((p) => (
+          <div key={p.key} className="rounded-lg border border-border p-3">
+            <div className="text-[15px] font-semibold">{p.images} images</div>
+            <div className="text-[13px] text-muted">₹{p.priceInr.toLocaleString("en-IN")} <span className="text-faint">· about ₹{(p.priceInr / p.images).toFixed(0)} each</span></div>
+            <button
+              type="button"
+              onClick={() => buy(p.key)}
+              disabled={!p.available || pending !== null}
+              className="sk-btn sk-btn-ghost mt-2.5 w-full text-[12.5px] disabled:opacity-60"
+            >
+              {!p.available ? "Not available yet" : pending === p.key ? "Redirecting…" : "Buy"}
+            </button>
+          </div>
+        ))}
+      </div>
+      {error && <p className="mt-2 text-[12.5px] text-danger">{error}</p>}
+    </div>
+  );
+}

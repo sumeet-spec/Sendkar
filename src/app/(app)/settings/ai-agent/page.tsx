@@ -1,5 +1,5 @@
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { AiAgentForm } from "./AiAgentForm";
 
 export default async function AiAgentPage() {
@@ -16,7 +16,7 @@ export default async function AiAgentPage() {
       <AiAgentForm
         initialEnabled={workspace.ai_agent_enabled}
         initialKnowledge={workspace.ai_agent_knowledge ?? ""}
-        planAllowed={getPlanLimits(workspace.plan).aiAgentEnabled}
+        planAllowed={getPlanLimits(effectivePlan(workspace)).aiAgentEnabled}
       />
     </div>
   );

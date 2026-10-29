@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { NewWebhookForm } from "./NewWebhookForm";
 import { WebhookRow } from "./WebhookRow";
 
@@ -8,7 +8,7 @@ export default async function WebhooksPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
 
   const { data: webhooks } = await supabase
     .from("outbound_webhooks")

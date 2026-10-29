@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { suggestAutomationsFromHistory, type AutomationSuggestion } from "@/lib/ai";
 import { revalidatePath } from "next/cache";
 
@@ -57,7 +57,7 @@ export async function createAutomation(_prevState: unknown, formData: FormData) 
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
 
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
   if (!limits.automationsEnabled) return { error: "Automations need the Starter plan or above." };
 
   const name = String(formData.get("name") ?? "").trim();

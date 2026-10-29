@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { parseReceivables } from "@/lib/reminders";
 import { sendReminder, type ReceivableRow } from "@/lib/reminderSend";
+import { workspaceCanSend } from "@/lib/plans";
+import { NO_PLAN_MESSAGE } from "@/lib/planGate";
 
 const CONTACT_LANGUAGES = new Set(["hi", "mr", "ta", "te", "kn", "gu", "en"]);
 const MAX_PASTE_CHARS = 200_000;
@@ -168,6 +170,7 @@ export async function remindNow(id: string): Promise<{ error?: string; sent?: bo
   const owned = await ownedReceivable(id);
   if (!owned) return { error: "Not found." };
   const { workspace, receivable } = owned;
+  if (!workspaceCanSend(workspace)) return { error: NO_PLAN_MESSAGE };
   if (receivable.status !== "open") return { error: "Only open bills can be reminded." };
   if (!workspace.whatsapp_phone_number_id || !workspace.whatsapp_access_token) return { error: "Connect WhatsApp first." };
   if (!workspace.reminder_template_id) return { error: "Choose your reminder template first." };

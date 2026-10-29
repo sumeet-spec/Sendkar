@@ -5,6 +5,8 @@
  * as everything else.
  */
 
+import { postMessages } from "@/lib/aiModel";
+
 export class AiNotConfiguredError extends Error {
   constructor() {
     super("AI reply drafting isn't configured — set ANTHROPIC_API_KEY.");
@@ -26,15 +28,7 @@ export async function draftReply(thread: ThreadMessage[], contactName: string | 
     .map((m) => `${m.direction === "inbound" ? "Customer" : "You"}: ${m.body ?? "[template message]"}`)
     .join("\n");
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+  const res = await postMessages(apiKey, {
       max_tokens: 300,
       messages: [
         {
@@ -42,9 +36,7 @@ export async function draftReply(thread: ThreadMessage[], contactName: string | 
           content: `You're drafting a WhatsApp reply on behalf of a business, to a customer${contactName ? ` named ${contactName}` : ""}. Here's the conversation so far:\n\n${transcript}\n\nDraft ONE short, natural reply as the business. Output only the reply text, nothing else — no quotes, no preamble.`,
         },
       ],
-    }),
-    signal: AbortSignal.timeout(20_000),
-  });
+    }, 20_000);
 
   const data = (await res.json()) as { content?: Array<{ text?: string }>; error?: { message?: string } };
   if (!res.ok || data.error) throw new Error(data.error?.message ?? `AI request failed (HTTP ${res.status})`);
@@ -59,16 +51,10 @@ async function callClaude(prompt: string, maxTokens: number): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new AiNotConfiguredError();
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+  const res = await postMessages(apiKey, {
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
-    }),
-    signal: AbortSignal.timeout(20_000),
-  });
+    }, 20_000);
 
   const data = (await res.json()) as { content?: Array<{ text?: string }>; error?: { message?: string } };
   if (!res.ok || data.error) throw new Error(data.error?.message ?? `AI request failed (HTTP ${res.status})`);

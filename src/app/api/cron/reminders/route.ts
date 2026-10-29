@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decideReminder, todayInIndia } from "@/lib/reminders";
+import { workspaceCanSend } from "@/lib/plans";
 import { sendReminder, type ReceivableRow, type ReminderWorkspace, type ReminderTemplate } from "@/lib/reminderSend";
 
 /**
@@ -64,10 +65,14 @@ export async function GET(request: NextRequest) {
   for (const [workspaceId, receivables] of byWorkspace) {
     const { data: workspace } = await admin
       .from("workspaces")
-      .select("id, name, whatsapp_phone_number_id, whatsapp_access_token, razorpay_key_id, razorpay_key_secret, payu_merchant_key, payu_salt, reminder_template_id")
+      .select("id, name, whatsapp_phone_number_id, whatsapp_access_token, razorpay_key_id, razorpay_key_secret, payu_merchant_key, payu_salt, reminder_template_id, plan, trial_ends_at")
       .eq("id", workspaceId)
-      .maybeSingle<ReminderWorkspace & { reminder_template_id: string | null }>();
+      .maybeSingle<ReminderWorkspace & { reminder_template_id: string | null; plan: string; trial_ends_at: string | null }>();
     if (!workspace) continue;
+    if (!workspaceCanSend(workspace)) {
+      skippedWorkspaces[workspaceId] = "no active plan";
+      continue;
+    }
     if (!workspace.whatsapp_phone_number_id || !workspace.whatsapp_access_token) {
       skippedWorkspaces[workspaceId] = "WhatsApp not connected";
       continue;

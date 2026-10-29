@@ -1,5 +1,5 @@
 import { getCurrentWorkspace, listWorkspaceMembers } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { InviteForm } from "./InviteForm";
 import { AutoAssignmentToggle } from "./AutoAssignmentToggle";
 import { createClient } from "@/lib/supabase/server";
@@ -8,7 +8,7 @@ export default async function TeamPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
 
   const [members, { data: invites }] = await Promise.all([
     listWorkspaceMembers(workspace.id),

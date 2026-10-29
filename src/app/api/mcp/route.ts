@@ -5,6 +5,7 @@ import { sendTemplateMessage, sendSessionMessage, sendProductMessage, sendReacti
 import { resolveNumberCredentials } from "@/lib/whatsappNumbers";
 import { attributeOrder } from "@/lib/attribution";
 import { isRateLimited } from "@/lib/rateLimit";
+import { workspaceCanSendById, NO_PLAN_MESSAGE } from "@/lib/planGate";
 
 // Tools that place a real WhatsApp send — same cost/abuse exposure as
 // /api/v1/send, so they share its rate limit rather than being unbounded
@@ -273,6 +274,9 @@ export async function POST(request: NextRequest) {
   }
   const admin = createAdminClient();
   const workspaceId = auth.workspaceId;
+  if (SEND_TOOLS.has(toolName) && !(await workspaceCanSendById(admin, workspaceId))) {
+    return textResult(id, NO_PLAN_MESSAGE, true);
+  }
 
   try {
     switch (toolName) {

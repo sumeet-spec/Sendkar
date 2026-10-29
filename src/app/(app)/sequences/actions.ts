@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
 import { JOURNEY_STEPS, PACK_LANGUAGES, PACK_TEMPLATES, journeyMapping, type PackLang } from "@/lib/templatePack";
 
@@ -10,7 +10,7 @@ export async function createSequence(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
 
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
   if (!limits.automationsEnabled) return { error: "Sequences need the Starter plan or above." };
 
   const name = String(formData.get("name") ?? "").trim();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendSessionMessage, sendTemplateMessage, type WorkspaceCreds } from "@/lib/whatsapp";
 import { resolveTemplateParam } from "@/lib/templateVars";
+import { workspaceCanSend } from "@/lib/plans";
 import { interpolate, enrollContactInSequence } from "@/lib/sequences";
 import { createRazorpayPaymentLink } from "@/lib/payments";
 
@@ -131,6 +132,11 @@ export async function GET(request: NextRequest) {
     const { data: workspace } = await admin.from("workspaces").select("*").eq("id", sequence.workspace_id).single();
     if (!workspace) {
       results[enrollment.id] = "workspace missing";
+      continue;
+    }
+    // No active plan: leave the journey where it is rather than cancelling it.
+    if (!workspaceCanSend(workspace)) {
+      results[enrollment.id] = "held — workspace has no active plan";
       continue;
     }
 

@@ -3,7 +3,7 @@
 import crypto from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { sendEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -21,7 +21,7 @@ export async function inviteTeamMember(_prevState: unknown, formData: FormData) 
     .select("*", { count: "exact", head: true })
     .eq("workspace_id", workspace.id);
 
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
   if ((memberCount ?? 0) >= limits.maxTeamMembers) {
     return { error: `Your ${workspace.plan} plan is capped at ${limits.maxTeamMembers} team members — upgrade to invite more.` };
   }

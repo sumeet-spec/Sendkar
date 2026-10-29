@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan, planLabel } from "@/lib/plans";
 import { getNumberAllowance } from "@/lib/planUsage";
 import { WhatsAppForm, InstagramForm, MessengerForm } from "./ChannelForms";
 import { AdditionalNumbers } from "./AdditionalNumbers";
@@ -10,7 +10,7 @@ export default async function ChannelsPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
 
   const { data: numbers } = await supabase
     .from("whatsapp_numbers")
@@ -32,7 +32,7 @@ export default async function ChannelsPage() {
     <div className="max-w-2xl">
       <h1 className="mb-1 text-xl font-semibold tracking-tight">Channels</h1>
       <p className="mb-6 text-[12.5px] text-faint">
-        WhatsApp numbers: {allowance.connected} of {allowance.allowed} on your {workspace.plan} plan.{" "}
+        WhatsApp numbers: {allowance.connected} of {allowance.allowed} ({planLabel(effectivePlan(workspace))}).{" "}
         {!allowance.canAdd && <a href="/settings/billing" className="text-accent hover:text-accent-hover">See plans</a>}
       </p>
       <div className="flex flex-col gap-5">

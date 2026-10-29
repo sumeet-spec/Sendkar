@@ -3,8 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enhanceImagePrompt } from "@/lib/ai";
 import { isRateLimited } from "@/lib/rateLimit";
-import { imageAllowance } from "@/lib/plans";
-import { countImagesThisMonth } from "@/lib/planUsage";
+import { effectivePlan, getPlanLimits, imageAllowance } from "@/lib/plans";
+import { getImageUsage } from "@/lib/planUsage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -40,31 +40,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Image generation limit reached for this workspace. Try again in an hour." }, { status: 429 });
   }
 
-  // Monthly allowance by plan. Every image is a real Gemini charge (about ₹3.5), so the cap is hard:
-  // a slot is reserved BEFORE generating, handed back if generation fails, and re-counted after
-  // reserving so two requests arriving together cannot both slip under the limit.
+  // Monthly allowance by plan, then any image packs they have bought. Every image is a real Gemini
+  // charge (about ₹3.5), so the cap is hard: a slot is reserved BEFORE generating, handed back if
+  // generation fails, and re-counted after reserving so two requests arriving together cannot both
+  // slip under the limit.
   const admin = createAdminClient();
-  const { data: workspaceRow } = await admin.from("workspaces").select("plan").eq("id", workspaceId).maybeSingle();
-  const plan = workspaceRow?.plan ?? "free";
+  const { data: workspaceRow } = await admin.from("workspaces").select("plan, trial_ends_at").eq("id", workspaceId).maybeSingle();
+  // An ended trial counts as no plan: no monthly images, though packs already bought still work.
+  const plan = effectivePlan({ plan: workspaceRow?.plan ?? "free", trial_ends_at: workspaceRow?.trial_ends_at ?? null });
+  const monthlyLimit = getPlanLimits(plan).imagesPerMonth;
 
-  const usedBefore = await countImagesThisMonth(admin, workspaceId);
-  if (usedBefore === null) {
+  const usageBefore = await getImageUsage(admin, workspaceId);
+  if (usageBefore === null) {
     // Fail closed: if usage can't be read, spending money on an image is the wrong default.
     return NextResponse.json({ error: "Image generation is temporarily unavailable. Please try again shortly." }, { status: 503 });
   }
-  const before = imageAllowance(plan, usedBefore);
+  const before = imageAllowance(plan, usageBefore.monthlyUsed, usageBefore.packBalance);
   if (before.exhausted) return NextResponse.json({ error: before.blockedReason, limit: before.limit, remaining: 0 }, { status: 402 });
 
-  const { data: reservation, error: reserveError } = await admin.from("ai_image_usage").insert({ workspace_id: workspaceId }).select("id").single();
+  // The monthly allowance pays first; packs only once it has run out.
+  const fromPack = usageBefore.monthlyUsed >= monthlyLimit;
+
+  const { data: reservation, error: reserveError } = await admin.from("ai_image_usage").insert({ workspace_id: workspaceId, from_pack: fromPack }).select("id").single();
   if (reserveError || !reservation) {
     return NextResponse.json({ error: "Image generation is temporarily unavailable. Please try again shortly." }, { status: 503 });
   }
   const refund = async () => { await admin.from("ai_image_usage").delete().eq("id", reservation.id); };
 
-  const usedAfter = await countImagesThisMonth(admin, workspaceId);
-  if (usedAfter === null || usedAfter > before.limit) {
+  const usageAfter = await getImageUsage(admin, workspaceId);
+  const overdrawn = usageAfter === null
+    || (fromPack ? usageAfter.packUsed > usageAfter.packPurchased : usageAfter.monthlyUsed > monthlyLimit);
+  if (overdrawn) {
     await refund();
-    return NextResponse.json({ error: before.blockedReason ?? "Image allowance reached for this month.", limit: before.limit, remaining: 0 }, { status: 402 });
+    return NextResponse.json({ error: before.blockedReason ?? "Image allowance reached.", limit: before.limit, remaining: 0 }, { status: 402 });
   }
 
   // Enhance prompt with Claude
@@ -124,5 +132,5 @@ export async function POST(req: NextRequest) {
 
   const { data: { publicUrl } } = admin.storage.from("campaign-images").getPublicUrl(filename);
 
-  return NextResponse.json({ url: publicUrl, revisedPrompt: enhancedPrompt, limit: before.limit, remaining: Math.max(before.limit - usedAfter, 0) });
+  return NextResponse.json({ url: publicUrl, revisedPrompt: enhancedPrompt, limit: before.limit, remaining: Math.max(before.remaining - 1, 0) });
 }

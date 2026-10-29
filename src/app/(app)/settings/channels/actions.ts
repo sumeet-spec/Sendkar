@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { verifyPhoneNumberCreds, subscribeAppToWaba } from "@/lib/whatsapp";
 import { revalidatePath } from "next/cache";
 import { checkCanConnectNumber } from "@/lib/planUsage";
@@ -11,7 +11,7 @@ export async function saveInstagramCreds(_prevState: unknown, formData: FormData
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
 
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
   if (!limits.instagramEnabled) return { error: "Instagram is on the Growth plan and above — upgrade in Billing first." };
 
   const pageId = String(formData.get("pageId") ?? "").trim();
@@ -35,7 +35,7 @@ export async function saveMessengerCreds(_prevState: unknown, formData: FormData
   const workspace = await getCurrentWorkspace();
   if (!workspace) return { error: "No workspace found." };
 
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
   if (!limits.instagramEnabled) return { error: "Messenger is on the Growth plan and above — upgrade in Billing first." };
 
   const pageId = String(formData.get("pageId") ?? "").trim();

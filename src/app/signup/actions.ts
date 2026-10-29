@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePhone, phoneToAuthEmail } from "@/lib/auth";
 import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 import { redirect } from "next/navigation";
+import { trialStartFields } from "@/lib/plans";
 
 export async function signup(_prevState: unknown, formData: FormData) {
   // The form only collects the 10-digit local number — India-only product,
@@ -47,7 +48,7 @@ export async function signup(_prevState: unknown, formData: FormData) {
   // policy lets a user insert their own workspace_members row (only the
   // on-workspace-created trigger can, via SECURITY DEFINER) — safe because
   // owner_id is set to the id createUser() just returned, never client input.
-  const { error: wsError } = await admin.from("workspaces").insert({ name: workspaceName, owner_id: user.id });
+  const { error: wsError } = await admin.from("workspaces").insert({ name: workspaceName, owner_id: user.id, ...trialStartFields() });
   if (wsError) return { error: `Account created, but workspace setup failed: ${wsError.message}` };
 
   const supabase = await createClient();

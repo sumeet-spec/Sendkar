@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { getPlanLimits } from "@/lib/plans";
+import { getPlanLimits, effectivePlan } from "@/lib/plans";
 import { NewSequenceForm } from "./NewSequenceForm";
 import { SequenceRow } from "./SequenceRow";
 import { JourneyCard } from "./JourneyCard";
@@ -9,7 +9,7 @@ export default async function SequencesPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const limits = getPlanLimits(workspace.plan);
+  const limits = getPlanLimits(effectivePlan(workspace));
 
   const { data: sequences } = await supabase
     .from("sequences")
