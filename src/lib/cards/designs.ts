@@ -77,6 +77,11 @@ const VECTOR_DESIGNS: Design[] = (Object.entries(CATALOG) as Array<[OccasionId, 
   defs.map(([name, motif, variant, palette], i) => ({ id: `${occasion}-v${i + 1}`, occasion, name, motif, variant, palette })),
 );
 
+const HEX = /^#[0-9a-fA-F]{6}$/;
+const rgb = (hex: string): [number, number, number] => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+const toHex = (c: number[]) => `#${c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("")}`;
+const mix = (a: string, b: string, t: number) => { const x = rgb(a), y = rgb(b); return toHex(x.map((v, i) => v + (y[i] - v) * t)); };
+
 /** The panel and footer take a dark version of the picture's own colour, and the shop name a warm gold. */
 function artPalette(avg: string): Palette {
   return { bg1: mix(avg, "#000000", 0.5), bg2: mix(avg, "#000000", 0.8), accent: "#fcd34d", art1: mix(avg, "#ffffff", 0.4), art2: mix(avg, "#ffffff", 0.7) };
@@ -93,10 +98,6 @@ export const designsFor = (occasion: OccasionId): Design[] => DESIGNS.filter((d)
 
 // ── The shop's own colours ─────────────────────────────────────────────────
 
-const HEX = /^#[0-9a-fA-F]{6}$/;
-const rgb = (hex: string): [number, number, number] => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
-const toHex = (c: number[]) => `#${c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("")}`;
-const mix = (a: string, b: string, t: number) => { const x = rgb(a), y = rgb(b); return toHex(x.map((v, i) => v + (y[i] - v) * t)); };
 
 /** The same artwork in the shop's own colours: dark backdrop from the main colour, art in the highlight and light tints. */
 export function brandPalette(primary: string, accent: string): Palette {
