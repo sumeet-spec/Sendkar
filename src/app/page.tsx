@@ -5,7 +5,7 @@ import { Reveal } from "@/components/Reveal";
 import { StoryCarousel, type StoryMoment } from "@/components/StoryCarousel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
-import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getDictionary, LANGUAGES } from "@/lib/i18n/dictionaries";
 
 const STORY_MOMENTS: StoryMoment[] = [
   {
@@ -201,7 +201,7 @@ export default async function RootPage() {
                 <div className="sk-hero-stat-label">{t.statMcp}</div>
               </div>
               <div className="sk-hero-stat">
-                <div className="sk-hero-stat-num accent">₹0</div>
+                <div className="sk-hero-stat-num accent">{LANGUAGES.length}</div>
                 <div className="sk-hero-stat-label">{t.statPrice}</div>
               </div>
             </div>
@@ -254,7 +254,7 @@ export default async function RootPage() {
           <div className="sk-window">
             <div className="sk-window-bar">
               <div className="sk-window-dots"><span /><span /><span /></div>
-              <div className="sk-window-url">sendkar.app/dashboard</div>
+              <div className="sk-window-url">sendkar.shop/dashboard</div>
             </div>
             <div className="p-5">
               <div className="grid grid-cols-2 gap-3">
@@ -304,7 +304,7 @@ export default async function RootPage() {
           <div className="order-2 lg:order-1 sk-window">
             <div className="sk-window-bar">
               <div className="sk-window-dots"><span /><span /><span /></div>
-              <div className="sk-window-url">sendkar.app/inbox</div>
+              <div className="sk-window-url">sendkar.shop/inbox</div>
               <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-[#05130a]">Auto-assigned</span>
             </div>
             <div className="flex h-72">

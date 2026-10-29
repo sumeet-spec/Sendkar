@@ -4,7 +4,7 @@
  * campaigns — not an exhaustive translation of every settings sub-page.
  * Machine-translated by Claude, not a native speaker: treat every non-English
  * string here as a first draft that needs a fluent-speaker review pass
- * before it's the first thing a real Kannada/Hindi/Tamil/Telugu/Marathi
+ * before it's the first thing a real Gujarati/Kannada/Hindi/Tamil/Telugu/Marathi
  * customer sees. English is the only language reviewed as final.
  */
 
@@ -15,6 +15,7 @@ export const LANGUAGES = [
   { code: "ta", label: "தமிழ்" },
   { code: "te", label: "తెలుగు" },
   { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "gu", label: "ગુજરાતી" },
 ] as const;
 
 export type LanguageCode = (typeof LANGUAGES)[number]["code"];
@@ -437,6 +438,68 @@ export const dictionaries: Record<LanguageCode, Dictionary> = {
       noMetaApp: "ಇನ್ನೂ Meta App ಇಲ್ಲವೇ?", createOne: "developers.facebook.com ನಲ್ಲಿ ಒಂದನ್ನು ರಚಿಸಿ →",
       successTitle: "ಸಂಪರ್ಕಗೊಂಡಿದೆ", successAs: " — ", successBody: "ಈ ಕ್ರೆಡೆನ್ಷಿಯಲ್‌ಗಳು ನಿಜವಾಗಿಯೂ ಕೆಲಸ ಮಾಡುತ್ತವೆ ಎಂದು Meta ದೃಢಪಡಿಸಿದೆ — ಕೇವಲ ಉಳಿಸಲಾಗಿಲ್ಲ, ಪರಿಶೀಲಿಸಲಾಗಿದೆ.",
       continueButton: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಮುಂದುವರಿಸಿ →",
+    },
+  },
+  gu: {
+    nav: {
+      overview: "ઓવરવ્યૂ", contacts: "સંપર્કો", templates: "ટેમ્પલેટ", catalog: "કેટલોગ", campaigns: "કેમ્પેઇન",
+      inbox: "ઇનબોક્સ", analytics: "એનાલિટિક્સ", chatbotFlows: "ચેટબોટ ફ્લો", forms: "ફોર્મ", automations: "ઓટોમેશન", segments: "સેગમેન્ટ",
+      webhooks: "વેબહુક", linksWidget: "લિંક અને વિજેટ", agency: "એજન્સી", settings: "સેટિંગ્સ", billing: "બિલિંગ", sequences: "સિક્વન્સ", deals: "ડીલ",
+      team: "ટીમ", channels: "ચેનલ", cannedResponses: "સેવ કરેલા જવાબો", apiKeys: "API કીઝ", integrations: "ઇન્ટિગ્રેશન",
+      businessHours: "વ્યવસાયનો સમય", payments: "પેમેન્ટ", calling: "કોલિંગ", language: "ભાષા", aiAgent: "AI એજન્ટ",
+      logout: "લૉગ આઉટ",
+    },
+    auth: {
+      loginTitle: "લૉગ ઇન કરો", loginSubtitle: "ફરી સ્વાગત છે.", whatsappNumber: "WhatsApp નંબર", password: "પાસવર્ડ",
+      loginButton: "લૉગ ઇન કરો", noAccount: "નવા છો? તમારું બિઝનેસ એકાઉન્ટ બનાવો", signupTitle: "તમારો બિઝનેસ સેટ કરો",
+      signupSubtitle: "શરૂ કરવું મફત છે, પહેલા દિવસથી અસલી Cloud API.", workspaceName: "બિઝનેસનું નામ",
+      signupButton: "વર્કસ્પેસ બનાવો", haveAccount: "પહેલેથી એકાઉન્ટ છે?", logIn: "લૉગ ઇન કરો",
+    },
+    dashboard: {
+      title: "ઓવરવ્યૂ", whatsappConnected: "WhatsApp જોડાયેલું છે", whatsappNotConnected: "WhatsApp જોડાયેલું નથી",
+      noWhatsappBanner: "હજી સુધી કોઈ WhatsApp Business નંબર જોડાયો નથી. Meta Business Manager પાસેથી ફોન નંબર ID અને એક્સેસ ટોકન મળે એટલે સેટઅપ પૂરું કરો — બાકી બધું અહીં પહેલેથી કામ કરે છે.",
+      contacts: "સંપર્કો", campaigns: "કેમ્પેઇન", messagesSent: "મોકલેલા મેસેજ", deliveryRate: "ડિલિવરી દર",
+      failedSuffix: "નિષ્ફળ", revenueTracked: "નોંધાયેલી કમાણી", fromCampaign: "કેમ્પેઇનમાંથી",
+      topCustomers: "ટોપ ગ્રાહકો", messagingTier: "મેસેજિંગ ટિયર",
+      checklistTitle: "તમારા પહેલા મેસેજ સુધી પહોંચો", checklistConnect: "તમારો WhatsApp Business નંબર જોડો",
+      checklistTemplate: "એક ટેમ્પલેટ મંજૂર કરાવો", checklistContacts: "તમારા સંપર્કો ઇમ્પોર્ટ કરો",
+      checklistCampaign: "તમારું પહેલું કેમ્પેઇન મોકલો",
+    },
+    contacts: {
+      title: "સંપર્કો", searchPlaceholder: "ફોન અથવા નામથી શોધો…", search: "શોધો", exportCsv: "CSV એક્સપોર્ટ કરો",
+      total: "કુલ", colPhone: "ફોન", colName: "નામ", colLanguage: "ભાષા", colTags: "ટેગ",
+      colSource: "સ્ત્રોત", colSpend: "ખર્ચ", colAdded: "ઉમેર્યું", noContacts: "હજી કોઈ સંપર્ક નથી — ઉપરથી CSV ઇમ્પોર્ટ કરો.",
+    },
+    campaigns: {
+      title: "કેમ્પેઇન", newCampaign: "નવું કેમ્પેઇન", colName: "નામ", colTemplate: "ટેમ્પલેટ", colStatus: "સ્થિતિ",
+      colCreated: "બનાવ્યું", noCampaigns: "હજી કોઈ કેમ્પેઇન નથી.", startSending: "મોકલવાનું શરૂ કરો",
+    },
+    landing: {
+      navPricing: "પ્રાઇસિંગ", navMcp: "MCP", navLogin: "લૉગ ઇન", navGetStarted: "શરૂ કરો",
+      heroEyebrow: "વોટ્સએપ માર્કેટિંગ સોફ્ટવેર", heroLine1: "એક મેસેજ.", heroLine2: "દરેક ગ્રાહક સુધી પહોંચે", heroLine3: "તેની પોતાની ભાષામાં.",
+      heroSubhead: "આ પ્રિયા ટેક્સટાઇલ્સનો અસલી ઓર્ડર છે, શરૂથી અંત સુધી — એક ઇન્સ્ટાગ્રામ જાહેરાત, ગ્રાહકની પોતાની ભાષામાં જવાબ, વોટ્સએપ છોડ્યા વિના લીધેલું પેમેન્ટ, અને જે જાહેરાતે વેચાણ અપાવ્યું તેની સાથે જોડાયેલી કમાણી.",
+      badgeReseller: "⚡ Metaનું અસલી Cloud API — રિસેલર નહીં", badgeFree: "🆓 કાયમ માટે ફ્રી પ્લાન — 14 દિવસનું ટ્રાયલ નહીં",
+      ctaGetStarted: "મફતમાં શરૂ કરો →", ctaSeePricing: "પ્રાઇસિંગ જુઓ",
+      statChannels: "ચેનલ", statMcp: "Claude માટે MCP ટૂલ્સ", statPrice: "ભારતીય ભાષાઓ",
+    },
+    onboarding: {
+      title: "WhatsApp જોડો",
+      introBefore: "Meta Business Manager પાસેથી ત્રણ વસ્તુઓ જોઈશે. હજી WhatsApp Business નંબર નથી?",
+      skipLabel: "આ છોડી દો",
+      introAfter: "— Sendkarમાં બાકી બધું પહેલેથી કામ કરે છે, બસ આ ભરાય ત્યાં સુધી મેસેજ મોકલવાનું બંધ રહેશે.",
+      numberWarning: "એવો WhatsApp નંબર વાપરો જે તમે સામાન્ય WhatsApp એપમાં પહેલેથી વાપરતા ન હો — તેને અહીં જોડવાથી તે Sendkarમાં જતો રહે છે અને એપમાંથી લૉગ આઉટ થઈ જાય છે (તમારી ચેટ્સ તમારા ફોનમાં જ રહે છે, પણ હવેથી આ નંબર તમે Sendkarથી ચલાવશો).",
+      step1Title: "તમારો ફોન નંબર ID અને WABA ID મેળવો",
+      step1Body: "તમારી Meta App → WhatsApp → API Setupમાં, તમને એક \"From\" ફોન નંબર દેખાશે જેની નીચે તેનો Phone number ID હશે, અને નજીકમાં WhatsApp Business Account ID ફીલ્ડ હશે.",
+      phoneIdPlaceholder: "ફોન નંબર ID — જેમ કે 102938475600000", wabaIdPlaceholder: "WhatsApp Business Account ID",
+      step2Title: "એક્સેસ ટોકન મેળવો",
+      step2Body: "એ જ API Setup પેજ પરનો અસ્થાયી ટોકન ટેસ્ટિંગ માટે ચાલે છે (24 કલાકમાં પૂરો થાય છે). અસલી ઉપયોગ માટે, Meta Business Settingsમાં એક System User બનાવો, તેને whatsapp_business_messaging અને whatsapp_business_management પરવાનગી આપો, અને ત્યાંથી જ તેનો ટોકન બનાવો.",
+      tokenPlaceholder: "EAAG...",
+      step3Title: "અમે તેને લાઇવ ચકાસીએ છીએ",
+      step3Body: "સેવ કરતા પહેલાં Sendkar આ ક્રેડેન્શિયલ્સને Metaના APIથી ચકાસે છે, અને તમારા WABAને જવાબો અને ડિલિવરી સ્ટેટસ મેળવવા માટે સબ્સ્ક્રાઇબ કરે છે — આ બે પગલાં મોટાભાગના WhatsApp પ્લેટફોર્મ છોડી દે છે, એટલે \"કનેક્ટેડ\"નો અર્થ હંમેશાં એવો નથી કે મેસેજ બંને બાજુ ચાલે છે.",
+      submitButton: "જોડો અને ચકાસો", submitPending: "Meta સાથે ચકાસણી ચાલુ છે…",
+      noMetaApp: "હજી Meta App નથી?", createOne: "developers.facebook.com પર એક બનાવો →",
+      successTitle: "જોડાઈ ગયું", successAs: " — ", successBody: "Metaએ પુષ્ટિ કરી કે આ ક્રેડેન્શિયલ્સ ખરેખર કામ કરે છે — ફક્ત સેવ નહીં, ચકાસેલા.",
+      continueButton: "ડેશબોર્ડ પર જાઓ →",
     },
   },
 };

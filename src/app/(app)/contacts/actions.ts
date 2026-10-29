@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { revalidatePath } from "next/cache";
 
-const LANGUAGES = new Set(["hi", "mr", "ta", "te", "kn", "en"]);
+const LANGUAGES = new Set(["hi", "mr", "ta", "te", "kn", "gu", "en"]);
 
 /** Minimal CSV parser — this data has no quoted/escaped commas, so a split() is enough. */
 function parseCsv(text: string): string[][] {

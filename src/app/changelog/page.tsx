@@ -5,6 +5,14 @@ export const metadata = { title: "Changelog — Sendkar" };
 
 const ENTRIES = [
   {
+    date: "October 29, 2026",
+    items: [
+      "Gujarati is now a full language — dashboard, sign-up, contact language and CSV import, alongside Hindi, Marathi, Tamil, Telugu, Kannada and English.",
+      "Fixed a homepage stat that read \"₹0\" next to \"Languages built in\"; it now shows the real language count.",
+      "Fixed product screenshots on the homepage that showed the wrong web address.",
+    ],
+  },
+  {
     date: "August 24, 2026",
     items: [
       "WhatsApp Flows — build multi-screen forms that open right inside the chat, no browser redirect. Settings → Forms.",

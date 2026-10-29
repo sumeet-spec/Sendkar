@@ -9,6 +9,7 @@ const LANGUAGES = [
   { value: "ta", label: "Tamil" },
   { value: "te", label: "Telugu" },
   { value: "kn", label: "Kannada" },
+  { value: "gu", label: "Gujarati" },
   { value: "en", label: "English" },
 ];
 

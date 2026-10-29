@@ -5,7 +5,7 @@ import { importContactsFromSheetUrl } from "./actions";
 
 const LANGUAGES = [
   { value: "hi", label: "Hindi" }, { value: "mr", label: "Marathi" }, { value: "ta", label: "Tamil" },
-  { value: "te", label: "Telugu" }, { value: "kn", label: "Kannada" }, { value: "en", label: "English" },
+  { value: "te", label: "Telugu" }, { value: "kn", label: "Kannada" }, { value: "gu", label: "Gujarati" }, { value: "en", label: "English" },
 ];
 
 export function SheetsImportForm() {
