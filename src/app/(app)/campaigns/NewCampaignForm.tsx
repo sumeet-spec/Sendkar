@@ -9,6 +9,7 @@ interface Template {
   language: string;
   status: string;
   body_preview?: string | null;
+  header_type?: string | null;
 }
 
 interface WhatsAppNumber {
@@ -26,14 +27,16 @@ export function NewCampaignForm({
   numbers,
   segments,
   availableTags,
+  cardUrl,
 }: {
   templates: Template[];
   numbers: WhatsAppNumber[];
   segments: Segment[];
   availableTags: string[];
+  cardUrl?: string;
 }) {
   const [state, formAction, pending] = useActionState(createCampaign, null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(cardUrl));
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [segmentTag, setSegmentTag] = useState("");
   const [selectedSegmentId, setSelectedSegmentId] = useState("");
@@ -75,6 +78,15 @@ export function NewCampaignForm({
         </button>
       </div>
 
+      {cardUrl && (
+        <div className="flex items-center gap-3 rounded-md border border-border bg-[var(--surface-2)] p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={cardUrl} alt="Your card" className="h-20 w-20 rounded-md object-cover" />
+          <p className="text-[12.5px] text-muted">This card will go out with the campaign. Pick a template that has an image at the top.</p>
+          <input type="hidden" name="imageUrl" value={cardUrl} />
+        </div>
+      )}
+
       {/* Name */}
       <div>
         <label className="sk-label">Campaign name</label>
@@ -93,9 +105,12 @@ export function NewCampaignForm({
         >
           <option value="" disabled>Select an approved template…</option>
           {templates.map((t) => (
-            <option key={t.id} value={t.id}>{t.name} ({t.language})</option>
+            <option key={t.id} value={t.id}>{t.name} ({t.language}){t.header_type === "image" ? " · with picture" : ""}</option>
           ))}
         </select>
+        {cardUrl && selectedTemplate && selectedTemplate.header_type !== "image" && (
+          <p className="mt-2 text-[12.5px] text-danger">This template has no picture at the top, so your card would not be sent. Pick one marked "with picture".</p>
+        )}
         {selectedTemplate?.body_preview && (
           <div className="mt-2 rounded-md border border-border bg-[var(--surface-2)] px-3 py-2.5 text-[12.5px] text-muted" style={{ whiteSpace: "pre-wrap" }}>
             {selectedTemplate.body_preview}

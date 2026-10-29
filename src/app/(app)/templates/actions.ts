@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
-import { submitTemplateToMeta } from "@/lib/whatsapp";
+import { uploadMediaHandle, submitTemplateToMeta } from "@/lib/whatsapp";
 import { generateTemplateDraft, type GeneratedTemplateDraft } from "@/lib/ai";
 import { parseCarouselCards } from "@/lib/carouselCards";
 import { revalidatePath } from "next/cache";
@@ -15,6 +15,22 @@ export async function generateTemplateWithAi(description: string, language: stri
     return { draft };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "AI draft failed." };
+  }
+}
+
+/** Image-header templates need a sample picture uploaded to Meta; returns its handle, or an error message. */
+async function headerHandleFor(token: string, imageUrl: string | null): Promise<{ handle?: string; error?: string }> {
+  if (!imageUrl) return { error: "Add a sample picture for the image header first." };
+  try {
+    const res = await fetch(imageUrl, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return { error: "Could not read the header picture. Check the link." };
+    const mime = res.headers.get("content-type")?.split(";")[0] ?? "";
+    if (!["image/png", "image/jpeg"].includes(mime)) return { error: "WhatsApp image headers must be a PNG or JPG picture." };
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (bytes.length > 5 * 1024 * 1024) return { error: "The header picture must be under 5 MB." };
+    return { handle: await uploadMediaHandle({ token, bytes, mime }) };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not upload the header picture." };
   }
 }
 
@@ -56,6 +72,13 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
   let metaResponse: unknown = null;
   let submitError: string | null = null;
 
+  let headerHandle: string | undefined;
+  if (canSubmitToMeta && headerType === "image") {
+    const h = await headerHandleFor(workspace.whatsapp_access_token!, headerImageUrl);
+    if (h.error) return { error: h.error };
+    headerHandle = h.handle;
+  }
+
   if (canSubmitToMeta) {
     try {
       metaResponse = await submitTemplateToMeta({
@@ -64,7 +87,7 @@ export async function createTemplate(_prevState: unknown, formData: FormData) {
         name: metaTemplateName,
         language,
         category,
-        components: { headerType, headerText, bodyText, footerText, buttons, carouselCards: isCarousel ? carouselCards : undefined },
+        components: { headerType, headerText, headerHandle, bodyText, footerText, buttons, carouselCards: isCarousel ? carouselCards : undefined },
       });
     } catch (err) {
       // Save the draft locally anyway — a rejected/failed submission shouldn't lose the work,
@@ -144,6 +167,13 @@ export async function resubmitTemplate(templateId: string, newBodyText: string):
   let metaResponse: unknown = null;
   let submitError: string | null = null;
 
+  let headerHandle: string | undefined;
+  if (canSubmit && t.header_type === "image") {
+    const h = await headerHandleFor(workspace.whatsapp_access_token!, t.header_image_url);
+    if (h.error) return { error: h.error };
+    headerHandle = h.handle;
+  }
+
   if (canSubmit) {
     try {
       metaResponse = await submitTemplateToMeta({
@@ -155,6 +185,7 @@ export async function resubmitTemplate(templateId: string, newBodyText: string):
         components: {
           headerType: t.header_type ?? "none",
           headerText: t.header_text ?? undefined,
+          headerHandle,
           bodyText: newBodyText,
           footerText: t.footer_text ?? undefined,
           buttons: t.buttons ?? undefined,

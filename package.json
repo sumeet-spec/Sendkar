@@ -10,9 +10,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@sentry/nextjs": "^10.71.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
+    "harfbuzzjs": "^1.6.4",
     "next": "16.3.5",
     "qrcode": "^1.5.4",
     "react": "19.2.8",

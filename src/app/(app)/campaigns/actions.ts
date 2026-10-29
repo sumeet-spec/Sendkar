@@ -41,6 +41,9 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
   const segmentTag = String(formData.get("segmentTag") ?? "").trim() || null;
   const segmentId = String(formData.get("segmentId") ?? "") || null;
   const whatsappNumberId = String(formData.get("whatsappNumberId") ?? "") || null;
+  // Only a picture we stored ourselves (a card from the card maker) may be attached.
+  const cardUrl = String(formData.get("imageUrl") ?? "").trim();
+  const imageUrl = cardUrl && cardUrl.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`) ? cardUrl : null;
   if (!name || !templateId) return { error: "Name and template are required." };
 
   const supabase = await createClient();
@@ -59,6 +62,7 @@ export async function createCampaign(_prevState: unknown, formData: FormData) {
       segment_tag: segmentTag,
       segment_id: segmentId,
       whatsapp_number_id: whatsappNumberId,
+      image_url: imageUrl,
       status: "draft",
     })
     .select("id")
@@ -143,11 +147,11 @@ export async function sendTestMessage(_prevState: unknown, formData: FormData) {
   const supabase = await createClient();
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("id, whatsapp_number_id, templates(meta_template_name, language, body_text)")
+    .select("id, whatsapp_number_id, image_url, templates(meta_template_name, language, body_text, header_type, header_image_url)")
     .eq("id", campaignId)
     .eq("workspace_id", workspace.id)
     .single();
-  const template = campaign?.templates as { meta_template_name?: string; language?: string; body_text?: string } | null;
+  const template = campaign?.templates as { meta_template_name?: string; language?: string; body_text?: string; header_type?: string | null; header_image_url?: string | null } | null;
   if (!template?.meta_template_name) return { error: "Template not found." };
 
   const creds = await resolveNumberCredentials(workspace, campaign?.whatsapp_number_id ?? null);
@@ -160,6 +164,7 @@ export async function sendTestMessage(_prevState: unknown, formData: FormData) {
       templateName: template.meta_template_name,
       language: template.language ?? "en",
       bodyParams: placeholderCount > 0 ? Array.from({ length: placeholderCount }, () => "there") : undefined,
+      headerImageUrl: template.header_type === "image" ? (campaign?.image_url as string | null) || template.header_image_url || undefined : undefined,
     });
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Test send failed." };

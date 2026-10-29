@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Card maker: HarfBuzz (WASM) and resvg (native) must load from node_modules as-is,
+  // and the Noto font files are read from disk at render time so must ship with the function.
+  serverExternalPackages: ["harfbuzzjs", "@resvg/resvg-js"],
+  outputFileTracingIncludes: { "/api/**": ["./src/assets/fonts/**"] },
   // Pins the workspace root to this project — without it, Turbopack walks up
   // and finds an unrelated package-lock.json at the Windows user-profile
   // root and warns about treating that as the monorepo root.

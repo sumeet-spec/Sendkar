@@ -176,15 +176,16 @@ export async function GET(request: NextRequest) {
 
     const { data: primaryTemplate } = await admin
       .from("templates")
-      .select("meta_template_name, language, body_text")
+      .select("meta_template_name, language, body_text, header_type, header_image_url")
       .eq("id", campaign.template_id)
       .single();
 
-    let templatesByLanguage = new Map<string, { meta_template_name: string; language: string; body_text: string | null }>();
+    type SendableTemplate = { meta_template_name: string; language: string; body_text: string | null; header_type: string | null; header_image_url: string | null };
+    let templatesByLanguage = new Map<string, SendableTemplate>();
     if (campaign.template_group) {
       const { data: groupTemplates } = await admin
         .from("templates")
-        .select("meta_template_name, language, body_text")
+        .select("meta_template_name, language, body_text, header_type, header_image_url")
         .eq("workspace_id", workspace.id)
         .eq("template_group", campaign.template_group);
       templatesByLanguage = new Map((groupTemplates ?? []).map((t) => [t.language, t]));
@@ -212,6 +213,13 @@ export async function GET(request: NextRequest) {
             resolveTemplateParam(variableMapping[String(i + 1)], { name: contactRow?.name, phone: contactRow?.phone, email: contactRow?.email }, template.language))
         : undefined;
 
+      // A template with an image header needs a picture every time: the campaign's own card first, else the template's.
+      const headerImageUrl = template.header_type === "image" ? (campaign.image_url as string | null) || template.header_image_url || undefined : undefined;
+      if (template.header_type === "image" && !headerImageUrl) {
+        await admin.from("campaign_recipients").update({ status: "failed", error: "This template needs a picture. Add a card to the campaign." }).eq("id", recipient.id);
+        continue;
+      }
+
       try {
         const { metaMessageId } = await sendTemplateMessage({
           workspace: sender.creds,
@@ -219,6 +227,7 @@ export async function GET(request: NextRequest) {
           templateName: template.meta_template_name,
           language: template.language,
           bodyParams,
+          headerImageUrl,
         });
 
         await admin

@@ -11,6 +11,8 @@
 export interface BuildInput {
   headerType?: "none" | "text" | "image";
   headerText?: string;
+  /** Meta media handle for an image header's sample picture (Resumable Upload API). */
+  headerHandle?: string;
   bodyText: string;
   footerText?: string;
   buttons?: Array<Record<string, unknown>>;
@@ -38,7 +40,9 @@ export function buildTemplateComponents(input: BuildInput): Array<Record<string,
   if (input.headerType === "text" && input.headerText) {
     components.push({ type: "HEADER", format: "TEXT", text: input.headerText });
   } else if (input.headerType === "image") {
-    components.push({ type: "HEADER", format: "IMAGE" });
+    components.push(input.headerHandle
+      ? { type: "HEADER", format: "IMAGE", example: { header_handle: [input.headerHandle] } }
+      : { type: "HEADER", format: "IMAGE" });
   }
 
   const body: Record<string, unknown> = { type: "BODY", text: input.bodyText };

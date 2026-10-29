@@ -18,9 +18,11 @@ const STATUS_STYLE: Record<string, string> = {
 export default async function CampaignsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; card?: string }>;
 }) {
-  const { q = "", status = "" } = await searchParams;
+  const { q = "", status = "", card = "" } = await searchParams;
+  // A card made in the card maker arrives as ?card=<url>; only our own storage is accepted.
+  const cardUrl = card.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/`) ? card : "";
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
@@ -46,7 +48,7 @@ export default async function CampaignsPage({
     })(),
     supabase
       .from("templates")
-      .select("id, name, language, status, body_preview")
+      .select("id, name, language, status, body_preview, header_type")
       .eq("workspace_id", workspace.id)
       .eq("status", "approved")
       .order("created_at", { ascending: false }),
@@ -98,6 +100,7 @@ export default async function CampaignsPage({
           numbers={numbers ?? []}
           segments={segments ?? []}
           availableTags={availableTags}
+          cardUrl={cardUrl}
         />
       </div>
 

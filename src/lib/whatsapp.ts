@@ -83,11 +83,16 @@ export interface SendTemplateInput {
   // code again here, as a button component parameter — separate from (and in
   // addition to) the body parameter Meta auto-fills into its generated text.
   otpCode?: string;
+  /** Public URL of the picture for a template with an image header. Meta fetches it at send time. */
+  headerImageUrl?: string;
 }
 
 export async function sendTemplateMessage(input: SendTemplateInput) {
   const { phoneNumberId, token } = requireCreds(input.workspace);
   const components: Array<Record<string, unknown>> = [];
+  if (input.headerImageUrl) {
+    components.push({ type: "header", parameters: [{ type: "image", image: { link: input.headerImageUrl } }] });
+  }
   if (input.bodyParams?.length) {
     components.push({ type: "body", parameters: input.bodyParams.map((text) => ({ type: "text", text })) });
   }
@@ -478,6 +483,7 @@ export interface CarouselCard {
 export interface TemplateComponents {
   headerType?: "none" | "text" | "image";
   headerText?: string;
+  headerHandle?: string; // image headers need a sample picture uploaded to Meta first: see uploadMediaHandle
   bodyText: string;
   footerText?: string;
   buttons?: Array<{ type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER"; text: string; url?: string; phone_number?: string }>;
@@ -514,6 +520,32 @@ export async function submitTemplateToMeta(input: SubmitTemplateInput) {
     throw new Error(json.error?.message ?? `Meta rejected the template submission (HTTP ${res.status})`);
   }
   return json; // { id, status: "PENDING" | ..., category }
+}
+
+/**
+ * Uploads a picture to Meta's Resumable Upload API and returns the media handle a template's image
+ * header needs as its sample. Needs the Meta app id (NEXT_PUBLIC_META_APP_ID) the token belongs to.
+ */
+export async function uploadMediaHandle(input: { token: string; bytes: Uint8Array; mime: string }): Promise<string> {
+  const appId = process.env.NEXT_PUBLIC_META_APP_ID;
+  if (!appId) throw new Error("Image headers aren't available on this deployment yet.");
+
+  const start = await fetch(
+    `https://graph.facebook.com/${GRAPH_API_VERSION}/${appId}/uploads?file_length=${input.bytes.length}&file_type=${encodeURIComponent(input.mime)}`,
+    { method: "POST", headers: { Authorization: `Bearer ${input.token}` }, signal: AbortSignal.timeout(15_000) },
+  );
+  const session = (await start.json()) as { id?: string; error?: { message?: string } };
+  if (!start.ok || !session.id) throw new Error(session.error?.message ?? "Could not start the picture upload with Meta.");
+
+  const upload = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${session.id}`, {
+    method: "POST",
+    headers: { Authorization: `OAuth ${input.token}`, file_offset: "0", "Content-Type": input.mime },
+    body: Buffer.from(input.bytes),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const done = (await upload.json()) as { h?: string; error?: { message?: string } };
+  if (!upload.ok || !done.h) throw new Error(done.error?.message ?? "Meta did not accept the picture.");
+  return done.h;
 }
 
 // ── Opt-out ────────────────────────────────────────────────────────────────

@@ -29,6 +29,7 @@ const NAV_KEYS = [
   { href: "/automations", key: "automations", icon: "bolt" },
   { href: "/sequences", key: "sequences", icon: "flow" },
   { href: "/reminders", key: "reminders", icon: "deals" },
+  { href: "/cards", key: "cards", icon: "doc" },
   { href: "/segments", key: "segments", icon: "users" },
   { href: "/deals", key: "deals", icon: "deals" },
   { href: "/webhooks", key: "webhooks", icon: "webhook" },
@@ -40,6 +41,7 @@ const NAV_KEYS = [
 const SETTINGS_NAV_KEYS = [
   { href: "/settings/billing", key: "billing" },
   { href: "/settings/ai-agent", key: "aiAgent" },
+  { href: "/settings/brand", key: "brandKit" },
   { href: "/settings/team", key: "team" },
   { href: "/settings/business-hours", key: "businessHours" },
   { href: "/settings/payments", key: "payments" },
