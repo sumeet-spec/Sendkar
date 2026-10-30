@@ -10,6 +10,8 @@ import { SUMMARY_COPY } from "@/lib/i18n/summaryCopy";
 import { YesterdayCard } from "./YesterdayCard";
 import { DayChart } from "./DayChart";
 import { RecentCampaigns } from "./RecentCampaigns";
+import { DASHBOARD_MORE_UI } from "@/lib/i18n/dashboardMoreCopy";
+import { DATE_LOCALE } from "@/lib/i18n/billingCopy";
 import {
   DAY_MS,
   MESSAGING_TIERS,
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const lang = await getCurrentLanguage();
   const t = getDictionary(lang).dashboard;
+  const m = DASHBOARD_MORE_UI[lang];
 
   const now = new Date().getTime();
   const thirtyDaysAgo = new Date(now - 30 * DAY_MS).toISOString();
@@ -78,7 +81,7 @@ export default async function DashboardPage() {
   );
   const chart30Labels = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(now - (29 - i) * DAY_MS);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return d.toLocaleDateString(DATE_LOCALE[lang], { month: "short", day: "numeric" });
   });
   const chartHasActivity = chart30Values.some((v) => v > 0);
   const chart30Total = chart30Values.reduce((a, b) => a + b, 0);
@@ -212,7 +215,7 @@ export default async function DashboardPage() {
             <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">{t.messagesSent}</div>
             <div className="font-mono text-[22px] font-semibold tabular-nums">{total.toLocaleString()}</div>
             {chart30Total > 0 && (
-              <div className="mt-0.5 text-[11px] text-faint">{chart30Total.toLocaleString()} last 30d</div>
+              <div className="mt-0.5 text-[11px] text-faint">{m.last30.replace("{n}", chart30Total.toLocaleString())}</div>
             )}
           </div>
         </div>
@@ -244,9 +247,9 @@ export default async function DashboardPage() {
       {/* ── 30-day message chart ── */}
       <div className="sk-card mb-4 overflow-hidden">
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
-          <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Messages sent — last 30 days</div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-faint">{m.chartTitle}</div>
           {chartHasActivity && (
-            <div className="font-mono text-[12px] tabular-nums text-muted">{chart30Total.toLocaleString()} total</div>
+            <div className="font-mono text-[12px] tabular-nums text-muted">{m.total.replace("{n}", chart30Total.toLocaleString())}</div>
           )}
         </div>
         <div className="px-2 py-3">
@@ -254,7 +257,7 @@ export default async function DashboardPage() {
             <DayChart values={chart30Values} labels={chart30Labels} />
           ) : (
             <div className="flex h-[128px] items-center justify-center text-[12px] text-faint">
-              No messages sent in the last 30 days — start a campaign to see activity here.
+              {m.chartEmpty}
             </div>
           )}
         </div>
@@ -265,22 +268,22 @@ export default async function DashboardPage() {
         {/* Recent campaigns */}
         <div className="sk-card overflow-hidden">
           <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Recent campaigns</div>
+            <div className="text-[11px] font-medium uppercase tracking-wide text-faint">{m.recent}</div>
             <Link href="/campaigns" prefetch={false} className="text-[11px] text-accent hover:text-accent-hover">
-              View all →
+              {m.viewAll}
             </Link>
           </div>
-          <RecentCampaigns campaigns={campaignPerfRows} />
+          <RecentCampaigns campaigns={campaignPerfRows} t={m} locale={DATE_LOCALE[lang]} />
         </div>
 
         {/* Sidebar: template health + AI insight */}
         <div className="flex flex-col gap-4">
           {/* Template health */}
           <div className="sk-card p-4">
-            <div className="mb-3 text-[11px] font-medium uppercase tracking-wide text-faint">Templates</div>
+            <div className="mb-3 text-[11px] font-medium uppercase tracking-wide text-faint">{m.templates}</div>
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[12.5px] text-muted">Approved</span>
+                <span className="text-[12.5px] text-muted">{m.approved}</span>
                 <span
                   className="font-mono text-[13px] font-semibold"
                   style={{ color: templateHealth.approved > 0 ? "var(--accent)" : "var(--faint)" }}
@@ -289,14 +292,14 @@ export default async function DashboardPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[12.5px] text-muted">Pending review</span>
+                <span className="text-[12.5px] text-muted">{m.pending}</span>
                 <span className="font-mono text-[13px]" style={{ color: templateHealth.pending > 0 ? "var(--warn)" : "var(--faint)" }}>
                   {templateHealth.pending}
                 </span>
               </div>
               {templateHealth.rejected > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-[12.5px] text-muted">Rejected</span>
+                  <span className="text-[12.5px] text-muted">{m.rejected}</span>
                   <span className="font-mono text-[13px]" style={{ color: "var(--danger)" }}>
                     {templateHealth.rejected}
                   </span>
@@ -460,7 +463,7 @@ export default async function DashboardPage() {
           ))}
         </div>
         <div className="mt-2.5 text-[11.5px] text-faint">
-          Meta raises this cap as delivery quality stays high — it isn&apos;t something Sendkar controls.
+          {m.tierNote}
         </div>
       </div>
     </div>

@@ -2,19 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { saveVariableMapping } from "../actions";
+import type { CampaignsMoreUi } from "@/lib/i18n/campaignsMoreCopy";
 
-const CONTACT_FIELDS: Record<string, string> = {
-  name: "Contact name",
-  phone: "Phone number",
-  email: "Email address",
-};
 
 export function VariableMappingForm({
   campaignId,
   bodyText,
   currentMapping,
   disabled,
+  t,
 }: {
+  t: CampaignsMoreUi["mapping"];
   campaignId: string;
   bodyText: string | null | undefined;
   currentMapping: Record<string, string>;
@@ -30,17 +28,18 @@ export function VariableMappingForm({
   const [pending, startTransition] = useTransition();
 
   if (placeholders.length === 0) return null;
+  const CONTACT_FIELDS: Record<string, string> = { name: t.contactName, phone: t.phone, email: t.email };
 
   return (
     <div className="sk-card mb-6 p-4">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-[13px] font-semibold">Personalise message variables</div>
+          <div className="text-[13px] font-semibold">{t.title}</div>
           <div className="mt-0.5 text-[12px] text-faint">
-            Fill each placeholder from a contact field, or with one fixed line for everyone — like the festival name, your shop name or the offer.
+            {t.hint}
           </div>
         </div>
-        {saved && <span className="text-[12.5px] text-accent">Saved ✓</span>}
+        {saved && <span className="text-[12.5px] text-accent">{t.saved}</span>}
       </div>
 
       <div className="flex flex-col gap-2.5">
@@ -65,20 +64,20 @@ export function VariableMappingForm({
                   setMapping((prev) => ({ ...prev, [idx]: e.target.value === "text" ? "text:" : e.target.value }));
                 }}
               >
-                <option value="">— leave as-is (fills with contact name) —</option>
+                <option value="">{t.leave}</option>
                 {Object.entries(CONTACT_FIELDS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>
                 ))}
-                <option value="text">Same text for everyone…</option>
+                <option value="text">{t.same}</option>
               </select>
               {mapping[idx]?.startsWith("text:") && (
                 <input
                   className="sk-input text-[13px]"
                   disabled={disabled}
                   maxLength={200}
-                  placeholder="e.g. Diwali, your business name, or the offer line"
+                  placeholder={t.samePh}
                   value={mapping[idx].slice(5)}
                   onChange={(e) => {
                     setSaved(false);
@@ -101,7 +100,7 @@ export function VariableMappingForm({
                 setSaved(false);
                 const emptyFixed = Object.entries(mapping).find(([, v]) => v === "text:" || v.slice(5).trim() === "" && v.startsWith("text:"));
                 if (emptyFixed) {
-                  setError(`Type the text for {{${emptyFixed[0]}}}, or pick a contact field.`);
+                  setError(t.needText.replace("{n}", emptyFixed[0]));
                   return;
                 }
                 const result = await saveVariableMapping(campaignId, mapping);
@@ -111,7 +110,7 @@ export function VariableMappingForm({
             }
             className="sk-btn sk-btn-primary disabled:opacity-60"
           >
-            {pending ? "Saving…" : "Save mapping"}
+            {pending ? t.saving : t.save}
           </button>
           {error && <span className="text-[12.5px] text-danger">{error}</span>}
         </div>
@@ -119,7 +118,7 @@ export function VariableMappingForm({
 
       {disabled && (
         <p className="mt-2 text-[12px] text-faint">
-          Variable mapping is locked once a campaign has started. Duplicate the campaign to change it.
+          {t.locked}
         </p>
       )}
     </div>

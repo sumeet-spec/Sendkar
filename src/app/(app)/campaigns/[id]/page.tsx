@@ -13,13 +13,16 @@ import { CampaignProgress } from "./CampaignProgress";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { APP_COPY } from "@/lib/i18n/appCopy";
 import { CAMPAIGN_COPY } from "@/lib/i18n/campaignCopy";
+import { CAMPAIGNS_MORE_UI } from "@/lib/i18n/campaignsMoreCopy";
 
 // Starting a campaign sends in the background of this page's request, for up to four minutes.
 export const maxDuration = 300;
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const ct = CAMPAIGN_COPY[await getCurrentLanguage()];
+  const lang = await getCurrentLanguage();
+  const ct = CAMPAIGN_COPY[lang];
+  const more = CAMPAIGNS_MORE_UI[lang];
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const currency = workspace.currency ?? "USD";
@@ -122,8 +125,9 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             campaignId={campaign.id}
             failedCount={counts.failed ?? 0}
             status={campaign.status}
+            t={more.actions}
           />
-          {campaign.status === "draft" && <TestSendForm campaignId={campaign.id} />}
+          {campaign.status === "draft" && <TestSendForm campaignId={campaign.id} t={more.test} />}
           <CampaignControls campaignId={campaign.id} status={campaign.status} scheduledAt={campaign.scheduled_at} t={ct.controls} />
         </div>
       </div>
@@ -134,6 +138,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         bodyText={template?.body_text}
         currentMapping={variableMapping}
         disabled={campaign.status !== "draft"}
+        t={more.mapping}
       />
 
       {/* ── Meta cost estimate ── */}
@@ -194,6 +199,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
 
       {/* ── Recipients ── */}
       <RecipientTable
+        t={more.recipients}
         campaignId={campaign.id}
         recipients={(recipients ?? []).map((r) => ({
           id: r.id,

@@ -6,6 +6,8 @@ import { TemplateActions } from "./TemplateActions";
 import { TemplateFilters } from "./TemplateFilters";
 import { explainRejection } from "@/lib/templateRejectionReasons";
 import { StarterPack } from "./StarterPack";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { TEMPLATES_UI } from "@/lib/i18n/templatesCopy";
 
 // The starter pack submits ~40 templates to Meta in one action.
 export const maxDuration = 60;
@@ -28,6 +30,7 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Se
   const { q = "", status = "" } = await searchParams;
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
+  const tx = TEMPLATES_UI[await getCurrentLanguage()];
   const supabase = await createClient();
   const canSubmitToMeta = Boolean(workspace.whatsapp_waba_id && workspace.whatsapp_access_token);
   const aiImageEnabled = Boolean(process.env.GEMINI_API_KEY);
@@ -50,20 +53,20 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Se
     <div className="max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Templates</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{tx.title}</h1>
           <p className="mt-1 text-sm text-muted">
             {canSubmitToMeta
-              ? "Submits directly to Meta for review — status updates automatically via webhook."
-              : "Connect WhatsApp in Settings → Channels to submit for real Meta review."}
+              ? tx.introConnected
+              : tx.introNot}
           </p>
         </div>
         <NewTemplateForm canSubmitToMeta={canSubmitToMeta} workspaceId={workspace.id} aiImageEnabled={aiImageEnabled} />
       </div>
 
-      <StarterPack canSubmitToMeta={canSubmitToMeta} installedCount={(templates ?? []).filter((t) => String(t.meta_template_name).startsWith("sk_")).length} />
+      <StarterPack t={tx} canSubmitToMeta={canSubmitToMeta} installedCount={(templates ?? []).filter((t) => String(t.meta_template_name).startsWith("sk_")).length} />
 
       <Suspense>
-        <TemplateFilters />
+        <TemplateFilters t={tx} />
       </Suspense>
 
       <div className="grid grid-cols-2 gap-4">
@@ -71,14 +74,14 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Se
           <div key={t.id} className="sk-card p-5">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div className="font-medium leading-tight">{t.name}</div>
-              <span className={`sk-pill flex-shrink-0 capitalize ${STATUS_STYLE[t.status] ?? ""}`}>{t.status}</span>
+              <span className={`sk-pill flex-shrink-0 ${STATUS_STYLE[t.status] ?? ""}`}>{(tx as unknown as Record<string, string>)[t.status] ?? t.status}</span>
             </div>
             <div className="mb-3 flex flex-wrap gap-2">
               <span className="sk-pill">{LANGUAGE_LABEL[t.language] ?? t.language}</span>
               <span className="sk-pill">{t.category}</span>
-              {t.template_group && <span className="sk-pill border-accent text-accent">group: {t.template_group}</span>}
+              {t.template_group && <span className="sk-pill border-accent text-accent">{tx.group.replace("{name}", t.template_group)}</span>}
               {Array.isArray(t.carousel_cards) && t.carousel_cards.length > 0 && (
-                <span className="sk-pill border-accent text-accent">▭▭ {t.carousel_cards.length} cards</span>
+                <span className="sk-pill border-accent text-accent">▭▭ {tx.cards.replace("{n}", String(t.carousel_cards.length))}</span>
               )}
             </div>
             <div className="font-mono text-[12.5px] text-faint">{t.meta_template_name}</div>
@@ -96,17 +99,17 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Se
             })()}
             {t.status === "pending" && (
               <p className="mt-2 text-[11.5px] text-faint">
-                Under Meta review — usually a few hours, sometimes up to 48h. Updates automatically.
+                {tx.underReview}
               </p>
             )}
-            <TemplateActions id={t.id} status={t.status} bodyText={t.body_text} />
+            <TemplateActions id={t.id} status={t.status} bodyText={t.body_text} t={tx} />
           </div>
         ))}
         {(!templates || templates.length === 0) && (
           <p className="col-span-2 py-10 text-center text-muted">
             {q || (status && status !== "all")
-              ? "No templates match this filter."
-              : "No templates yet — every campaign needs at least one approved template. Click \"New template\" to submit your first."}
+              ? tx.emptyFilter
+              : tx.empty}
           </p>
         )}
       </div>

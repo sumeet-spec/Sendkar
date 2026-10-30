@@ -2,10 +2,12 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import type { TemplatesUi } from "@/lib/i18n/templatesCopy";
+
 
 const STATUSES = ["all", "approved", "pending", "rejected"] as const;
 
-export function TemplateFilters() {
+export function TemplateFilters({ t }: { t: TemplatesUi }) {
   const router = useRouter();
   const sp = useSearchParams();
   const [, startTransition] = useTransition();
@@ -25,7 +27,7 @@ export function TemplateFilters() {
         type="text"
         defaultValue={q}
         onChange={(e) => update("q", e.target.value)}
-        placeholder="Search templates…"
+        placeholder={t.search}
         className="sk-input w-56 text-sm"
       />
       <div className="flex gap-1">
@@ -33,13 +35,13 @@ export function TemplateFilters() {
           <button
             key={s}
             onClick={() => update("status", s)}
-            className={`sk-pill capitalize transition-colors ${
+            className={`sk-pill transition-colors ${
               status === s
                 ? "border-accent bg-accent text-[#05130a]"
                 : "hover:border-foreground/50"
             }`}
           >
-            {s}
+            {t[s]}
           </button>
         ))}
       </div>

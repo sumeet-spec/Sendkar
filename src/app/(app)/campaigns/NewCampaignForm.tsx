@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import type { CampaignCopy } from "@/lib/i18n/campaignCopy";
 import { createCampaign, getAudienceCount } from "./actions";
+import type { CampaignsMoreUi } from "@/lib/i18n/campaignsMoreCopy";
 
 interface Template {
   id: string;
@@ -31,8 +32,10 @@ export function NewCampaignForm({
   cardUrl,
   cardUrls,
   t,
+  more,
 }: {
   t: CampaignCopy["form"];
+  more: CampaignsMoreUi["newForm"];
   templates: Template[];
   numbers: WhatsAppNumber[];
   segments: Segment[];
@@ -79,7 +82,7 @@ export function NewCampaignForm({
       <div className="flex items-center justify-between">
         <div className="font-semibold">{t.newCampaign}</div>
         <button type="button" onClick={() => setOpen(false)} className="text-[11px] text-faint hover:text-foreground">
-          ✕ Cancel
+          ✕ {more.cancel}
         </button>
       </div>
 
@@ -88,7 +91,7 @@ export function NewCampaignForm({
           <div className="flex flex-wrap gap-2">
             {Object.entries(cardUrls).map(([code, url]) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={code} src={url} alt={`Card in ${code}`} className="h-16 w-16 rounded-md object-cover" />
+              <img key={code} src={url} alt={more.cardAlt.replace("{code}", code)} className="h-16 w-16 rounded-md object-cover" />
             ))}
           </div>
           <p className="mt-2 text-[12.5px] text-muted">{t.cardLanguages}</p>
@@ -98,7 +101,7 @@ export function NewCampaignForm({
       {cardUrl && !cardUrls && (
         <div className="flex items-center gap-3 rounded-md border border-border bg-[var(--surface-2)] p-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cardUrl} alt="Your card" className="h-20 w-20 rounded-md object-cover" />
+          <img src={cardUrl} alt={more.yourCard} className="h-20 w-20 rounded-md object-cover" />
           <p className="text-[12.5px] text-muted">{t.cardOne}</p>
           <input type="hidden" name="imageUrl" value={cardUrl} />
         </div>
@@ -239,7 +242,7 @@ export function NewCampaignForm({
           {pending ? t.creating : t.createDraft}
         </button>
         <button type="button" onClick={() => setOpen(false)} className="sk-btn sk-btn-ghost">
-          Cancel
+          {more.cancel}
         </button>
       </div>
     </form>

@@ -2,8 +2,10 @@
 
 import { useTransition, useState } from "react";
 import { deleteTemplate, duplicateTemplate, resubmitTemplate } from "./actions";
+import type { TemplatesUi } from "@/lib/i18n/templatesCopy";
 
-export function TemplateActions({ id, status, bodyText }: { id: string; status: string; bodyText?: string | null }) {
+
+export function TemplateActions({ id, status, bodyText, t }: { id: string; status: string; bodyText?: string | null; t: TemplatesUi }) {
   const [dupPending, startDup] = useTransition();
   const [delPending, startDel] = useTransition();
   const [resubPending, startResub] = useTransition();
@@ -19,7 +21,7 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
           onClick={() => setResubOpen(true)}
           className="sk-btn sk-btn-primary w-full text-[12.5px]"
         >
-          Fix & resubmit to Meta
+          {t.fixResubmit}
         </button>
       )}
 
@@ -30,7 +32,7 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
             onChange={(e) => setEditedBody(e.target.value)}
             className="sk-input text-[12.5px]"
             rows={4}
-            placeholder="Corrected body text…"
+            placeholder={t.correctedPh}
           />
           <div className="flex gap-2">
             <button
@@ -45,10 +47,10 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
               }
               className="sk-btn sk-btn-primary flex-1 text-[12.5px] disabled:opacity-60"
             >
-              {resubPending ? "Resubmitting…" : "Resubmit"}
+              {resubPending ? t.resubmitting : t.resubmit}
             </button>
             <button onClick={() => setResubOpen(false)} className="sk-btn sk-btn-ghost text-[12.5px]">
-              Cancel
+              {t.cancel}
             </button>
           </div>
           {resubError && <p className="text-[12px] text-danger">{resubError}</p>}
@@ -61,7 +63,7 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
           onClick={() => startDup(async () => { await duplicateTemplate(id); })}
           className="sk-btn sk-btn-ghost flex-1 text-[12.5px] disabled:opacity-60"
         >
-          {dupPending ? "Duplicating…" : "Duplicate"}
+          {dupPending ? t.duplicating : t.duplicate}
         </button>
 
         {confirmDelete ? (
@@ -71,10 +73,10 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
               onClick={() => startDel(async () => { await deleteTemplate(id); })}
               className="flex-1 rounded-md border border-danger px-3 py-1.5 text-[12.5px] font-medium text-danger hover:bg-danger/10 disabled:opacity-60"
             >
-              {delPending ? "Deleting…" : "Confirm delete"}
+              {delPending ? t.deleting : t.confirmDelete}
             </button>
             <button onClick={() => setConfirmDelete(false)} className="sk-btn sk-btn-ghost text-[12.5px]">
-              Cancel
+              {t.cancel}
             </button>
           </>
         ) : (
@@ -82,7 +84,7 @@ export function TemplateActions({ id, status, bodyText }: { id: string; status: 
             onClick={() => setConfirmDelete(true)}
             className="sk-btn sk-btn-ghost flex-1 text-[12.5px] text-danger hover:border-danger"
           >
-            Delete
+            {t.delete}
           </button>
         )}
       </div>

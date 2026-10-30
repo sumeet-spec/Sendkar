@@ -3,14 +3,16 @@
 import { useState, useTransition } from "react";
 import { PACK_LANGUAGES, PACK_TEMPLATES, type PackStage } from "@/lib/templatePack";
 import { installStarterPack, type StarterPackResult } from "./actions";
+import type { TemplatesUi } from "@/lib/i18n/templatesCopy";
 
-const STAGES: Array<{ stage: PackStage; title: string; blurb: string }> = [
-  { stage: "campaign", title: "Festival and offer campaigns", blurb: "Send to all your customers at once." },
-  { stage: "transactional", title: "After a sale and for payments", blurb: "Bills, thank-yous, LR numbers and payment reminders." },
-  { stage: "nurture", title: "Keeping customers close", blurb: "Tips, birthdays and win-backs." },
-];
 
-export function StarterPack({ canSubmitToMeta, installedCount }: { canSubmitToMeta: boolean; installedCount: number }) {
+export function StarterPack({ canSubmitToMeta, installedCount, t: tt }: { canSubmitToMeta: boolean; installedCount: number; t: TemplatesUi }) {
+  const t = tt.pack;
+  const STAGES: Array<{ stage: PackStage; title: string; blurb: string }> = [
+    { stage: "campaign", title: t.campaignTitle, blurb: t.campaignBlurb },
+    { stage: "transactional", title: t.transTitle, blurb: t.transBlurb },
+    { stage: "nurture", title: t.nurtureTitle, blurb: t.nurtureBlurb },
+  ];
   const [languages, setLanguages] = useState<string[]>(["hi", "gu", "en"]);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<StarterPackResult | null>(null);
@@ -30,11 +32,9 @@ export function StarterPack({ canSubmitToMeta, installedCount }: { canSubmitToMe
   return (
     <details className="sk-card mb-6 p-4" open={installedCount === 0}>
       <summary className="cursor-pointer list-none">
-        <div className="font-medium">Starter pack for Indian traders</div>
+        <div className="font-medium">{t.title}</div>
         <p className="mt-0.5 text-[12.5px] text-muted">
-          {PACK_TEMPLATES.length} ready-made messages for any shop or business — festival greetings and offers, new stock, price lists,
-          thank-you, payment reminders, dispatch updates, follow-ups — in Hindi, Gujarati and English. Add them in one click, and write
-          your own for anything specific to your trade.
+          {t.blurb.replace("{n}", String(PACK_TEMPLATES.length))}
         </p>
       </summary>
 
@@ -44,11 +44,11 @@ export function StarterPack({ canSubmitToMeta, installedCount }: { canSubmitToMe
             <div className="text-[13px] font-semibold">{title}</div>
             <div className="mb-1.5 text-[12px] text-faint">{blurb}</div>
             <ul className="flex flex-col gap-1">
-              {PACK_TEMPLATES.filter((t) => t.stage === stage).map((t) => (
-                <li key={t.key} className="flex items-start justify-between gap-3 text-[12.5px]">
-                  <span><span className="font-medium">{t.title}</span> <span className="text-faint">— {t.when}</span></span>
-                  <span className={`sk-pill flex-shrink-0 ${t.category === "UTILITY" ? "border-accent text-accent" : "text-muted"}`}>
-                    {t.category === "UTILITY" ? "Service" : "Promotional"}
+              {PACK_TEMPLATES.filter((x) => x.stage === stage).map((x) => (
+                <li key={x.key} className="flex items-start justify-between gap-3 text-[12.5px]">
+                  <span><span className="font-medium">{x.title}</span> <span className="text-faint">— {x.when}</span></span>
+                  <span className={`sk-pill flex-shrink-0 ${x.category === "UTILITY" ? "border-accent text-accent" : "text-muted"}`}>
+                    {x.category === "UTILITY" ? t.service : t.promo}
                   </span>
                 </li>
               ))}
@@ -65,25 +65,23 @@ export function StarterPack({ canSubmitToMeta, installedCount }: { canSubmitToMe
             ))}
           </div>
           <button type="button" onClick={install} disabled={pending || languages.length === 0} className="sk-btn sk-btn-primary disabled:opacity-60">
-            {pending ? "Submitting to Meta…" : `Add ${total} templates`}
+            {pending ? t.submitting : t.add.replace("{n}", String(total))}
           </button>
         </div>
 
         <p className="text-[12px] text-faint">
-          {canSubmitToMeta
-            ? "Meta reviews each one on your own account: service messages are usually approved within minutes, promotional ones within hours. Anything Meta rejects shows below with its reason."
-            : "Connect WhatsApp in Settings → Channels first to send these to Meta. Until then they are saved as drafts."}{" "}
-          The Hindi and Gujarati wording is a first draft — have someone fluent read it before your first campaign.
+          {canSubmitToMeta ? t.noteConnected : t.noteNot}{" "}
+          {t.draftNote}
         </p>
 
         {result?.error && <p className="text-[12.5px] text-danger">{result.error}</p>}
         {result && !result.error && (
           <div className="text-[12.5px]">
             <p className="text-accent">
-              {result.submitted ? `${result.submitted} sent to Meta for review. ` : ""}
-              {result.savedAsDrafts ? `${result.savedAsDrafts} saved as drafts. ` : ""}
-              {result.alreadyThere ? `${result.alreadyThere} were already in your account. ` : ""}
-              {result.rejected ? `${result.rejected} were rejected.` : ""}
+              {result.submitted ? `${t.submitted.replace("{n}", String(result.submitted))} ` : ""}
+              {result.savedAsDrafts ? `${t.drafts.replace("{n}", String(result.savedAsDrafts))} ` : ""}
+              {result.alreadyThere ? `${t.already.replace("{n}", String(result.alreadyThere))} ` : ""}
+              {result.rejected ? t.rejectedN.replace("{n}", String(result.rejected)) : ""}
             </p>
             {result.problems && result.problems.length > 0 && (
               <ul className="mt-1 list-disc pl-5 text-danger">{result.problems.map((p) => <li key={p}>{p}</li>)}</ul>

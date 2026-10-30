@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import type { CampaignsMoreUi } from "@/lib/i18n/campaignsMoreCopy";
+
 
 export interface RecipientRow {
   id: string;
@@ -25,7 +27,9 @@ const STATUS_STYLE: Record<string, string> = {
 export function RecipientTable({
   recipients,
   campaignId,
+  t,
 }: {
+  t: CampaignsMoreUi["recipients"];
   recipients: RecipientRow[];
   campaignId: string;
 }) {
@@ -62,14 +66,14 @@ export function RecipientTable({
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="sk-pill flex-shrink-0 cursor-pointer text-[11.5px] capitalize"
+                className="sk-pill flex-shrink-0 cursor-pointer text-[11.5px]"
                 style={
                   activeTab === tab
                     ? { borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-glow)" }
                     : undefined
                 }
               >
-                {tab}
+                {t[tab]}
                 {counts[tab] ? (
                   <span className="ml-1 font-mono tabular-nums opacity-70">{counts[tab]}</span>
                 ) : null}
@@ -97,7 +101,7 @@ export function RecipientTable({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="sk-input py-1.5 pl-7 pr-3 text-[12.5px]"
-            placeholder="Search by phone or name…"
+            placeholder={t.search}
             style={{ width: 220 }}
           />
         </div>
@@ -108,7 +112,7 @@ export function RecipientTable({
           download
           className="sk-btn sk-btn-ghost text-[12.5px]"
         >
-          Export CSV
+          {t.exportCsv}
         </a>
       </div>
 
@@ -117,7 +121,7 @@ export function RecipientTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              {["Phone", "Name", "Status", "Sent", "Error"].map((h) => (
+              {[t.phone, t.name, t.status, t.sentAt, t.error].map((h) => (
                 <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">
                   {h}
                 </th>
@@ -140,7 +144,7 @@ export function RecipientTable({
                   </td>
                   <td className="px-4 py-2.5 text-muted">{contact?.name ?? "—"}</td>
                   <td className="px-4 py-2.5">
-                    <span className={`sk-pill ${STATUS_STYLE[r.status] ?? ""}`}>{r.status}</span>
+                    <span className={`sk-pill ${STATUS_STYLE[r.status] ?? ""}`}>{(t as Record<string, string>)[r.status] ?? r.status}</span>
                   </td>
                   <td className="px-4 py-2.5 text-[12.5px] text-faint">
                     {r.sent_at ? new Date(r.sent_at).toLocaleString() : "—"}
@@ -153,8 +157,8 @@ export function RecipientTable({
               <tr>
                 <td colSpan={5} className="px-4 py-10 text-center text-[13px] text-muted">
                   {recipients.length === 0
-                    ? "No recipients yet — start the campaign to snapshot the audience."
-                    : "No recipients match this filter."}
+                    ? t.none
+                    : t.noMatch}
                 </td>
               </tr>
             )}
@@ -164,7 +168,7 @@ export function RecipientTable({
 
       {recipients.length >= 200 && (
         <div className="border-t border-border px-4 py-3 text-[12px] text-faint">
-          Showing latest 200 recipients · <a href={`/api/campaigns/${campaignId}/recipients`} download className="text-accent hover:text-accent-hover">Export CSV for full list</a>
+          {t.showing} <a href={`/api/campaigns/${campaignId}/recipients`} download className="text-accent hover:text-accent-hover">{t.exportFull}</a>
         </div>
       )}
     </div>

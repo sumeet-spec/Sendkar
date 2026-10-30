@@ -2,10 +2,12 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback } from "react";
+import type { CampaignsMoreUi } from "@/lib/i18n/campaignsMoreCopy";
+
 
 const STATUSES = ["all", "draft", "sending", "paused", "completed"] as const;
 
-export function CampaignFilters({ q, status }: { q: string; status: string }) {
+export function CampaignFilters({ q, status, t }: { q: string; status: string; t: CampaignsMoreUi["filters"] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -40,7 +42,7 @@ export function CampaignFilters({ q, status }: { q: string; status: string }) {
           defaultValue={q}
           onChange={(e) => update("q", e.target.value)}
           className="sk-input w-full pl-8 text-[13px]"
-          placeholder="Search campaigns…"
+          placeholder={t.search}
         />
       </div>
 
@@ -49,14 +51,14 @@ export function CampaignFilters({ q, status }: { q: string; status: string }) {
           <button
             key={s}
             onClick={() => update("status", s)}
-            className="sk-pill cursor-pointer text-[11.5px] capitalize"
+            className="sk-pill cursor-pointer text-[11.5px]"
             style={
               (s === "all" && !status) || status === s
                 ? { borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-glow)" }
                 : undefined
             }
           >
-            {s}
+            {t[s]}
           </button>
         ))}
       </div>

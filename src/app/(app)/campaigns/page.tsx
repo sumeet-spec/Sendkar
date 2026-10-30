@@ -5,6 +5,8 @@ import { AiStrategistPanel } from "./AiStrategistPanel";
 import { CampaignFilters } from "./CampaignFilters";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { CAMPAIGN_COPY } from "@/lib/i18n/campaignCopy";
+import { CAMPAIGNS_MORE_UI } from "@/lib/i18n/campaignsMoreCopy";
+import { SEGMENTS_UI } from "@/lib/i18n/segmentsCopy";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -34,7 +36,9 @@ export default async function CampaignsPage({
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
-  const dict = getDictionary(await getCurrentLanguage()).campaigns;
+  const lang = await getCurrentLanguage();
+  const more = CAMPAIGNS_MORE_UI[lang];
+  const dict = getDictionary(lang).campaigns;
 
   const [
     { data: allCampaigns },
@@ -110,7 +114,8 @@ export default async function CampaignsPage({
           availableTags={availableTags}
           cardUrl={cardUrl}
           cardUrls={cardUrls}
-          t={CAMPAIGN_COPY[await getCurrentLanguage()].form}
+          t={CAMPAIGN_COPY[lang].form}
+          more={more.newForm}
         />
       </div>
 
@@ -123,10 +128,10 @@ export default async function CampaignsPage({
         </div>
       )}
 
-      <AiStrategistPanel />
+      <AiStrategistPanel t={more.ai} fields={SEGMENTS_UI[lang].field} />
 
       <Suspense>
-        <CampaignFilters q={q} status={status} />
+        <CampaignFilters q={q} status={status} t={more.filters} />
       </Suspense>
 
       <div className="flex flex-col gap-3">

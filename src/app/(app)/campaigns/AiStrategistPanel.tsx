@@ -4,9 +4,11 @@ import { useState, useTransition } from "react";
 import { generateCampaignStrategy } from "./actions";
 import { createSegmentFromConditions } from "@/app/(app)/segments/actions";
 import type { CampaignStrategyDraft } from "@/lib/ai";
-import { SEGMENT_FIELD_LABELS } from "@/lib/segments";
+import type { SegmentsUi } from "@/lib/i18n/segmentsCopy";
+import type { CampaignsMoreUi } from "@/lib/i18n/campaignsMoreCopy";
 
-export function AiStrategistPanel() {
+
+export function AiStrategistPanel({ t, fields }: { t: CampaignsMoreUi["ai"]; fields: SegmentsUi["field"] }) {
   const [expanded, setExpanded] = useState(false);
   const [goal, setGoal] = useState("");
   const [draft, setDraft] = useState<CampaignStrategyDraft | null>(null);
@@ -38,8 +40,8 @@ export function AiStrategistPanel() {
           >
             ✦
           </span>
-          <span className="text-[13px] font-semibold">AI campaign strategist</span>
-          <span className="text-[11.5px] text-faint">— describe a goal, get audience + message + timing</span>
+          <span className="text-[13px] font-semibold">{t.title}</span>
+          <span className="text-[11.5px] text-faint">{t.sub}</span>
         </div>
         <svg
           width="14"
@@ -76,7 +78,7 @@ export function AiStrategistPanel() {
                 }
               }}
               className="sk-input flex-1 text-sm"
-              placeholder="Win back customers who haven't ordered in 30 days"
+              placeholder={t.placeholder}
               disabled={pending}
             />
             <button
@@ -93,7 +95,7 @@ export function AiStrategistPanel() {
               }
               className="sk-btn sk-btn-primary disabled:opacity-60"
             >
-              {pending ? "Thinking…" : "Draft plan"}
+              {pending ? t.thinking : t.draftPlan}
             </button>
           </div>
 
@@ -104,7 +106,7 @@ export function AiStrategistPanel() {
               <div className="h-1 w-32 overflow-hidden rounded-full" style={{ background: "var(--border)" }}>
                 <div className="h-full w-1/2 animate-[sk-skeleton-pulse_1.5s_ease-in-out_infinite] rounded-full" style={{ background: "var(--accent-dim)" }} />
               </div>
-              AI is planning your campaign…
+              {t.planning}
             </div>
           )}
 
@@ -113,15 +115,15 @@ export function AiStrategistPanel() {
               {/* Audience */}
               <div className="rounded-lg border border-border p-3">
                 <div className="mb-1.5 text-[10.5px] font-medium uppercase tracking-wide text-faint">
-                  Audience — {draft.segmentName}
+                  {t.audience} — {draft.segmentName}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {draft.segmentConditions.length === 0 && (
-                    <span className="text-[12.5px] text-muted">Everyone</span>
+                    <span className="text-[12.5px] text-muted">{t.everyone}</span>
                   )}
                   {draft.segmentConditions.map((c, i) => (
                     <span key={i} className="sk-pill text-[11px]">
-                      {SEGMENT_FIELD_LABELS[c.field]}: {c.value}
+                      {fields[c.field]}: {c.value}
                     </span>
                   ))}
                 </div>
@@ -139,7 +141,7 @@ export function AiStrategistPanel() {
                     }
                     className="mt-2 text-[12px] font-semibold text-accent hover:text-accent-hover disabled:opacity-60"
                   >
-                    {segmentSaved ? "Segment saved ✓" : "Save this segment →"}
+                    {segmentSaved ? t.segmentSaved : t.saveSegment}
                   </button>
                 )}
               </div>
@@ -147,7 +149,7 @@ export function AiStrategistPanel() {
               {/* Send time */}
               <div className="rounded-lg border border-border p-3">
                 <div className="mb-1.5 text-[10.5px] font-medium uppercase tracking-wide text-faint">
-                  Suggested send time
+                  {t.sendTime}
                 </div>
                 <p className="text-[13px]">{draft.suggestedSendTime}</p>
                 {draft.rationale && (
@@ -159,14 +161,14 @@ export function AiStrategistPanel() {
               <div className="col-span-2 rounded-lg border border-border p-3">
                 <div className="mb-1.5 flex items-center justify-between">
                   <div className="text-[10.5px] font-medium uppercase tracking-wide text-faint">
-                    Template draft
+                    {t.templateDraft}
                   </div>
                   <button
                     type="button"
                     onClick={copyBody}
                     className="text-[11.5px] font-semibold text-accent hover:text-accent-hover"
                   >
-                    {copied ? "Copied ✓" : "Copy body text"}
+                    {copied ? t.copied : t.copy}
                   </button>
                 </div>
                 {draft.template.headerText && (
@@ -188,11 +190,11 @@ export function AiStrategistPanel() {
                   </div>
                 )}
                 <p className="mt-2 text-[11.5px] text-faint">
-                  Paste this into{" "}
+                  {t.pasteBefore}{" "}
                   <a href="/templates" className="text-accent hover:text-accent-hover">
-                    Templates
+                    {t.templates}
                   </a>{" "}
-                  to submit to Meta for approval, then come back and create a campaign with it.
+                  {t.pasteAfter}
                 </p>
               </div>
             </div>

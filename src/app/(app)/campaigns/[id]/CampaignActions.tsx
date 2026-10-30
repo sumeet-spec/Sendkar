@@ -2,12 +2,16 @@
 
 import { useTransition } from "react";
 import { retryFailedRecipients, cloneCampaign } from "../actions";
+import type { CampaignsMoreUi } from "@/lib/i18n/campaignsMoreCopy";
+
 
 export function CampaignActions({
   campaignId,
   failedCount,
   status,
+  t,
 }: {
+  t: CampaignsMoreUi["actions"];
   campaignId: string;
   failedCount: number;
   status: string;
@@ -28,7 +32,7 @@ export function CampaignActions({
           className="sk-btn sk-btn-ghost disabled:opacity-60"
           style={{ borderColor: "var(--danger)", color: "var(--danger)" }}
         >
-          {retrying ? "Retrying…" : `Retry failed (${failedCount})`}
+          {retrying ? t.retrying : t.retryFailed.replace("{n}", String(failedCount))}
         </button>
       )}
       <button
@@ -40,7 +44,7 @@ export function CampaignActions({
         }
         className="sk-btn sk-btn-ghost disabled:opacity-60"
       >
-        {cloning ? "Duplicating…" : "Duplicate"}
+        {cloning ? t.duplicating : t.duplicate}
       </button>
     </div>
   );
