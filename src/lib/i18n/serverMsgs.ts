@@ -14,11 +14,24 @@ export type MsgKey =
   | "itemName" | "itemPrice" | "itemPhoto" | "itemPhotoSave" | "itemMax" | "itemSave"
   | "badDate" | "badCreditLimit" | "writeFirst" | "pickDay"
   | "enterField" | "upiBad" | "upiName" | "gatewayFirst" | "linkBad" | "pickMode"
-  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan";
+  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan" | "remConsent" | "remLang" | "remTooMuch" | "tplNotFound" | "tplNotApproved" | "notFound" | "onlyOpen" | "connectFirst" | "chooseTemplate" | "tplNotApprovedYet" | "paidAlready" | "optedOutStopped" | "couldNotStart";
 
 type Msgs = Record<MsgKey, string>;
 
 const en: Msgs = {
+  remConsent: "Confirm that these customers have agreed to get payment reminders on WhatsApp.",
+  remLang: "Pick the language these customers prefer.",
+  remTooMuch: "That is too much to import at once. Split it into smaller batches.",
+  tplNotFound: "That template was not found.",
+  tplNotApproved: "WhatsApp has not approved that template yet. Pick an approved one.",
+  notFound: "Not found.",
+  onlyOpen: "Only open bills can be reminded.",
+  connectFirst: "Connect WhatsApp first.",
+  chooseTemplate: "Choose your reminder template first.",
+  tplNotApprovedYet: "Your reminder template is not approved by WhatsApp yet.",
+  paidAlready: "That bill's payment link was already paid, so it was marked as paid.",
+  optedOutStopped: "This customer opted out, so reminders are stopped.",
+  couldNotStart: "Could not start that send. Try again.",
   aiPlan: "The AI agent needs the Growth plan or above: every reply it sends is a real AI request.",
   noWorkspace: "No workspace found.", notLoggedIn: "Please log in again.", saveFail: "Could not save. Try again.",
   badPhone: "Enter a 10-digit mobile number.", needAmount: "Enter the bill amount.", pickBillLang: "Pick a language for the bill.",
@@ -47,6 +60,19 @@ const en: Msgs = {
 };
 
 const hi: Msgs = {
+  remConsent: "पक्का करें कि इन ग्राहकों ने WhatsApp पर पेमेंट रिमाइंडर पाने की हाँ कही है।",
+  remLang: "वह भाषा चुनें जो ये ग्राहक पसंद करते हैं।",
+  remTooMuch: "एक बार में इतना जोड़ा नहीं जा सकता। इसे छोटे हिस्सों में बाँटें।",
+  tplNotFound: "वह टेम्पलेट नहीं मिला।",
+  tplNotApproved: "WhatsApp ने अभी वह टेम्पलेट मंज़ूर नहीं किया। कोई मंज़ूर टेम्पलेट चुनें।",
+  notFound: "नहीं मिला।",
+  onlyOpen: "सिर्फ़ बाकी बिलों की याद दिलाई जा सकती है।",
+  connectFirst: "पहले WhatsApp जोड़ें।",
+  chooseTemplate: "पहले अपना रिमाइंडर टेम्पलेट चुनें।",
+  tplNotApprovedYet: "आपका रिमाइंडर टेम्पलेट अभी WhatsApp से मंज़ूर नहीं हुआ है।",
+  paidAlready: "उस बिल का पेमेंट लिंक पहले ही चुकाया जा चुका था, इसलिए उसे चुकता कर दिया गया।",
+  optedOutStopped: "इस ग्राहक ने संदेश बंद करा दिए हैं, इसलिए रिमाइंडर रोक दिए गए।",
+  couldNotStart: "वह भेजना शुरू नहीं हो सका। फिर कोशिश करें।",
   aiPlan: "AI एजेंट के लिए ग्रोथ प्लान या उससे ऊपर चाहिए: इसका हर जवाब एक असली AI अनुरोध है।",
   noWorkspace: "कारोबार नहीं मिला।", notLoggedIn: "कृपया फिर से लॉग इन करें।", saveFail: "सेव नहीं हो सका। फिर कोशिश करें।",
   badPhone: "10 अंकों का मोबाइल नंबर डालें।", needAmount: "बिल की रकम डालें।", pickBillLang: "बिल की भाषा चुनें।",
@@ -75,6 +101,19 @@ const hi: Msgs = {
 };
 
 const mr: Msgs = {
+  remConsent: "या ग्राहकांनी WhatsApp वर पेमेंट रिमाइंडर घेण्यास होकार दिला आहे याची खात्री करा.",
+  remLang: "या ग्राहकांना आवडणारी भाषा निवडा.",
+  remTooMuch: "एकावेळी इतके जोडता येत नाही. ते लहान भागांत विभागा.",
+  tplNotFound: "ते टेम्पलेट सापडले नाही.",
+  tplNotApproved: "WhatsApp ने ते टेम्पलेट अजून मंजूर केलेले नाही. मंजूर झालेले निवडा.",
+  notFound: "सापडले नाही.",
+  onlyOpen: "फक्त बाकी बिलांची आठवण करून देता येते.",
+  connectFirst: "आधी WhatsApp जोडा.",
+  chooseTemplate: "आधी तुमचे रिमाइंडर टेम्पलेट निवडा.",
+  tplNotApprovedYet: "तुमचे रिमाइंडर टेम्पलेट अजून WhatsApp ने मंजूर केलेले नाही.",
+  paidAlready: "त्या बिलाची पेमेंट लिंक आधीच भरली गेली होती, म्हणून ते भरले म्हणून नोंदवले.",
+  optedOutStopped: "या ग्राहकाने संदेश बंद केले आहेत, म्हणून रिमाइंडर थांबवले.",
+  couldNotStart: "ते पाठवणे सुरू करता आले नाही. पुन्हा प्रयत्न करा.",
   aiPlan: "AI एजंटसाठी ग्रोथ प्लॅन किंवा त्यापुढील लागतो: त्याचे प्रत्येक उत्तर खरी AI विनंती असते.",
   noWorkspace: "व्यवसाय सापडला नाही.", notLoggedIn: "कृपया पुन्हा लॉग इन करा.", saveFail: "सेव्ह होऊ शकले नाही. पुन्हा प्रयत्न करा.",
   badPhone: "10 अंकी मोबाइल नंबर टाका.", needAmount: "बिलाची रक्कम टाका.", pickBillLang: "बिलाची भाषा निवडा.",
@@ -103,6 +142,19 @@ const mr: Msgs = {
 };
 
 const gu: Msgs = {
+  remConsent: "ખાતરી કરો કે આ ગ્રાહકોએ WhatsApp પર પેમેન્ટ રિમાઇન્ડર મેળવવા હા કહી છે.",
+  remLang: "આ ગ્રાહકો જે ભાષા પસંદ કરે તે પસંદ કરો.",
+  remTooMuch: "એક સાથે આટલું ઉમેરી શકાતું નથી. તેને નાના ભાગમાં વહેંચો.",
+  tplNotFound: "તે ટેમ્પ્લેટ મળ્યું નહીં.",
+  tplNotApproved: "WhatsApp એ તે ટેમ્પ્લેટ હજી મંજૂર કર્યું નથી. મંજૂર થયેલું પસંદ કરો.",
+  notFound: "મળ્યું નહીં.",
+  onlyOpen: "ફક્ત બાકી બિલની યાદ અપાવી શકાય છે.",
+  connectFirst: "પહેલા WhatsApp જોડો.",
+  chooseTemplate: "પહેલા તમારું રિમાઇન્ડર ટેમ્પ્લેટ પસંદ કરો.",
+  tplNotApprovedYet: "તમારું રિમાઇન્ડર ટેમ્પ્લેટ હજી WhatsApp એ મંજૂર કર્યું નથી.",
+  paidAlready: "તે બિલની પેમેન્ટ લિંક પહેલેથી ચૂકવાઈ ગઈ હતી, એટલે તેને ચૂકવેલ નોંધ્યું.",
+  optedOutStopped: "આ ગ્રાહકે સંદેશ બંધ કરાવ્યા છે, એટલે રિમાઇન્ડર અટકાવ્યા.",
+  couldNotStart: "તે મોકલવાનું શરૂ થઈ શક્યું નહીં. ફરી પ્રયત્ન કરો.",
   aiPlan: "AI એજન્ટ માટે ગ્રોથ પ્લાન કે તેથી ઉપરનો જોઈએ: તેનો દરેક જવાબ સાચી AI વિનંતી છે.",
   noWorkspace: "ધંધો મળ્યો નહીં.", notLoggedIn: "કૃપા કરી ફરી લૉગ ઇન કરો.", saveFail: "સેવ થઈ શક્યું નહીં. ફરી પ્રયત્ન કરો.",
   badPhone: "10 અંકનો મોબાઇલ નંબર નાખો.", needAmount: "બિલની રકમ નાખો.", pickBillLang: "બિલની ભાષા પસંદ કરો.",
@@ -131,6 +183,19 @@ const gu: Msgs = {
 };
 
 const ta: Msgs = {
+  remConsent: "இந்த வாடிக்கையாளர்கள் WhatsApp-ல் பணம் செலுத்தும் நினைவூட்டல்களைப் பெற சம்மதித்துள்ளனர் என்பதை உறுதிசெய்யுங்கள்.",
+  remLang: "இந்த வாடிக்கையாளர்கள் விரும்பும் மொழியைத் தேர்ந்தெடுங்கள்.",
+  remTooMuch: "ஒரே நேரத்தில் இவ்வளவு சேர்க்க முடியாது. சிறு தொகுதிகளாகப் பிரியுங்கள்.",
+  tplNotFound: "அந்த டெம்ப்ளேட் கிடைக்கவில்லை.",
+  tplNotApproved: "WhatsApp அந்த டெம்ப்ளேட்டை இன்னும் அங்கீகரிக்கவில்லை. அங்கீகரிக்கப்பட்டதைத் தேர்ந்தெடுங்கள்.",
+  notFound: "கிடைக்கவில்லை.",
+  onlyOpen: "நிலுவையில் உள்ள பில்களுக்கு மட்டுமே நினைவூட்ட முடியும்.",
+  connectFirst: "முதலில் WhatsApp-ஐ இணையுங்கள்.",
+  chooseTemplate: "முதலில் உங்கள் நினைவூட்டல் டெம்ப்ளேட்டைத் தேர்ந்தெடுங்கள்.",
+  tplNotApprovedYet: "உங்கள் நினைவூட்டல் டெம்ப்ளேட் WhatsApp-ல் இன்னும் அங்கீகரிக்கப்படவில்லை.",
+  paidAlready: "அந்த பில்லின் பணம் செலுத்தும் இணைப்பு ஏற்கனவே செலுத்தப்பட்டிருந்தது, எனவே செலுத்தப்பட்டதாகக் குறிக்கப்பட்டது.",
+  optedOutStopped: "இந்த வாடிக்கையாளர் செய்தி வேண்டாம் என்றதால் நினைவூட்டல்கள் நிறுத்தப்பட்டன.",
+  couldNotStart: "அந்த அனுப்புதலைத் தொடங்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
   aiPlan: "AI முகவருக்கு க்ரோத் திட்டம் அல்லது அதற்கு மேல் தேவை: இது அனுப்பும் ஒவ்வொரு பதிலும் உண்மையான AI கோரிக்கை.",
   noWorkspace: "தொழில் கணக்கு கிடைக்கவில்லை.", notLoggedIn: "மீண்டும் உள்நுழையவும்.", saveFail: "சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
   badPhone: "10 இலக்க மொபைல் எண்ணை உள்ளிடுங்கள்.", needAmount: "பில் தொகையை உள்ளிடுங்கள்.", pickBillLang: "பில்லின் மொழியைத் தேர்ந்தெடுங்கள்.",
@@ -159,6 +224,19 @@ const ta: Msgs = {
 };
 
 const te: Msgs = {
+  remConsent: "ఈ కస్టమర్లు WhatsApp‌లో చెల్లింపు రిమైండర్లు పొందడానికి అంగీకరించారని నిర్ధారించండి.",
+  remLang: "ఈ కస్టమర్లు ఇష్టపడే భాషను ఎంచుకోండి.",
+  remTooMuch: "ఒకేసారి ఇంత జోడించలేం. చిన్న భాగాలుగా విభజించండి.",
+  tplNotFound: "ఆ టెంప్లేట్ దొరకలేదు.",
+  tplNotApproved: "WhatsApp ఆ టెంప్లేట్‌ను ఇంకా ఆమోదించలేదు. ఆమోదించినదాన్ని ఎంచుకోండి.",
+  notFound: "దొరకలేదు.",
+  onlyOpen: "బాకీ ఉన్న బిల్లులకు మాత్రమే గుర్తు చేయగలం.",
+  connectFirst: "ముందుగా WhatsApp కనెక్ట్ చేయండి.",
+  chooseTemplate: "ముందుగా మీ రిమైండర్ టెంప్లేట్‌ను ఎంచుకోండి.",
+  tplNotApprovedYet: "మీ రిమైండర్ టెంప్లేట్‌ను WhatsApp ఇంకా ఆమోదించలేదు.",
+  paidAlready: "ఆ బిల్లు చెల్లింపు లింక్ ఇప్పటికే చెల్లించబడింది, అందుకే చెల్లించినట్టు గుర్తించాం.",
+  optedOutStopped: "ఈ కస్టమర్ సందేశాలు వద్దన్నందున రిమైండర్లు ఆపేశాం.",
+  couldNotStart: "ఆ పంపడాన్ని ప్రారంభించలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
   aiPlan: "AI ఏజెంట్‌కు గ్రోత్ ప్లాన్ లేదా అంతకంటే పైది కావాలి: అది పంపే ప్రతి సమాధానం నిజమైన AI అభ్యర్థన.",
   noWorkspace: "వ్యాపార ఖాతా కనబడలేదు.", notLoggedIn: "దయచేసి మళ్ళీ లాగిన్ అవ్వండి.", saveFail: "సేవ్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
   badPhone: "10 అంకెల మొబైల్ నంబర్ ఇవ్వండి.", needAmount: "బిల్లు మొత్తం ఇవ్వండి.", pickBillLang: "బిల్లు భాషను ఎంచుకోండి.",
@@ -187,6 +265,19 @@ const te: Msgs = {
 };
 
 const kn: Msgs = {
+  remConsent: "ಈ ಗ್ರಾಹಕರು WhatsApp‌ನಲ್ಲಿ ಪಾವತಿ ಜ್ಞಾಪನೆಗಳನ್ನು ಪಡೆಯಲು ಒಪ್ಪಿದ್ದಾರೆ ಎಂದು ಖಚಿತಪಡಿಸಿ.",
+  remLang: "ಈ ಗ್ರಾಹಕರು ಇಷ್ಟಪಡುವ ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+  remTooMuch: "ಒಮ್ಮೆಗೆ ಇಷ್ಟು ಸೇರಿಸಲಾಗದು. ಚಿಕ್ಕ ಭಾಗಗಳಾಗಿ ವಿಭಜಿಸಿ.",
+  tplNotFound: "ಆ ಟೆಂಪ್ಲೇಟ್ ಸಿಗಲಿಲ್ಲ.",
+  tplNotApproved: "WhatsApp ಆ ಟೆಂಪ್ಲೇಟ್ ಅನ್ನು ಇನ್ನೂ ಅನುಮೋದಿಸಿಲ್ಲ. ಅನುಮೋದಿತವಾದದ್ದನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+  notFound: "ಸಿಗಲಿಲ್ಲ.",
+  onlyOpen: "ಬಾಕಿ ಇರುವ ಬಿಲ್‌ಗಳಿಗೆ ಮಾತ್ರ ನೆನಪಿಸಬಹುದು.",
+  connectFirst: "ಮೊದಲು WhatsApp ಜೋಡಿಸಿ.",
+  chooseTemplate: "ಮೊದಲು ನಿಮ್ಮ ಜ್ಞಾಪನೆ ಟೆಂಪ್ಲೇಟ್ ಆಯ್ಕೆಮಾಡಿ.",
+  tplNotApprovedYet: "ನಿಮ್ಮ ಜ್ಞಾಪನೆ ಟೆಂಪ್ಲೇಟ್ ಅನ್ನು WhatsApp ಇನ್ನೂ ಅನುಮೋದಿಸಿಲ್ಲ.",
+  paidAlready: "ಆ ಬಿಲ್‌ನ ಪಾವತಿ ಲಿಂಕ್ ಈಗಾಗಲೇ ಪಾವತಿಯಾಗಿತ್ತು, ಆದ್ದರಿಂದ ಪಾವತಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ.",
+  optedOutStopped: "ಈ ಗ್ರಾಹಕರು ಸಂದೇಶ ಬೇಡ ಎಂದಿದ್ದರಿಂದ ಜ್ಞಾಪನೆಗಳನ್ನು ನಿಲ್ಲಿಸಲಾಗಿದೆ.",
+  couldNotStart: "ಆ ಕಳುಹಿಸುವಿಕೆಯನ್ನು ಪ್ರಾರಂಭಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   aiPlan: "AI ಏಜೆಂಟ್‌ಗೆ ಗ್ರೋತ್ ಪ್ಲಾನ್ ಅಥವಾ ಅದಕ್ಕಿಂತ ಮೇಲಿನದು ಬೇಕು: ಅದು ಕಳುಹಿಸುವ ಪ್ರತಿ ಉತ್ತರ ನಿಜವಾದ AI ವಿನಂತಿ.",
   noWorkspace: "ವ್ಯಾಪಾರ ಖಾತೆ ಸಿಗಲಿಲ್ಲ.", notLoggedIn: "ದಯವಿಟ್ಟು ಮತ್ತೆ ಲಾಗಿನ್ ಮಾಡಿ.", saveFail: "ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   badPhone: "10 ಅಂಕೆಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನೀಡಿ.", needAmount: "ಬಿಲ್ ಮೊತ್ತ ನೀಡಿ.", pickBillLang: "ಬಿಲ್‌ನ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ.",

@@ -8,7 +8,8 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { parseReceivables } from "@/lib/reminders";
 import { sendReminder, type ReceivableRow } from "@/lib/reminderSend";
 import { workspaceCanSend } from "@/lib/plans";
-import { NO_PLAN_MESSAGE } from "@/lib/planGate";
+import { refusal } from "@/lib/gateMessages";
+import { msg } from "@/lib/i18n/msg";
 
 const CONTACT_LANGUAGES = new Set(["hi", "mr", "ta", "te", "kn", "gu", "en"]);
 const MAX_PASTE_CHARS = 200_000;
@@ -24,18 +25,18 @@ export interface ImportResult {
 
 export async function importReceivables(_prev: unknown, formData: FormData): Promise<ImportResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   if (formData.get("consent") !== "on") {
-    return { error: "Confirm that these customers have agreed to get payment reminders on WhatsApp." };
+    return { error: await msg("remConsent") };
   }
   const language = String(formData.get("language") ?? "").trim();
-  if (!CONTACT_LANGUAGES.has(language)) return { error: "Pick the language these customers prefer." };
+  if (!CONTACT_LANGUAGES.has(language)) return { error: await msg("remLang") };
 
   const file = formData.get("file");
   const pasted = String(formData.get("pasted") ?? "");
   const text = file instanceof File && file.size > 0 ? await file.text() : pasted;
-  if (text.length > MAX_PASTE_CHARS) return { error: "That's too much to import at once — split it into smaller batches." };
+  if (text.length > MAX_PASTE_CHARS) return { error: await msg("remTooMuch") };
 
   const parsed = parseReceivables(text);
   const problems = parsed.errors.slice(0, 8).map((e) => (e.line > 0 ? `Line ${e.line}: ${e.message}` : e.message));
@@ -103,7 +104,7 @@ export async function importReceivables(_prev: unknown, formData: FormData): Pro
 
 export async function saveReminderTemplate(templateId: string): Promise<{ error?: string; success?: boolean }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   const supabase = await createClient();
   if (templateId) {
@@ -113,8 +114,8 @@ export async function saveReminderTemplate(templateId: string): Promise<{ error?
       .eq("id", templateId)
       .eq("workspace_id", workspace.id)
       .maybeSingle();
-    if (!template) return { error: "That template wasn't found." };
-    if (template.status !== "approved") return { error: "Meta hasn't approved that template yet — pick an approved one." };
+    if (!template) return { error: await msg("tplNotFound") };
+    if (template.status !== "approved") return { error: await msg("tplNotApproved") };
   }
 
   const { error } = await supabase.from("workspaces").update({ reminder_template_id: templateId || null }).eq("id", workspace.id);
@@ -138,7 +139,7 @@ async function ownedReceivable(id: string) {
 
 export async function markReceivablePaid(id: string): Promise<{ error?: string }> {
   const owned = await ownedReceivable(id);
-  if (!owned) return { error: "Not found." };
+  if (!owned) return { error: await msg("notFound") };
   const supabase = await createClient();
   const { error } = await supabase.from("receivables").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", id);
   if (error) return { error: error.message };
@@ -148,7 +149,7 @@ export async function markReceivablePaid(id: string): Promise<{ error?: string }
 
 export async function stopReminders(id: string): Promise<{ error?: string }> {
   const owned = await ownedReceivable(id);
-  if (!owned) return { error: "Not found." };
+  if (!owned) return { error: await msg("notFound") };
   const supabase = await createClient();
   const { error } = await supabase.from("receivables").update({ status: "stopped" }).eq("id", id);
   if (error) return { error: error.message };
@@ -158,7 +159,7 @@ export async function stopReminders(id: string): Promise<{ error?: string }> {
 
 export async function resumeReminders(id: string): Promise<{ error?: string }> {
   const owned = await ownedReceivable(id);
-  if (!owned) return { error: "Not found." };
+  if (!owned) return { error: await msg("notFound") };
   const supabase = await createClient();
   const { error } = await supabase.from("receivables").update({ status: "open", failed_attempts: 0, last_error: null }).eq("id", id);
   if (error) return { error: error.message };
@@ -168,12 +169,12 @@ export async function resumeReminders(id: string): Promise<{ error?: string }> {
 
 export async function remindNow(id: string): Promise<{ error?: string; sent?: boolean }> {
   const owned = await ownedReceivable(id);
-  if (!owned) return { error: "Not found." };
+  if (!owned) return { error: await msg("notFound") };
   const { workspace, receivable } = owned;
-  if (!workspaceCanSend(workspace)) return { error: NO_PLAN_MESSAGE };
-  if (receivable.status !== "open") return { error: "Only open bills can be reminded." };
-  if (!workspace.whatsapp_phone_number_id || !workspace.whatsapp_access_token) return { error: "Connect WhatsApp first." };
-  if (!workspace.reminder_template_id) return { error: "Choose your reminder template first." };
+  if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
+  if (receivable.status !== "open") return { error: await msg("onlyOpen") };
+  if (!workspace.whatsapp_phone_number_id || !workspace.whatsapp_access_token) return { error: await msg("connectFirst") };
+  if (!workspace.reminder_template_id) return { error: await msg("chooseTemplate") };
 
   const admin = createAdminClient();
   const { data: template } = await admin
@@ -181,7 +182,7 @@ export async function remindNow(id: string): Promise<{ error?: string; sent?: bo
     .select("meta_template_name, language, status")
     .eq("id", workspace.reminder_template_id)
     .maybeSingle();
-  if (template?.status !== "approved") return { error: "Your reminder template isn't approved by Meta yet." };
+  if (template?.status !== "approved") return { error: await msg("tplNotApprovedYet") };
 
   const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
@@ -189,8 +190,8 @@ export async function remindNow(id: string): Promise<{ error?: string; sent?: bo
 
   revalidatePath("/reminders");
   if (outcome.ok) return { sent: true };
-  if (outcome.reason === "paid") return { error: "That bill's payment link was already paid — marked as paid." };
-  if (outcome.reason === "opted_out") return { error: "This customer opted out, so reminders are stopped." };
-  if (outcome.reason === "skipped") return { error: "Couldn't start that send — try again." };
+  if (outcome.reason === "paid") return { error: await msg("paidAlready") };
+  if (outcome.reason === "opted_out") return { error: await msg("optedOutStopped") };
+  if (outcome.reason === "skipped") return { error: await msg("couldNotStart") };
   return { error: outcome.error ?? "The send failed." };
 }

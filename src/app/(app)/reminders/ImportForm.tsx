@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { importReceivables, type ImportResult } from "./actions";
+import type { RemindersUi } from "@/lib/i18n/remindersCopy";
 
 const LANGUAGES = [
   { value: "gu", label: "Gujarati" },
@@ -13,54 +14,48 @@ const LANGUAGES = [
   { value: "en", label: "English" },
 ];
 
-export function ImportForm() {
+export function ImportForm({ t }: { t: RemindersUi }) {
   const [state, formAction, pending] = useActionState<ImportResult | null, FormData>(importReceivables, null);
 
   return (
     <form action={formAction} className="sk-card flex flex-col gap-3 p-4">
       <div>
-        <label className="sk-label">Paste your outstanding list</label>
+        <label className="sk-label">{t.pasteLabel}</label>
         <textarea
           name="pasted"
           rows={6}
           className="sk-input font-mono text-[12.5px]"
           placeholder={"Party name\tMobile\tOutstanding\tDue date\tBill no\nPatel Textiles\t98250 12345\t1,25,000\t05/11/2026\tINV-88"}
         />
-        <p className="mt-1 text-[12px] text-faint">
-          Copy the rows straight from Excel or a Tally report. Columns can be in any order if the first row has headers
-          like Party, Mobile, Amount, Due date. No due date means due today. Up to 500 rows at a time.
-        </p>
+        <p className="mt-1 text-[12px] text-faint">{t.pasteHelp}</p>
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-0 flex-1">
-          <label className="sk-label">…or upload a CSV file</label>
+          <label className="sk-label">{t.uploadLabel}</label>
           <input type="file" name="file" accept=".csv,.txt,.tsv" className="sk-input text-sm" />
         </div>
         <div>
-          <label className="sk-label">Customers&apos; language</label>
+          <label className="sk-label">{t.langLabel}</label>
           <select name="language" required defaultValue="" className="sk-input text-sm">
-            <option value="" disabled>Select…</option>
+            <option value="" disabled>{t.select}</option>
             {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
         </div>
       </div>
       <label className="flex items-start gap-2 text-[13px]">
         <input type="checkbox" name="consent" className="mt-0.5" />
-        <span>
-          These customers have agreed to receive payment reminders from us on WhatsApp. (Meta requires this, and
-          anyone who replies STOP is removed automatically.)
-        </span>
+        <span>{t.consent}</span>
       </label>
       <div className="flex items-center gap-3">
         <button type="submit" disabled={pending} className="sk-btn sk-btn-primary disabled:opacity-60">
-          {pending ? "Importing…" : "Import bills"}
+          {pending ? t.importing : t.importBtn}
         </button>
         {state?.error && <p className="text-sm text-danger">{state.error}</p>}
         {state?.success && (
           <p className="text-sm text-accent">
-            Added {state.imported} bill{state.imported === 1 ? "" : "s"}
-            {state.duplicates ? `, skipped ${state.duplicates} already on the list` : ""}
-            {state.optedOut ? `, skipped ${state.optedOut} who opted out` : ""}.
+            {t.added.replace("{n}", String(state.imported ?? 0))}
+            {state.duplicates ? t.skippedDup.replace("{n}", String(state.duplicates)) : ""}
+            {state.optedOut ? t.skippedOpted.replace("{n}", String(state.optedOut)) : ""}.
           </p>
         )}
       </div>

@@ -11,6 +11,8 @@ import { ITEMS_UI } from "./itemsUi";
 import { ORDER_UI } from "./orderUi";
 import { PAY_UI } from "./payUi";
 import { CHAT_POSTER_COPY } from "./chatPosterCopy";
+import { CHANNELS_UI } from "./channelsCopy";
+import { REMINDERS_UI } from "./remindersCopy";
 
 const SCRIPTS: Record<Exclude<LanguageCode, "en">, RegExp> = {
   hi: /[ऀ-ॿ]/, mr: /[ऀ-ॿ]/, gu: /[઀-૿]/, ta: /[஀-௿]/, te: /[ఀ-౿]/, kn: /[ಀ-೿]/,
@@ -27,7 +29,7 @@ function leaves(value: unknown, path = ""): Array<[string, string]> {
 const SETS: Array<[string, Record<LanguageCode, unknown>]> = [
   ["server messages", SERVER_MSGS], ["payments settings", PAY_SETTINGS_UI], ["AI agent settings", AI_AGENT_UI], ["quick bill", BILL_UI],
   ["bill import", BILL_IMPORT_UI], ["follow-ups", FOLLOW_UI], ["my customers", CUSTOMERS_UI], ["customer care", CARE_UI], ["my items", ITEMS_UI],
-  ["order requests", ORDER_UI], ["pay page", PAY_UI], ["chat poster", CHAT_POSTER_COPY],
+  ["order requests", ORDER_UI], ["pay page", PAY_UI], ["chat poster", CHAT_POSTER_COPY], ["channels", CHANNELS_UI], ["reminders", REMINDERS_UI],
 ];
 
 describe("every screen's words exist in all seven languages", () => {

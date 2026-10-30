@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { completeEmbeddedSignup, type EmbeddedSignupResult } from "./embeddedSignupActions";
+import type { ChannelsUi } from "@/lib/i18n/channelsCopy";
 
 declare global {
   interface Window {
@@ -58,7 +59,7 @@ const POLL_MS = 150;
  * once it's approved, not a way around needing it. Renders nothing if the env
  * vars aren't set.
  */
-export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspaceId: string; blockedReason?: string | null }) {
+export function EmbeddedSignupButton({ t, workspaceId, blockedReason }: { t: ChannelsUi; workspaceId: string; blockedReason?: string | null }) {
   const configured = Boolean(process.env.NEXT_PUBLIC_META_APP_ID && process.env.NEXT_PUBLIC_META_EMBEDDED_SIGNUP_CONFIG_ID);
   const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && Boolean(window.FB));
   const [status, setStatus] = useState<EmbeddedSignupResult | null>(null);
@@ -101,16 +102,17 @@ export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspace
           event: name,
         };
       } else if (name === "CANCEL") {
-        setStatus({ error: "Signup was cancelled before it finished." });
+        setStatus({ error: t.cancelled });
         setPending(false);
       } else if (name === "ERROR") {
-        setStatus({ error: typeof data.data?.error_message === "string" ? data.data.error_message : "Meta reported an error during signup." });
+        setStatus({ error: typeof data.data?.error_message === "string" ? data.data.error_message : t.metaError });
         setPending(false);
       }
     };
     window.addEventListener("message", onMessage);
 
     return () => window.removeEventListener("message", onMessage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configured]);
 
   if (!configured) return null;
@@ -139,7 +141,7 @@ export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspace
       (response) => {
         const code = response.authResponse?.code;
         if (!code) {
-          setStatus({ error: "Signup was cancelled or didn't complete." });
+          setStatus({ error: t.cancelled });
           setPending(false);
           return;
         }
@@ -147,10 +149,10 @@ export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspace
           .then((signup) =>
             signup
               ? completeEmbeddedSignup(workspaceId, code, signup.wabaId, signup.phoneNumberId, signup.event)
-              : ({ error: "Meta didn't report a WhatsApp Business Account — try again." } satisfies EmbeddedSignupResult),
+              : ({ error: t.noWaba } satisfies EmbeddedSignupResult),
           )
           .then((result) => setStatus(result))
-          .catch(() => setStatus({ error: "Something went wrong while connecting — please try again." }))
+          .catch(() => setStatus({ error: t.wentWrong }))
           .finally(() => setPending(false));
       },
       {
@@ -164,57 +166,34 @@ export function EmbeddedSignupButton({ workspaceId, blockedReason }: { workspace
 
   return (
     <div className="sk-card p-4">
-      <div className="mb-1 font-medium">Connect with Facebook</div>
-      <p className="mb-3 text-[12.5px] text-faint">
-        The recommended path — no phone-number-id or access token to find and paste. Opens Meta&apos;s own signup
-        flow in a popup.
-      </p>
+      <div className="mb-1 font-medium">{t.fbTitle}</div>
+      <p className="mb-3 text-[12.5px] text-faint">{t.fbIntro}</p>
       <div className="mb-3 rounded-md border border-accent/30 bg-accent/5 p-2.5 text-[12px] text-foreground">
-        <div className="mb-1 font-medium">Already use the WhatsApp Business app?</div>
-        <p>
-          Choose <strong>connect your existing WhatsApp Business account</strong> in the popup. Your number keeps
-          working in the app, recent chats and contacts come across, and Sendkar adds reminders, broadcasts and a
-          shared inbox on top. You need app version 2.24.17 or newer and a number that has been in use on the app for
-          at least 7 days. Groups, status and calls stay in the app, and broadcast lists there become read-only.
-        </p>
+        <div className="mb-1 font-medium">{t.coTitle}</div>
+        <p>{t.coBody}</p>
       </div>
-      <p className="mb-3 rounded-md border border-warn/30 bg-warn/5 p-2.5 text-[12px] text-foreground">
-        Using the regular WhatsApp (not Business) app? Switch to the Business app first — your chats move with you —
-        or connect a separate number here instead. Connecting a number that isn&apos;t on the Business app moves it to
-        Sendkar and logs it out of the app.
-      </p>
+      <p className="mb-3 rounded-md border border-warn/30 bg-warn/5 p-2.5 text-[12px] text-foreground">{t.warn}</p>
       <button
         onClick={handleLogin}
         disabled={!sdkReady || pending || Boolean(blockedReason)}
         className="sk-btn sk-btn-primary disabled:opacity-60"
       >
-        {pending ? "Connecting…" : sdkReady ? "Continue with Facebook" : "Loading…"}
+        {pending ? t.btnConnecting : sdkReady ? t.btn : t.btnLoading}
       </button>
       {blockedReason && (
         <p className="mt-2 text-[12.5px] text-warn">
-          {blockedReason} <a href="/settings/billing" className="text-accent hover:text-accent-hover">See plans</a>
+          {blockedReason} <a href="/settings/billing" className="text-accent hover:text-accent-hover">{t.seePlans}</a>
         </p>
       )}
       {inApp && (
         <p className="mt-2 text-[12px] text-faint">
-          Using the Sendkar app and the connect window does not open?{" "}
-          <a href="intent://www.sendkar.shop/settings/channels#Intent;scheme=https;package=com.android.chrome;end" className="text-accent hover:text-accent-hover">Open this page in Chrome</a>, connect there, then come back.
+          {t.inApp}{" "}
+          <a href="intent://www.sendkar.shop/settings/channels#Intent;scheme=https;package=com.android.chrome;end" className="text-accent hover:text-accent-hover">{t.inAppLink}</a>{t.inAppAfter}
         </p>
       )}
       {status?.error && <p className="mt-2 text-[12.5px] text-danger">{status.error}</p>}
-      {status?.success && (
-        <p className="mt-2 text-[12.5px] text-accent">
-          {status.coexistence
-            ? "Connected — your app keeps working. Recent chats and contacts will appear in the inbox over the next few minutes."
-            : "Connected — refresh to see it below."}
-        </p>
-      )}
-      {status?.syncWarning && (
-        <p className="mt-1 text-[12px] text-warn">
-          Connected, but Meta didn&apos;t accept the request to bring your existing chats across: {status.syncWarning}.
-          Meta only allows that within 24 hours of connecting, so reconnect the number if you want them.
-        </p>
-      )}
+      {status?.success && <p className="mt-2 text-[12.5px] text-accent">{status.coexistence ? t.okCo : t.ok}</p>}
+      {status?.syncWarning && <p className="mt-1 text-[12px] text-warn">{t.syncWarn.replace("{reason}", status.syncWarning)}</p>}
     </div>
   );
 }
