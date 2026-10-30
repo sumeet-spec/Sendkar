@@ -53,3 +53,15 @@ describe("applySegmentConditions", () => {
     expect(q.calls).toEqual([]);
   });
 });
+
+describe("automatic customer types", () => {
+  it("filters on the system-made tags, apart from the tags a shop types", () => {
+    const calls: Array<{ method: string; args: unknown[] }> = [];
+    const q = {
+      contains(...args: unknown[]) { calls.push({ method: "contains", args }); return q; },
+      eq(...args: unknown[]) { calls.push({ method: "eq", args }); return q; },
+    };
+    applySegmentConditions(q, [{ field: "auto_tag", value: "lapsed" }]);
+    expect(calls).toEqual([{ method: "contains", args: ["auto_tags", ["lapsed"]] }]);
+  });
+});

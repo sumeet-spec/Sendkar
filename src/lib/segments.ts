@@ -5,7 +5,7 @@
  * saved object any campaign can pick.
  */
 
-export type SegmentField = "tag" | "language" | "source" | "sentiment";
+export type SegmentField = "tag" | "auto_tag" | "language" | "source" | "sentiment";
 
 export interface SegmentCondition {
   field: SegmentField;
@@ -14,6 +14,7 @@ export interface SegmentCondition {
 
 export const SEGMENT_FIELD_LABELS: Record<SegmentField, string> = {
   tag: "Tag",
+  auto_tag: "Customer type",
   language: "Language",
   source: "Source",
   sentiment: "Last sentiment",
@@ -36,6 +37,7 @@ export function applySegmentConditions<T extends { contains: (col: string, val: 
   for (const c of conditions) {
     if (!c.value) continue;
     if (c.field === "tag") q = q.contains("tags", [c.value]);
+    else if (c.field === "auto_tag") q = q.contains("auto_tags", [c.value]);
     else if (c.field === "language") q = q.eq("language", c.value);
     else if (c.field === "source") q = q.eq("source", c.value);
     else if (c.field === "sentiment") q = q.eq("last_sentiment", c.value);

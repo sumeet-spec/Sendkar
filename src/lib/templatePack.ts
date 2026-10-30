@@ -372,6 +372,24 @@ export const BILL_DUE_TEMPLATE: PackTemplate = {
   },
 };
 
+/**
+ * The "time to restock" nudge for something a customer buys on a rhythm. Promotional, so it carries the opt-out and
+ * only goes to customers who agreed to hear from the shop. Not part of the starter pack: Care submits it on request.
+ */
+export const REORDER_ITEM_TEMPLATE: PackTemplate = {
+  key: "reorder_item",
+  title: "Time to restock",
+  when: "A customer is due to buy something again, judging by how often they buy it.",
+  category: "MARKETING",
+  stage: "nurture",
+  vars: ["name", "items", "shop"],
+  body: {
+    hi: "नमस्ते {{1}} जी, आपके {{2}} का समय हो गया लगता है। इस मैसेज का जवाब दें, {{3}} आपके लिए तैयार रखेगा।",
+    gu: "નમસ્તે {{1}}, તમારા {{2}} નો સમય થઈ ગયો લાગે છે. આ મેસેજનો જવાબ આપો, {{3}} તમારા માટે તૈયાર રાખશે.",
+    en: "Hello {{1}}, it looks like it is time for your {{2}} again. Reply to this message and {{3}} will keep it ready for you.",
+  },
+};
+
 export const PAY_BUTTON_TEXT: Record<PackLang, string> = { hi: "अभी भुगतान करें", gu: "હમણાં ચૂકવો", en: "Pay now" };
 
 /** Which of the three written languages carries the message text for a bill in `lang`. */

@@ -5,7 +5,7 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import type { SegmentCondition, SegmentField } from "@/lib/segments";
 import { revalidatePath } from "next/cache";
 
-const VALID_FIELDS = new Set<SegmentField>(["tag", "language", "source", "sentiment"]);
+const VALID_FIELDS = new Set<SegmentField>(["tag", "auto_tag", "language", "source", "sentiment"]);
 
 export async function createSegment(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();

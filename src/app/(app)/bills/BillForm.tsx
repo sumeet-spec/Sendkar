@@ -39,6 +39,7 @@ export function BillForm({ t, defaultLang, canSend, prefill, catalog = [] }: { t
           {(state.sent ? t.sentOk : t.savedNotSent).replace("{no}", state.billNo ?? "")}
         </p>
         {!state.sent && state.notice && <p className="text-[13px] text-muted">{state.notice}</p>}
+        {state.overLimit && <p className="text-[13px] text-danger">{t.overLimit}</p>}
         <button type="button" className="sk-btn self-start" onClick={() => window.location.reload()}>
           {t.makeAnother}
         </button>

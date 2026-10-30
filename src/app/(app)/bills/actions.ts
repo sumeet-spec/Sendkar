@@ -19,6 +19,7 @@ export interface BillFormResult {
   billNo?: string;
   sent?: boolean;
   notice?: string;
+  overLimit?: boolean;
 }
 
 const num = (v: unknown) => {
@@ -82,7 +83,7 @@ export async function makeBill(_prev: unknown, formData: FormData): Promise<Bill
   if (orderId) {
     await createAdminClient().from("order_requests").update({ status: "billed", bill_id: result.billId }).eq("id", orderId).eq("workspace_id", workspace.id);
   }
-  return { success: true, billNo: result.billNo, sent: result.sent, notice: result.notice };
+  return { success: true, billNo: result.billNo, sent: result.sent, notice: result.notice, overLimit: result.overLimit };
 }
 
 export async function resendBill(billId: string): Promise<{ error?: string; sent?: boolean }> {

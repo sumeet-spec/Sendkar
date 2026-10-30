@@ -32,13 +32,30 @@ export function NewSegmentForm() {
                 >
                   {FIELDS.map((f) => <option key={f} value={f}>{SEGMENT_FIELD_LABELS[f]}</option>)}
                 </select>
-                <input
-                  name="value"
-                  value={row.value}
-                  onChange={(e) => setRows((r) => r.map((x, idx) => (idx === i ? { ...x, value: e.target.value } : x)))}
-                  className="sk-input flex-1"
-                  placeholder="value"
-                />
+                {row.field === "auto_tag" ? (
+                  <select
+                    name="value"
+                    value={row.value}
+                    onChange={(e) => setRows((r) => r.map((x, idx) => (idx === i ? { ...x, value: e.target.value } : x)))}
+                    className="sk-input flex-1"
+                  >
+                    <option value="">Pick one</option>
+                    <option value="regular">Regular (buys often)</option>
+                    <option value="lapsed">Not seen in 2 months</option>
+                    <option value="big_spender">Big spender</option>
+                    <option value="owes">Owes money</option>
+                    <option value="over_limit">Over credit limit</option>
+                    <option value="new">New</option>
+                  </select>
+                ) : (
+                  <input
+                    name="value"
+                    value={row.value}
+                    onChange={(e) => setRows((r) => r.map((x, idx) => (idx === i ? { ...x, value: e.target.value } : x)))}
+                    className="sk-input flex-1"
+                    placeholder="value"
+                  />
+                )}
                 {rows.length > 1 && (
                   <button type="button" onClick={() => setRows((r) => r.filter((_, idx) => idx !== i))} className="text-xs text-faint hover:text-danger">
                     Remove

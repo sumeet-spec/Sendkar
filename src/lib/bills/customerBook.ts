@@ -3,7 +3,7 @@
  * with what each customer has bought and still owes. Pure, so it can be tested without a database.
  */
 
-export interface BookContact { id: string; phone: string; name: string | null; opted_out: boolean | null; consent_at?: string | null; created_at: string }
+export interface BookContact { id: string; phone: string; name: string | null; opted_out: boolean | null; consent_at?: string | null; auto_tags?: string[] | null; source?: string | null; created_at: string }
 export interface BookBill { id: string; contact_id: string | null; bill_no: string; amount: number | string; paid: boolean; created_at: string }
 
 export interface BookEntry {

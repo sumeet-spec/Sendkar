@@ -8,6 +8,7 @@ import { attributeOrder } from "@/lib/attribution";
 import { enrollOnOrderPlaced } from "@/lib/sequences";
 import { contactLine, nameFor, DEFAULT_PRIMARY, sniffImage, type BrandKit } from "@/lib/brandKit";
 import { renderBillPng, formatRupees, type BillItem } from "./renderBill";
+import { refreshAutoTags } from "@/lib/care/careServer";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -39,7 +40,7 @@ export interface NewBill {
 }
 
 export type BillResult =
-  | { ok: true; billId: string; billNo: string; sent: boolean; notice?: string }
+  | { ok: true; billId: string; billNo: string; sent: boolean; notice?: string; overLimit?: boolean }
   | { ok: false; error: string };
 
 const isLang = (v: string): v is LanguageCode => LANGUAGES.some((l) => l.code === v);
@@ -219,8 +220,19 @@ export async function createBill(admin: Admin, ws: BillWorkspace, input: NewBill
   const agreed = Boolean(input.offersOk || existing?.consent_at);
   if (agreed && contactId) await enrollOnOrderPlaced(admin, { workspaceId: ws.id, contactId, amount: input.amount, orderLabel: billNo });
 
+  // Keep the customer's automatic tags current, and say so when this bill takes them past their credit limit.
+  let overLimit = false;
+  if (contactId) {
+    await refreshAutoTags(admin, ws.id, [contactId]).catch(() => 0);
+    const { data: c } = await admin.from("contacts").select("credit_limit").eq("id", contactId).maybeSingle();
+    if (c?.credit_limit !== null && c?.credit_limit !== undefined) {
+      const { data: unpaid } = await admin.from("bills").select("amount").eq("contact_id", contactId).eq("paid", false);
+      overLimit = (unpaid ?? []).reduce((t, b) => t + Number(b.amount), 0) > Number(c.credit_limit);
+    }
+  }
+
   const sent = await sendBill(admin, ws, bill.id);
-  return { ok: true, billId: bill.id, billNo, sent: sent.ok, notice: sent.ok ? undefined : sent.error };
+  return { ok: true, billId: bill.id, billNo, sent: sent.ok, notice: sent.ok ? undefined : sent.error, overLimit };
 }
 
 /** Sends (or re-sends) a saved bill. Safe to call again after the bill message is approved. */

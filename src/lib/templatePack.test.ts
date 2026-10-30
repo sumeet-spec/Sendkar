@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PACK_TEMPLATES, PACK_LANGUAGES, VAR_KINDS, JOURNEY_STEPS, BILL_TEMPLATE, BILL_DUE_TEMPLATE, PAY_BUTTON_TEXT, billMessageLang, buildPackTemplate, selectPackTemplates, journeyMapping } from "./templatePack";
+import { PACK_TEMPLATES, PACK_LANGUAGES, VAR_KINDS, JOURNEY_STEPS, BILL_TEMPLATE, BILL_DUE_TEMPLATE, REORDER_ITEM_TEMPLATE, PAY_BUTTON_TEXT, billMessageLang, buildPackTemplate, selectPackTemplates, journeyMapping } from "./templatePack";
 import { buildTemplateComponents } from "./templateBuild";
 
 // The pack must suit ANY business. These are trade-specific words that belong in a business's own templates, not here.
@@ -144,6 +144,24 @@ describe("bill message with a pay button", () => {
       expect([...new Set(variableIndexes(built.bodyText))].sort()).toEqual([1, 2, 3, 4]);
       expect(built.bodyText.trim().endsWith("}}")).toBe(false);
       expect(PAY_BUTTON_TEXT[code].length).toBeLessThanOrEqual(25);
+    }
+  });
+});
+
+describe("restock message", () => {
+  it("is promotional with an opt-out, has name, item and shop, and follows Meta's rules in every language", () => {
+    for (const { code } of PACK_LANGUAGES) {
+      const built = buildPackTemplate(REORDER_ITEM_TEMPLATE, code);
+      expect(built.metaName).toBe(`sk_reorder_item_${code}`);
+      expect(built.category).toBe("MARKETING");
+      expect(built.buttons?.[0]?.text).toBe("Stop");
+      expect(built.footerText).toBeTruthy();
+      expect([...new Set(variableIndexes(built.bodyText))].sort()).toEqual([1, 2, 3]);
+      expect(built.bodyText.trim().startsWith("{{")).toBe(false);
+      expect(built.bodyText.trim().endsWith("}}")).toBe(false);
+      expect(/\}\}\s*\{\{/.test(built.bodyText)).toBe(false);
+      expect(built.bodyText.replace(/\{\{\d+\}\}/g, "").split(/\s+/).filter(Boolean).length).toBeGreaterThanOrEqual(9);
+      expect(built.examples).toHaveLength(3);
     }
   });
 });
