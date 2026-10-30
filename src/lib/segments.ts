@@ -50,3 +50,14 @@ export function describeSegmentConditions(conditions: SegmentCondition[]): strin
   if (conditions.length === 0) return "Everyone";
   return conditions.map((c) => `${SEGMENT_FIELD_LABELS[c.field]}: ${c.value}`).join(", ");
 }
+
+/** Same as describeSegmentConditions, in the reader's language. `valueLabel` turns a stored value (an automatic tag) into words. */
+export function describeSegmentConditionsIn(
+  conditions: SegmentCondition[],
+  labels: Record<SegmentField, string>,
+  everyone: string,
+  valueLabel: (c: SegmentCondition) => string = (c) => c.value,
+): string {
+  if (conditions.length === 0) return everyone;
+  return conditions.map((c) => `${labels[c.field]}: ${valueLabel(c)}`).join(", ");
+}

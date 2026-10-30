@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { startCheckout } from "./actions";
+import type { BillingUi } from "@/lib/i18n/billingCopy";
 
 export function PlanCard({
-  plan, priceInr, features, current, highlight,
-}: { plan: string; priceInr: number; features: string[]; current: boolean; highlight?: boolean }) {
+  t, plan, priceInr, features, current, highlight,
+}: { t: BillingUi; plan: string; priceInr: number; features: string[]; current: boolean; highlight?: boolean }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,13 +36,13 @@ export function PlanCard({
         <div className="text-[15px] font-semibold capitalize">{plan}</div>
         {current && (
           <span className="rounded-full bg-accent px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#05130a]">
-            Current
+            {t.current}
           </span>
         )}
       </div>
       <div className="mb-4 text-2xl font-semibold">
-        {priceInr === 0 ? "Free" : `₹${priceInr.toLocaleString("en-IN")}`}
-        {priceInr > 0 && <span className="ml-0.5 text-sm font-normal text-faint">/mo</span>}
+        {priceInr === 0 ? t.free : `₹${priceInr.toLocaleString("en-IN")}`}
+        {priceInr > 0 && <span className="ml-0.5 text-sm font-normal text-faint">{t.perMonth}</span>}
       </div>
       <ul className="mb-4 flex flex-1 flex-col gap-1.5 text-[12.5px] text-muted">
         {features.map((f) => (
@@ -53,11 +54,11 @@ export function PlanCard({
       </ul>
       {current ? (
         <div className="mt-auto rounded-md border border-accent/30 bg-accent/5 px-3 py-1.5 text-center text-[12px] text-accent">
-          Active plan
+          {t.activePlan}
         </div>
       ) : plan !== "free" ? (
         <button onClick={upgrade} disabled={pending} className="sk-btn sk-btn-primary mt-auto w-full disabled:opacity-60">
-          {pending ? "Redirecting…" : "Upgrade"}
+          {pending ? t.redirecting : t.upgrade}
         </button>
       ) : (
         <div className="mt-auto h-8" />

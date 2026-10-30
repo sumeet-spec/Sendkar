@@ -1,18 +1,21 @@
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { BILLING_UI, DATE_LOCALE } from "@/lib/i18n/billingCopy";
+import { fill, getSiteCopy } from "@/lib/i18n/site";
 import { createClient } from "@/lib/supabase/server";
-import { IMAGE_PACKS, PAID_PLANS, PLAN_LIMITS, allowanceLines, effectivePlan, nextMonthStartIst, planLabel, trialDaysLeft, trialExpired, type Plan } from "@/lib/plans";
+import { IMAGE_PACKS, PAID_PLANS, PLAN_LIMITS, effectivePlan, nextMonthStartIst, trialDaysLeft, trialExpired, type Plan } from "@/lib/plans";
 import { getImageAllowance, getNumberAllowance } from "@/lib/planUsage";
 import { isPackConfigured } from "@/lib/billing";
 import { PlanCard } from "./PlanCard";
 import { ImagePacks } from "./ImagePacks";
 
-function Meter({ label, used, limit, note }: { label: string; used: number | null; limit: number; note?: string }) {
+function Meter({ label, used, limit, note, ofLimit }: { label: string; used: number | null; limit: number; note?: string; ofLimit: string }) {
   const pct = used === null || limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
   return (
     <div>
       <div className="flex items-baseline justify-between text-[13px]">
         <span className="font-medium">{label}</span>
-        <span className="text-muted">{used === null ? "—" : used} of {limit}</span>
+        <span className="text-muted">{ofLimit.replace("{used}", used === null ? "—" : String(used)).replace("{limit}", String(limit))}</span>
       </div>
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border">
         <div className={`h-full rounded-full ${pct >= 100 ? "bg-danger" : "bg-accent"}`} style={{ width: `${pct}%` }} />
@@ -26,6 +29,9 @@ export default async function BillingPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
+  const lang = await getCurrentLanguage();
+  const t = BILLING_UI[lang];
+  const site = getSiteCopy(lang);
 
   const effective = effectivePlan(workspace);
   const onPaidPlan = PAID_PLANS.includes(effective as Plan);
@@ -34,54 +40,65 @@ export default async function BillingPage() {
 
   const numbers = await getNumberAllowance(supabase, workspace);
   const images = await getImageAllowance(supabase, workspace);
-  const resetsOn = nextMonthStartIst().toLocaleDateString("en-IN", { day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
+  const resetsOn = nextMonthStartIst().toLocaleDateString(DATE_LOCALE[lang], { day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
   const planLimits = PLAN_LIMITS[effective as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free;
 
   // The number and image lines come from the plan limits themselves, so this page and the
   // public pricing can never disagree with what the product actually enforces.
+  const planLines = (key: "starter" | "growth" | "scale") => {
+    const limits = PLAN_LIMITS[key];
+    return [
+      limits.maxWhatsAppNumbers === 1 ? site.pricing.numberOne : fill(site.pricing.numberMany, limits.maxWhatsAppNumbers),
+      fill(site.pricing.images, limits.imagesPerMonth),
+      ...site.pricing.plans[key].features,
+    ];
+  };
   const cards = [
-    { plan: "starter", limits: PLAN_LIMITS.starter, features: [...allowanceLines("starter"), "Unlimited team seats", "Automations and chatbot flows"], highlight: true },
-    { plan: "growth", limits: PLAN_LIMITS.growth, features: [...allowanceLines("growth"), "WhatsApp, Instagram and Messenger", "Catalog, AI agent, outbound webhooks"] },
-    { plan: "scale", limits: PLAN_LIMITS.scale, features: [...allowanceLines("scale"), "Everything in Growth", "Priority support"] },
+    { plan: "starter", limits: PLAN_LIMITS.starter, features: planLines("starter"), highlight: true },
+    { plan: "growth", limits: PLAN_LIMITS.growth, features: planLines("growth") },
+    { plan: "scale", limits: PLAN_LIMITS.scale, features: planLines("scale") },
   ];
+  const planName = effective === "trial" ? t.plan.trial : effective === "free" ? t.plan.free : effective;
 
   return (
     <div className="max-w-4xl">
-      <h1 className="mb-6 text-xl font-semibold tracking-tight">Billing</h1>
+      <h1 className="mb-6 text-xl font-semibold tracking-tight">{t.title}</h1>
 
       {daysLeft !== null && daysLeft > 0 && (
         <div className="sk-card mb-6 border-accent/30 p-4 text-[13.5px]">
-          <strong className="font-semibold">Free trial — {daysLeft} day{daysLeft === 1 ? "" : "s"} left.</strong>{" "}
-          Everything is unlocked while you try Sendkar. Choose a plan any time and your setup carries straight over.
+          <strong className="font-semibold">{t.trialLeft.replace("{days}", daysLeft === 1 ? t.dayOne : t.dayMany.replace("{n}", String(daysLeft)))}</strong>{" "}
+          {t.trialBody}
         </div>
       )}
       {(expiredTrial || effective === "free") && (
         <div className="sk-card mb-6 border-warn/40 p-4 text-[13.5px]">
-          <strong className="font-semibold">{expiredTrial ? "Your free trial has ended." : "You don't have an active plan."}</strong>{" "}
-          Choose a plan below to start sending again. Your contacts, templates and messages are safe.
+          <strong className="font-semibold">{expiredTrial ? t.trialEnded : t.noPlan}</strong>{" "}
+          {t.chooseBody}
         </div>
       )}
 
       <div className="sk-card mb-6 p-4">
-        <div className="mb-3 text-[11px] font-medium uppercase tracking-wide text-faint">Your usage — {planLabel(effective)}</div>
+        <div className="mb-3 text-[11px] font-medium uppercase tracking-wide text-faint">{t.usage.replace("{plan}", planName)}</div>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Meter label="WhatsApp numbers" used={numbers.connected} limit={numbers.allowed} note={numbers.canAdd ? undefined : numbers.blockedReason ?? undefined} />
+          <Meter label={t.whatsappNumbers} ofLimit={t.ofLimit} used={numbers.connected} limit={numbers.allowed} note={numbers.canAdd ? undefined : numbers.blockedReason ?? undefined} />
           <Meter
-            label="AI images this month"
+            ofLimit={t.ofLimit}
+            label={t.aiImages}
             used={images ? images.used : null}
             limit={images ? images.limit : planLimits.imagesPerMonth}
-            note={`Resets on ${resetsOn}.${images && images.packBalance > 0 ? ` Plus ${images.packBalance} extra from image packs.` : ""}`}
+            note={t.resets.replace("{date}", resetsOn) + (images && images.packBalance > 0 ? t.packExtra.replace("{n}", String(images.packBalance)) : "")}
           />
         </div>
       </div>
 
       {onPaidPlan && (
-        <ImagePacks packs={IMAGE_PACKS.map((p) => ({ key: p.key, images: p.images, priceInr: p.priceInr, available: isPackConfigured(p) }))} />
+        <ImagePacks t={t} packs={IMAGE_PACKS.map((p) => ({ key: p.key, images: p.images, priceInr: p.priceInr, available: isPackConfigured(p) }))} />
       )}
 
       <div className="grid grid-cols-3 gap-4">
         {cards.map((c) => (
           <PlanCard
+            t={t}
             key={c.plan}
             plan={c.plan}
             priceInr={c.limits.priceInr}
@@ -93,7 +110,7 @@ export default async function BillingPage() {
       </div>
 
       <p className="mt-8 text-[12.5px] text-faint">
-        Want to leave? <a href="/delete-account" className="text-accent hover:text-accent-hover">Delete my account and data</a>
+        {t.wantLeave} <a href="/delete-account" className="text-accent hover:text-accent-hover">{t.deleteLink}</a>
       </p>
     </div>
   );

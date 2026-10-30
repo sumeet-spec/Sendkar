@@ -2,25 +2,27 @@
 
 import { useActionState, useState } from "react";
 import { createSegment } from "./actions";
-import { SEGMENT_FIELD_LABELS, type SegmentField } from "@/lib/segments";
+import type { SegmentField } from "@/lib/segments";
+import type { SegmentsUi } from "@/lib/i18n/segmentsCopy";
+import type { CareUi } from "@/lib/i18n/careUi";
 
-const FIELDS = Object.keys(SEGMENT_FIELD_LABELS) as SegmentField[];
+const FIELDS: SegmentField[] = ["tag", "auto_tag", "language", "source", "sentiment"];
 
-export function NewSegmentForm() {
+export function NewSegmentForm({ t, care }: { t: SegmentsUi; care: CareUi }) {
   const [state, formAction, pending] = useActionState(createSegment, null);
   const [rows, setRows] = useState([{ field: "tag" as SegmentField, value: "" }]);
 
   return (
     <details className="sk-card p-4">
-      <summary className="cursor-pointer text-sm font-medium">New segment</summary>
+      <summary className="cursor-pointer text-sm font-medium">{t.newSegment}</summary>
       <form action={formAction} className="mt-4 flex flex-col gap-3">
         <div>
-          <label className="sk-label">Name</label>
-          <input name="name" required className="sk-input" placeholder="VIP Hindi buyers" />
+          <label className="sk-label">{t.name}</label>
+          <input name="name" required className="sk-input" placeholder={t.namePh} />
         </div>
 
         <div>
-          <label className="sk-label">Conditions (all must match)</label>
+          <label className="sk-label">{t.conditions}</label>
           <div className="flex flex-col gap-2">
             {rows.map((row, i) => (
               <div key={i} className="flex gap-2">
@@ -30,7 +32,7 @@ export function NewSegmentForm() {
                   onChange={(e) => setRows((r) => r.map((x, idx) => (idx === i ? { ...x, field: e.target.value as SegmentField } : x)))}
                   className="sk-input w-40"
                 >
-                  {FIELDS.map((f) => <option key={f} value={f}>{SEGMENT_FIELD_LABELS[f]}</option>)}
+                  {FIELDS.map((f) => <option key={f} value={f}>{t.field[f]}</option>)}
                 </select>
                 {row.field === "auto_tag" ? (
                   <select
@@ -39,13 +41,8 @@ export function NewSegmentForm() {
                     onChange={(e) => setRows((r) => r.map((x, idx) => (idx === i ? { ...x, value: e.target.value } : x)))}
                     className="sk-input flex-1"
                   >
-                    <option value="">Pick one</option>
-                    <option value="regular">Regular (buys often)</option>
-                    <option value="lapsed">Not seen in 2 months</option>
-                    <option value="big_spender">Big spender</option>
-                    <option value="owes">Owes money</option>
-                    <option value="over_limit">Over credit limit</option>
-                    <option value="new">New</option>
+                    <option value="">{t.pickOne}</option>
+                    {(["regular", "lapsed", "big_spender", "owes", "over_limit", "new"] as const).map((k) => <option key={k} value={k}>{care.tag[k]}</option>)}
                   </select>
                 ) : (
                   <input
@@ -53,12 +50,12 @@ export function NewSegmentForm() {
                     value={row.value}
                     onChange={(e) => setRows((r) => r.map((x, idx) => (idx === i ? { ...x, value: e.target.value } : x)))}
                     className="sk-input flex-1"
-                    placeholder="value"
+                    placeholder={t.valuePh}
                   />
                 )}
                 {rows.length > 1 && (
                   <button type="button" onClick={() => setRows((r) => r.filter((_, idx) => idx !== i))} className="text-xs text-faint hover:text-danger">
-                    Remove
+                    {t.remove}
                   </button>
                 )}
               </div>
@@ -69,12 +66,12 @@ export function NewSegmentForm() {
             onClick={() => setRows((r) => [...r, { field: "tag", value: "" }])}
             className="mt-2 text-[12.5px] text-accent hover:text-accent-hover"
           >
-            + Add condition
+            {t.addCondition}
           </button>
         </div>
 
         <button type="submit" disabled={pending} className="sk-btn sk-btn-primary self-start disabled:opacity-60">
-          {pending ? "Creating…" : "Create"}
+          {pending ? t.creating : t.create}
         </button>
         {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       </form>

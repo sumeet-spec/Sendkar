@@ -14,11 +14,14 @@ export type MsgKey =
   | "itemName" | "itemPrice" | "itemPhoto" | "itemPhotoSave" | "itemMax" | "itemSave"
   | "badDate" | "badCreditLimit" | "writeFirst" | "pickDay"
   | "enterField" | "upiBad" | "upiName" | "gatewayFirst" | "linkBad" | "pickMode"
-  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan" | "remConsent" | "remLang" | "remTooMuch" | "tplNotFound" | "tplNotApproved" | "notFound" | "onlyOpen" | "connectFirst" | "chooseTemplate" | "tplNotApprovedYet" | "paidAlready" | "optedOutStopped" | "couldNotStart" | "ctLang" | "ctFile" | "ctEmpty" | "ctNoPhones" | "ctNothing" | "ctNoContacts";
+  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan" | "remConsent" | "remLang" | "remTooMuch" | "tplNotFound" | "tplNotApproved" | "notFound" | "onlyOpen" | "connectFirst" | "chooseTemplate" | "tplNotApprovedYet" | "paidAlready" | "optedOutStopped" | "couldNotStart" | "ctLang" | "ctFile" | "ctEmpty" | "ctNoPhones" | "ctNothing" | "ctNoContacts" | "packsPaid" | "segName" | "segCond";
 
 type Msgs = Record<MsgKey, string>;
 
 const en: Msgs = {
+  segName: "Name is required.",
+  segCond: "Add at least one condition.",
+  packsPaid: "Image packs are for paid plans. Choose a plan first.",
   ctLang: "Pick a language for this batch.",
   ctFile: "Choose a CSV file.",
   ctEmpty: "That file is empty.",
@@ -66,6 +69,9 @@ const en: Msgs = {
 };
 
 const hi: Msgs = {
+  segName: "नाम ज़रूरी है।",
+  segCond: "कम से कम एक शर्त जोड़ें।",
+  packsPaid: "इमेज पैक सिर्फ़ पेड प्लान के लिए हैं। पहले प्लान चुनें।",
   ctLang: "इस सूची के लिए भाषा चुनें।",
   ctFile: "CSV फ़ाइल चुनें।",
   ctEmpty: "वह फ़ाइल ख़ाली है।",
@@ -113,6 +119,9 @@ const hi: Msgs = {
 };
 
 const mr: Msgs = {
+  segName: "नाव आवश्यक आहे.",
+  segCond: "किमान एक अट जोडा.",
+  packsPaid: "इमेज पॅक फक्त सशुल्क प्लॅनसाठी आहेत. आधी प्लॅन निवडा.",
   ctLang: "या यादीसाठी भाषा निवडा.",
   ctFile: "CSV फाइल निवडा.",
   ctEmpty: "ती फाइल रिकामी आहे.",
@@ -160,6 +169,9 @@ const mr: Msgs = {
 };
 
 const gu: Msgs = {
+  segName: "નામ જરૂરી છે.",
+  segCond: "ઓછામાં ઓછી એક શરત ઉમેરો.",
+  packsPaid: "ઇમેજ પેક ફક્ત પેઇડ પ્લાન માટે છે. પહેલા પ્લાન પસંદ કરો.",
   ctLang: "આ યાદી માટે ભાષા પસંદ કરો.",
   ctFile: "CSV ફાઇલ પસંદ કરો.",
   ctEmpty: "તે ફાઇલ ખાલી છે.",
@@ -207,6 +219,9 @@ const gu: Msgs = {
 };
 
 const ta: Msgs = {
+  segName: "பெயர் தேவை.",
+  segCond: "குறைந்தது ஒரு நிபந்தனையைச் சேர்க்கவும்.",
+  packsPaid: "பட பேக்குகள் கட்டணத் திட்டங்களுக்கு மட்டுமே. முதலில் ஒரு திட்டத்தைத் தேர்ந்தெடுங்கள்.",
   ctLang: "இந்தத் தொகுப்புக்கான மொழியைத் தேர்ந்தெடுங்கள்.",
   ctFile: "CSV கோப்பைத் தேர்ந்தெடுங்கள்.",
   ctEmpty: "அந்தக் கோப்பு காலியாக உள்ளது.",
@@ -254,6 +269,9 @@ const ta: Msgs = {
 };
 
 const te: Msgs = {
+  segName: "పేరు అవసరం.",
+  segCond: "కనీసం ఒక షరతు జోడించండి.",
+  packsPaid: "ఇమేజ్ ప్యాక్‌లు చెల్లింపు ప్లాన్‌లకు మాత్రమే. ముందుగా ఒక ప్లాన్ ఎంచుకోండి.",
   ctLang: "ఈ బ్యాచ్‌కు భాషను ఎంచుకోండి.",
   ctFile: "CSV ఫైల్ ఎంచుకోండి.",
   ctEmpty: "ఆ ఫైల్ ఖాళీగా ఉంది.",
@@ -301,6 +319,9 @@ const te: Msgs = {
 };
 
 const kn: Msgs = {
+  segName: "ಹೆಸರು ಬೇಕು.",
+  segCond: "ಕನಿಷ್ಠ ಒಂದು ಷರತ್ತು ಸೇರಿಸಿ.",
+  packsPaid: "ಚಿತ್ರ ಪ್ಯಾಕ್‌ಗಳು ಪಾವತಿ ಪ್ಲಾನ್‌ಗಳಿಗೆ ಮಾತ್ರ. ಮೊದಲು ಒಂದು ಪ್ಲಾನ್ ಆಯ್ಕೆಮಾಡಿ.",
   ctLang: "ಈ ಬ್ಯಾಚ್‌ಗೆ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ.",
   ctFile: "CSV ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ.",
   ctEmpty: "ಆ ಫೈಲ್ ಖಾಲಿಯಿದೆ.",
