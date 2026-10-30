@@ -14,11 +14,19 @@ export type MsgKey =
   | "itemName" | "itemPrice" | "itemPhoto" | "itemPhotoSave" | "itemMax" | "itemSave"
   | "badDate" | "badCreditLimit" | "writeFirst" | "pickDay"
   | "enterField" | "upiBad" | "upiName" | "gatewayFirst" | "linkBad" | "pickMode"
-  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan" | "remConsent" | "remLang" | "remTooMuch" | "tplNotFound" | "tplNotApproved" | "notFound" | "onlyOpen" | "connectFirst" | "chooseTemplate" | "tplNotApprovedYet" | "paidAlready" | "optedOutStopped" | "couldNotStart" | "ctLang" | "ctFile" | "ctEmpty" | "ctNoPhones" | "ctNothing" | "ctNoContacts" | "packsPaid" | "segName" | "segCond";
+  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan" | "remConsent" | "remLang" | "remTooMuch" | "tplNotFound" | "tplNotApproved" | "notFound" | "onlyOpen" | "connectFirst" | "chooseTemplate" | "tplNotApprovedYet" | "paidAlready" | "optedOutStopped" | "couldNotStart" | "ctLang" | "ctFile" | "ctEmpty" | "ctNoPhones" | "ctNothing" | "ctNoContacts" | "packsPaid" | "segName" | "segCond" | "nothingToSend" | "windowClosedTpl" | "windowClosed" | "addCatalog" | "productNotFound" | "needButtons" | "saleAmount" | "nothingToSave";
 
 type Msgs = Record<MsgKey, string>;
 
 const en: Msgs = {
+  nothingToSend: "Nothing to send.",
+  windowClosedTpl: "The 24-hour reply window has closed for this customer. Send an approved message instead.",
+  windowClosed: "The 24-hour reply window has closed for this customer.",
+  addCatalog: "Add a catalog ID in Settings, Channels first.",
+  productNotFound: "Product not found.",
+  needButtons: "Enter a message and at least one button.",
+  saleAmount: "Enter a sale amount greater than 0.",
+  nothingToSave: "Nothing to save.",
   segName: "Name is required.",
   segCond: "Add at least one condition.",
   packsPaid: "Image packs are for paid plans. Choose a plan first.",
@@ -69,6 +77,14 @@ const en: Msgs = {
 };
 
 const hi: Msgs = {
+  nothingToSend: "भेजने के लिए कुछ नहीं है।",
+  windowClosedTpl: "इस ग्राहक के लिए 24 घंटे की जवाब देने की खिड़की बंद हो गई है। इसकी जगह मंज़ूर संदेश भेजें।",
+  windowClosed: "इस ग्राहक के लिए 24 घंटे की जवाब देने की खिड़की बंद हो गई है।",
+  addCatalog: "पहले सेटिंग, चैनल में कैटलॉग ID जोड़ें।",
+  productNotFound: "सामान नहीं मिला।",
+  needButtons: "संदेश और कम से कम एक बटन लिखें।",
+  saleAmount: "0 से ज़्यादा की बिक्री रकम डालें।",
+  nothingToSave: "सेव करने के लिए कुछ नहीं है।",
   segName: "नाम ज़रूरी है।",
   segCond: "कम से कम एक शर्त जोड़ें।",
   packsPaid: "इमेज पैक सिर्फ़ पेड प्लान के लिए हैं। पहले प्लान चुनें।",
@@ -119,6 +135,14 @@ const hi: Msgs = {
 };
 
 const mr: Msgs = {
+  nothingToSend: "पाठवण्यासाठी काही नाही.",
+  windowClosedTpl: "या ग्राहकासाठी 24 तासांची उत्तर देण्याची खिडकी बंद झाली आहे. त्याऐवजी मंजूर संदेश पाठवा.",
+  windowClosed: "या ग्राहकासाठी 24 तासांची उत्तर देण्याची खिडकी बंद झाली आहे.",
+  addCatalog: "आधी सेटिंग, चॅनेलमध्ये कॅटलॉग ID जोडा.",
+  productNotFound: "माल सापडला नाही.",
+  needButtons: "संदेश आणि किमान एक बटण लिहा.",
+  saleAmount: "0 पेक्षा जास्त विक्रीची रक्कम टाका.",
+  nothingToSave: "सेव्ह करण्यासाठी काही नाही.",
   segName: "नाव आवश्यक आहे.",
   segCond: "किमान एक अट जोडा.",
   packsPaid: "इमेज पॅक फक्त सशुल्क प्लॅनसाठी आहेत. आधी प्लॅन निवडा.",
@@ -169,6 +193,14 @@ const mr: Msgs = {
 };
 
 const gu: Msgs = {
+  nothingToSend: "મોકલવા માટે કંઈ નથી.",
+  windowClosedTpl: "આ ગ્રાહક માટે 24 કલાકની જવાબ આપવાની બારી બંધ થઈ ગઈ છે. તેને બદલે મંજૂર સંદેશ મોકલો.",
+  windowClosed: "આ ગ્રાહક માટે 24 કલાકની જવાબ આપવાની બારી બંધ થઈ ગઈ છે.",
+  addCatalog: "પહેલા સેટિંગ, ચેનલમાં કેટલોગ ID ઉમેરો.",
+  productNotFound: "માલ મળ્યો નહીં.",
+  needButtons: "સંદેશ અને ઓછામાં ઓછું એક બટન લખો.",
+  saleAmount: "0 થી વધુ વેચાણની રકમ નાખો.",
+  nothingToSave: "સેવ કરવા માટે કંઈ નથી.",
   segName: "નામ જરૂરી છે.",
   segCond: "ઓછામાં ઓછી એક શરત ઉમેરો.",
   packsPaid: "ઇમેજ પેક ફક્ત પેઇડ પ્લાન માટે છે. પહેલા પ્લાન પસંદ કરો.",
@@ -219,6 +251,14 @@ const gu: Msgs = {
 };
 
 const ta: Msgs = {
+  nothingToSend: "அனுப்ப எதுவும் இல்லை.",
+  windowClosedTpl: "இந்த வாடிக்கையாளருக்கான 24 மணி நேர பதில் சாளரம் மூடிவிட்டது. அதற்குப் பதிலாக அங்கீகரிக்கப்பட்ட செய்தியை அனுப்புங்கள்.",
+  windowClosed: "இந்த வாடிக்கையாளருக்கான 24 மணி நேர பதில் சாளரம் மூடிவிட்டது.",
+  addCatalog: "முதலில் அமைப்புகள், சேனல்களில் கேட்டலாக் ID-ஐச் சேர்க்கவும்.",
+  productNotFound: "பொருள் கிடைக்கவில்லை.",
+  needButtons: "செய்தியும் குறைந்தது ஒரு பட்டனும் உள்ளிடுங்கள்.",
+  saleAmount: "0-க்கு மேல் விற்பனைத் தொகையை உள்ளிடுங்கள்.",
+  nothingToSave: "சேமிக்க எதுவும் இல்லை.",
   segName: "பெயர் தேவை.",
   segCond: "குறைந்தது ஒரு நிபந்தனையைச் சேர்க்கவும்.",
   packsPaid: "பட பேக்குகள் கட்டணத் திட்டங்களுக்கு மட்டுமே. முதலில் ஒரு திட்டத்தைத் தேர்ந்தெடுங்கள்.",
@@ -269,6 +309,14 @@ const ta: Msgs = {
 };
 
 const te: Msgs = {
+  nothingToSend: "పంపడానికి ఏమీ లేదు.",
+  windowClosedTpl: "ఈ కస్టమర్‌కు 24 గంటల సమాధాన విండో మూసుకుంది. బదులుగా ఆమోదిత సందేశం పంపండి.",
+  windowClosed: "ఈ కస్టమర్‌కు 24 గంటల సమాధాన విండో మూసుకుంది.",
+  addCatalog: "ముందుగా సెట్టింగ్‌లు, ఛానెళ్లలో కేటలాగ్ ID జోడించండి.",
+  productNotFound: "సరుకు దొరకలేదు.",
+  needButtons: "సందేశం మరియు కనీసం ఒక బటన్ ఇవ్వండి.",
+  saleAmount: "0 కంటే ఎక్కువ అమ్మకం మొత్తం ఇవ్వండి.",
+  nothingToSave: "సేవ్ చేయడానికి ఏమీ లేదు.",
   segName: "పేరు అవసరం.",
   segCond: "కనీసం ఒక షరతు జోడించండి.",
   packsPaid: "ఇమేజ్ ప్యాక్‌లు చెల్లింపు ప్లాన్‌లకు మాత్రమే. ముందుగా ఒక ప్లాన్ ఎంచుకోండి.",
@@ -319,6 +367,14 @@ const te: Msgs = {
 };
 
 const kn: Msgs = {
+  nothingToSend: "ಕಳುಹಿಸಲು ಏನೂ ಇಲ್ಲ.",
+  windowClosedTpl: "ಈ ಗ್ರಾಹಕರಿಗೆ 24 ಗಂಟೆಗಳ ಉತ್ತರ ವಿಂಡೋ ಮುಚ್ಚಿದೆ. ಬದಲಿಗೆ ಅನುಮೋದಿತ ಸಂದೇಶ ಕಳುಹಿಸಿ.",
+  windowClosed: "ಈ ಗ್ರಾಹಕರಿಗೆ 24 ಗಂಟೆಗಳ ಉತ್ತರ ವಿಂಡೋ ಮುಚ್ಚಿದೆ.",
+  addCatalog: "ಮೊದಲು ಸೆಟ್ಟಿಂಗ್‌ಗಳು, ಚಾನೆಲ್‌ಗಳಲ್ಲಿ ಕ್ಯಾಟಲಾಗ್ ID ಸೇರಿಸಿ.",
+  productNotFound: "ವಸ್ತು ಸಿಗಲಿಲ್ಲ.",
+  needButtons: "ಸಂದೇಶ ಮತ್ತು ಕನಿಷ್ಠ ಒಂದು ಬಟನ್ ನೀಡಿ.",
+  saleAmount: "0 ಕ್ಕಿಂತ ಹೆಚ್ಚಿನ ಮಾರಾಟ ಮೊತ್ತ ನೀಡಿ.",
+  nothingToSave: "ಉಳಿಸಲು ಏನೂ ಇಲ್ಲ.",
   segName: "ಹೆಸರು ಬೇಕು.",
   segCond: "ಕನಿಷ್ಠ ಒಂದು ಷರತ್ತು ಸೇರಿಸಿ.",
   packsPaid: "ಚಿತ್ರ ಪ್ಯಾಕ್‌ಗಳು ಪಾವತಿ ಪ್ಲಾನ್‌ಗಳಿಗೆ ಮಾತ್ರ. ಮೊದಲು ಒಂದು ಪ್ಲಾನ್ ಆಯ್ಕೆಮಾಡಿ.",

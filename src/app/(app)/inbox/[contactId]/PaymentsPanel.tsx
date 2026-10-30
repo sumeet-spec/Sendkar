@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/lib/dashboardMetrics";
+import type { InboxUi } from "@/lib/i18n/inboxCopy";
 
 interface PaymentLink {
   id: string;
@@ -11,19 +12,19 @@ interface PaymentLink {
   failure_reason?: string | null;
 }
 
-export function PaymentsPanel({ links, currency = "USD" }: { links: PaymentLink[]; currency?: string }) {
+export function PaymentsPanel({ t, links, currency = "INR" }: { t: InboxUi; links: PaymentLink[]; currency?: string }) {
   if (links.length === 0) {
     return (
       <div className="sk-card p-4">
-        <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">Payment links</div>
-        <p className="text-[12.5px] text-faint">No payment links yet — send one from the reply box below.</p>
+        <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">{t.paymentLinks}</div>
+        <p className="text-[12.5px] text-faint">{t.noLinks}</p>
       </div>
     );
   }
 
   return (
     <div className="sk-card flex flex-col gap-3 p-4">
-      <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Payment links</div>
+      <div className="text-[11px] font-medium uppercase tracking-wide text-faint">{t.paymentLinks}</div>
       <div className="flex max-h-32 flex-col gap-2 overflow-y-auto">
         {links.map((l) => (
           <div key={l.id} className="flex items-center justify-between rounded-md bg-surface-2 p-2.5 text-[12.5px]">
@@ -32,14 +33,14 @@ export function PaymentsPanel({ links, currency = "USD" }: { links: PaymentLink[
               <span className="ml-1.5 text-faint capitalize">{l.provider}</span>
             </div>
             {l.paid_at ? (
-              <span className="sk-pill border-accent text-accent">Paid</span>
+              <span className="sk-pill border-accent text-accent">{t.paid}</span>
             ) : l.status === "failed" ? (
               <span className="sk-pill border-danger text-danger" title={l.failure_reason ?? undefined}>
-                Failed
+                {t.failed}
               </span>
             ) : (
               <a href={l.url} target="_blank" rel="noreferrer" className="sk-pill text-faint hover:text-accent">
-                Pending ↗
+                {t.pending}
               </a>
             )}
           </div>

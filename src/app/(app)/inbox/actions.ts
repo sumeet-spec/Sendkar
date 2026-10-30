@@ -14,26 +14,27 @@ import { workspaceCanSend } from "@/lib/plans";
 import { canSendFromWorkspace } from "@/lib/planGate";
 import { refusal } from "@/lib/gateMessages";
 import { revalidatePath } from "next/cache";
+import { msg } from "@/lib/i18n/msg";
 
 export async function replyToContact(_prevState: unknown, formData: FormData) {
   const contactId = String(formData.get("contactId") ?? "");
   const body = String(formData.get("body") ?? "").trim();
-  if (!contactId || !body) return { error: "Nothing to send." };
+  if (!contactId || !body) return { error: await msg("nothingToSend") };
 
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
 
   const supabase = await createClient();
   if (!(await canSendFromWorkspace(supabase, workspace))) return { error: await refusal("noNumber") };
   const { data: contact } = await supabase.from("contacts").select("phone, channel, session_expires_at, whatsapp_number_id").eq("id", contactId).single();
-  if (!contact) return { error: "Contact not found." };
+  if (!contact) return { error: await msg("customerNotFound") };
 
   // Meta only allows free-text replies within 24h of the customer's last inbound message —
   // outside that window a template message is required instead. Check it here, not just
   // let Meta's API reject it, so the error is clear instead of a raw API failure.
   if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
-    return { error: "The 24h reply window has closed for this contact — send a template message instead." };
+    return { error: await msg("windowClosedTpl") };
   }
 
   try {
@@ -74,7 +75,7 @@ export async function replyToContact(_prevState: unknown, formData: FormData) {
 
 export async function draftReplySuggestion(contactId: string): Promise<{ text?: string; error?: string }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   const supabase = await createClient();
   const [{ data: contact }, { data: messages }] = await Promise.all([
@@ -107,18 +108,18 @@ export async function summarizeConversation(contactId: string): Promise<{ summar
 
 export async function sendProductToContact(contactId: string, productId: string): Promise<{ success?: boolean; error?: string }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
-  if (!workspace.catalog_id) return { error: "Add a catalog ID in Settings → Channels first." };
+  if (!workspace) return { error: await msg("noWorkspace") };
+  if (!workspace.catalog_id) return { error: await msg("addCatalog") };
 
   const supabase = await createClient();
   const [{ data: contact }, { data: product }] = await Promise.all([
     supabase.from("contacts").select("phone, session_expires_at, whatsapp_number_id").eq("id", contactId).single(),
     supabase.from("products").select("retailer_id, name").eq("id", productId).single(),
   ]);
-  if (!contact) return { error: "Contact not found." };
-  if (!product) return { error: "Product not found." };
+  if (!contact) return { error: await msg("customerNotFound") };
+  if (!product) return { error: await msg("productNotFound") };
   if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
-    return { error: "The 24h reply window has closed for this contact." };
+    return { error: await msg("windowClosed") };
   }
 
   const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
@@ -148,14 +149,14 @@ export async function sendProductToContact(contactId: string, productId: string)
 
 export async function reactToMessage(contactId: string, messageId: string, emoji: string): Promise<{ success?: boolean; error?: string }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   const supabase = await createClient();
   const [{ data: contact }, { data: message }] = await Promise.all([
     supabase.from("contacts").select("phone, whatsapp_number_id").eq("id", contactId).single(),
     supabase.from("messages").select("meta_message_id").eq("id", messageId).single(),
   ]);
-  if (!contact || !message?.meta_message_id) return { error: "Message not found." };
+  if (!contact || !message?.meta_message_id) return { error: await msg("messageNotFound") };
 
   const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
   try {
@@ -197,14 +198,14 @@ export async function sendTypingIndicator(contactId: string): Promise<void> {
 
 export async function sendButtonsToContact(contactId: string, bodyText: string, buttons: InteractiveButton[]): Promise<{ success?: boolean; error?: string }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
-  if (!bodyText.trim() || buttons.length === 0) return { error: "Enter a message and at least one button." };
+  if (!workspace) return { error: await msg("noWorkspace") };
+  if (!bodyText.trim() || buttons.length === 0) return { error: await msg("needButtons") };
 
   const supabase = await createClient();
   const { data: contact } = await supabase.from("contacts").select("phone, session_expires_at, whatsapp_number_id").eq("id", contactId).single();
-  if (!contact) return { error: "Contact not found." };
+  if (!contact) return { error: await msg("customerNotFound") };
   if (!contact.session_expires_at || new Date(contact.session_expires_at) < new Date()) {
-    return { error: "The 24h reply window has closed for this contact." };
+    return { error: await msg("windowClosed") };
   }
 
   const creds = await resolveNumberCredentials(workspace, contact.whatsapp_number_id);
@@ -241,14 +242,14 @@ export async function logOrder(_prevState: unknown, formData: FormData) {
   const billNo = String(formData.get("billNo") ?? "").trim().slice(0, 40);
   const amount = Number.parseFloat(amountRaw);
   if (!contactId || !amountRaw || !Number.isFinite(amount) || amount <= 0) {
-    return { error: "Enter a sale amount greater than 0." };
+    return { error: await msg("saleAmount") };
   }
 
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   const userId = await getCurrentUserId();
-  if (!userId) return { error: "Not logged in." };
+  if (!userId) return { error: await msg("notLoggedIn") };
 
   const supabase = await createClient();
   const attributedCampaignId = await attributeOrder(supabase, contactId, new Date());
@@ -276,7 +277,7 @@ export async function logOrder(_prevState: unknown, formData: FormData) {
 
 export async function updateContact(contactId: string, fields: { name?: string; email?: string; opted_out?: boolean }): Promise<{ error?: string }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const supabase = await createClient();
   const { error } = await supabase
     .from("contacts")
@@ -292,13 +293,13 @@ export async function updateContact(contactId: string, fields: { name?: string; 
 export async function addContactNote(_prevState: unknown, formData: FormData) {
   const contactId = String(formData.get("contactId") ?? "");
   const body = String(formData.get("body") ?? "").trim();
-  if (!contactId || !body) return { error: "Nothing to save." };
+  if (!contactId || !body) return { error: await msg("nothingToSave") };
 
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   const userId = await getCurrentUserId();
-  if (!userId) return { error: "Not logged in." };
+  if (!userId) return { error: await msg("notLoggedIn") };
 
   const supabase = await createClient();
   const { error } = await supabase.from("contact_notes").insert({

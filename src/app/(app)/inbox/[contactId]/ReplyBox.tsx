@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { replyToContact, draftReplySuggestion, sendProductToContact, sendTypingIndicator, sendButtonsToContact } from "../actions";
 import { sendWaFlowToContact } from "../../forms/actions";
+import type { InboxUi } from "@/lib/i18n/inboxCopy";
 
 interface CannedResponse {
   id: string;
@@ -22,12 +23,14 @@ interface WaForm {
 }
 
 export function ReplyBox({
+  t,
   contactId,
   sessionOpen,
   cannedResponses,
   products,
   forms,
 }: {
+  t: InboxUi;
   contactId: string;
   sessionOpen: boolean;
   cannedResponses: CannedResponse[];
@@ -117,16 +120,13 @@ export function ReplyBox({
     <form ref={formRef} action={formAction} className="flex flex-col gap-2 border-t border-border p-4">
       <input type="hidden" name="contactId" value={contactId} />
       {!sessionOpen && (
-        <p className="text-[12.5px] text-warn">
-          The 24h reply window is closed — free-text replies will fail. Send a template message from Campaigns instead,
-          or wait for the contact to message again.
-        </p>
+        <p className="text-[12.5px] text-warn">{t.closedWarn}</p>
       )}
       <textarea
         ref={textRef}
         name="body"
         rows={2}
-        placeholder="Reply — Cmd+Enter to send"
+        placeholder={t.replyPh}
         className="sk-input resize-none overflow-hidden"
         style={{ minHeight: "60px", maxHeight: "180px" }}
         required
@@ -145,7 +145,7 @@ export function ReplyBox({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button type="button" onClick={draftWithAi} disabled={aiPending} className="sk-btn sk-btn-ghost disabled:opacity-60">
-            {aiPending ? "Drafting…" : "✳ Draft with AI"}
+            {aiPending ? t.drafting : t.draftAi}
           </button>
           {cannedResponses.length > 0 && (
             <select
@@ -156,7 +156,7 @@ export function ReplyBox({
               }}
               className="sk-input w-auto text-[12.5px]"
             >
-              <option value="" disabled>Insert canned reply…</option>
+              <option value="" disabled>{t.insertCanned}</option>
               {cannedResponses.map((c) => (
                 <option key={c.id} value={c.id}>/{c.shortcut}</option>
               ))}
@@ -172,14 +172,14 @@ export function ReplyBox({
               }}
               className="sk-input w-auto text-[12.5px] disabled:opacity-60"
             >
-              <option value="" disabled>{productPending ? "Sending…" : "Send product…"}</option>
+              <option value="" disabled>{productPending ? t.sending : t.sendProduct}</option>
               {products.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}{p.price_label ? ` (${p.price_label})` : ""}</option>
               ))}
             </select>
           )}
           <button type="button" onClick={() => setButtonsOpen((v) => !v)} disabled={!sessionOpen} className="sk-btn sk-btn-ghost disabled:opacity-60">
-            ▭ Buttons
+            {t.buttons}
           </button>
           {forms.length > 0 && (
             <select
@@ -191,7 +191,7 @@ export function ReplyBox({
               }}
               className="sk-input w-auto text-[12.5px] disabled:opacity-60"
             >
-              <option value="" disabled>{formPending ? "Sending…" : "Send form…"}</option>
+              <option value="" disabled>{formPending ? t.sending : t.sendForm}</option>
               {forms.map((f) => (
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}
@@ -199,18 +199,18 @@ export function ReplyBox({
           )}
         </div>
         <button type="submit" disabled={pending || !sessionOpen} className="sk-btn sk-btn-primary disabled:opacity-60">
-          {pending ? "Sending…" : "Send"}
+          {pending ? t.sending : t.send}
         </button>
       </div>
 
       {buttonsOpen && (
         <div className="flex flex-col gap-2 rounded-md border border-border bg-surface-2 p-3">
-          <div className="text-[11px] font-medium uppercase tracking-wide text-faint">Send up to 3 tappable buttons</div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-faint">{t.buttonsTitle}</div>
           <input
             value={buttonsBody}
             onChange={(e) => setButtonsBody(e.target.value)}
             className="sk-input text-[13px]"
-            placeholder={'Message body, e.g. "Want us to hold your order?"'}
+            placeholder={t.buttonsBodyPh}
           />
           <div className="flex gap-2">
             {buttonLabels.map((label, i) => (
@@ -220,13 +220,13 @@ export function ReplyBox({
                 onChange={(e) => setButtonLabels((prev) => prev.map((l, idx) => (idx === i ? e.target.value : l)))}
                 maxLength={20}
                 className="sk-input text-[12.5px]"
-                placeholder={`Button ${i + 1}`}
+                placeholder={t.buttonN.replace("{n}", String(i + 1))}
               />
             ))}
           </div>
           {buttonsError && <p className="text-[12px] text-danger">{buttonsError}</p>}
           <button type="button" onClick={sendButtons} disabled={buttonsPending} className="sk-btn sk-btn-primary self-start disabled:opacity-60">
-            {buttonsPending ? "Sending…" : "Send buttons"}
+            {buttonsPending ? t.sending : t.sendButtons}
           </button>
         </div>
       )}
