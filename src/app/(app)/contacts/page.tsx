@@ -1,25 +1,27 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
+import { CONTACTS_UI } from "@/lib/i18n/contactsCopy";
+import { CARE_UI } from "@/lib/i18n/careUi";
 import { CollapsibleImport } from "./CollapsibleImport";
 import { ContactFilters } from "./ContactFilters";
 import { ContactTable, type ContactRow } from "./ContactTable";
 
-const SOURCE_LABEL: Record<string, string> = {
-  apify_scrape: "CSV import",
-  csv_import: "CSV import",
-  whatsapp_inbound: "WhatsApp",
-  manual: "Manual",
-  api: "API",
-};
-
 type SearchParams = Promise<{ q?: string; lang?: string; tag?: string; optedOut?: string }>;
 
 export default async function ContactsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { q = "", lang = "", tag = "", optedOut = "" } = await searchParams;
+  const { q = "", lang: langFilter = "", tag = "", optedOut = "" } = await searchParams;
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const supabase = await createClient();
+  const lang = await getCurrentLanguage();
+  const t = CONTACTS_UI[lang];
+  const care = CARE_UI[lang];
+  const SOURCE_LABEL: Record<string, string> = {
+    apify_scrape: t.srcCsv, csv_import: t.srcCsv, whatsapp_inbound: t.srcWhatsapp, manual: t.srcManual, api: t.srcApi,
+    counter_qr: care.src.counter_qr, bill: care.src.bill, reminder_import: care.src.reminder_import,
+  };
 
   let query = supabase
     .from("contacts")
@@ -32,7 +34,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
     const safe = q.trim().replace(/[,.()%]/g, "");
     query = query.or(`phone.ilike.%${safe}%,name.ilike.%${safe}%`);
   }
-  if (lang) query = query.eq("language", lang);
+  if (langFilter) query = query.eq("language", langFilter);
   if (tag) query = query.contains("tags", [tag]);
   if (optedOut) query = query.eq("opted_out", true);
 
@@ -81,24 +83,24 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
     <div className="max-w-5xl">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Contacts</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{t.title}</h1>
           <p className="mt-1 text-[13px] text-faint">
-            {totalCount ?? 0} total
-            {(totalCount ?? 0) > 200 && ` — showing most recent 200`}
+            {t.total.replace("{n}", String(totalCount ?? 0))}
+            {(totalCount ?? 0) > 200 && t.showing}
           </p>
         </div>
         <a href="/api/contacts/export" className="sk-btn sk-btn-ghost text-[13px]">
-          Export CSV
+          {t.exportCsv}
         </a>
       </div>
 
-      <CollapsibleImport />
+      <CollapsibleImport t={t} />
 
       <Suspense>
-        <ContactFilters availableTags={availableTags} />
+        <ContactFilters t={t} availableTags={availableTags} />
       </Suspense>
 
-      <ContactTable contacts={rows} currency={workspace.currency ?? "USD"} />
+      <ContactTable t={t} contacts={rows} currency={workspace.currency ?? "INR"} />
     </div>
   );
 }

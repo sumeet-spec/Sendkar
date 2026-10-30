@@ -2,26 +2,17 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import { LANGUAGES as APP_LANGUAGES } from "@/lib/i18n/dictionaries";
+import type { ContactsUi } from "@/lib/i18n/contactsCopy";
 
-const LANGUAGES = [
-  { value: "", label: "All languages" },
-  { value: "hi", label: "Hindi" },
-  { value: "mr", label: "Marathi" },
-  { value: "ta", label: "Tamil" },
-  { value: "te", label: "Telugu" },
-  { value: "kn", label: "Kannada" },
-  { value: "en", label: "English" },
-  { value: "ar", label: "Arabic" },
-  { value: "es", label: "Spanish" },
-  { value: "pt_BR", label: "Portuguese" },
-  { value: "id", label: "Indonesian" },
-  { value: "bn", label: "Bengali" },
-  { value: "gu", label: "Gujarati" },
-  { value: "pa", label: "Punjabi" },
-  { value: "ur", label: "Urdu" },
+// The languages the app writes in use their own names; the rest keep English names.
+const EXTRA = [
+  { value: "ar", label: "Arabic" }, { value: "es", label: "Spanish" }, { value: "pt_BR", label: "Portuguese" }, { value: "id", label: "Indonesian" },
+  { value: "bn", label: "Bengali" }, { value: "pa", label: "Punjabi" }, { value: "ur", label: "Urdu" },
 ];
 
-export function ContactFilters({ availableTags }: { availableTags: string[] }) {
+export function ContactFilters({ t, availableTags }: { t: ContactsUi; availableTags: string[] }) {
+  const LANGUAGES = [{ value: "", label: t.allLanguages }, ...APP_LANGUAGES.map((l) => ({ value: l.code as string, label: l.label as string })), ...EXTRA];
   const router = useRouter();
   const sp = useSearchParams();
   const [, startTransition] = useTransition();
@@ -44,7 +35,7 @@ export function ContactFilters({ availableTags }: { availableTags: string[] }) {
         type="text"
         defaultValue={q}
         onChange={(e) => update("q", e.target.value)}
-        placeholder="Search phone or name…"
+        placeholder={t.search}
         className="sk-input w-52 text-sm"
       />
       <select
@@ -62,9 +53,9 @@ export function ContactFilters({ availableTags }: { availableTags: string[] }) {
           onChange={(e) => update("tag", e.target.value)}
           className="sk-input w-40 text-sm"
         >
-          <option value="">All tags</option>
-          {availableTags.map((t) => (
-            <option key={t} value={t}>{t}</option>
+          <option value="">{t.allTags}</option>
+          {availableTags.map((tg) => (
+            <option key={tg} value={tg}>{tg}</option>
           ))}
         </select>
       )}
@@ -74,14 +65,14 @@ export function ContactFilters({ availableTags }: { availableTags: string[] }) {
           optedOut ? "border-danger text-danger" : "hover:border-foreground/50"
         }`}
       >
-        {optedOut ? "✕ Opted-out only" : "Opted-out"}
+        {optedOut ? t.optedOutOnly : t.optedOut}
       </button>
       {(q || lang || tag || optedOut) && (
         <button
           onClick={() => startTransition(() => router.push("?"))}
           className="text-[12.5px] text-faint hover:text-foreground"
         >
-          Clear filters
+          {t.clearFilters}
         </button>
       )}
     </div>

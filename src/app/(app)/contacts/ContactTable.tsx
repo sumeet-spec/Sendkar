@@ -4,6 +4,8 @@ import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { bulkTagContacts } from "./actions";
 import { formatCurrency } from "@/lib/dashboardMetrics";
+import { LANGUAGES } from "@/lib/i18n/dictionaries";
+import type { ContactsUi } from "@/lib/i18n/contactsCopy";
 
 export interface ContactRow {
   id: string;
@@ -18,13 +20,13 @@ export interface ContactRow {
   spend: number;
 }
 
+// The languages the app writes in use their own names; the rest keep English names.
 const LANGUAGE_LABEL: Record<string, string> = {
-  hi: "Hindi", mr: "Marathi", ta: "Tamil", te: "Telugu", kn: "Kannada", en: "English",
-  ar: "Arabic", es: "Spanish", pt_BR: "Portuguese", id: "Indonesian", bn: "Bengali",
-  gu: "Gujarati", pa: "Punjabi", ur: "Urdu",
+  ar: "Arabic", es: "Spanish", pt_BR: "Portuguese", id: "Indonesian", bn: "Bengali", pa: "Punjabi", ur: "Urdu",
+  ...Object.fromEntries(LANGUAGES.map((l) => [l.code, l.label])),
 };
 
-export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; currency: string }) {
+export function ContactTable({ t, contacts, currency }: { t: ContactsUi; contacts: ContactRow[]; currency: string }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [tagInput, setTagInput] = useState("");
   const [tagPending, startTagTransition] = useTransition();
@@ -51,7 +53,7 @@ export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; c
     if (!tagInput.trim() || selected.size === 0) return;
     startTagTransition(async () => {
       const result = await bulkTagContacts([...selected], tagInput.trim(), tagAction);
-      setTagResult(result.error ? result.error : `${tagAction === "add" ? "Added" : "Removed"} tag "${tagInput.trim()}" on ${selected.size} contact${selected.size === 1 ? "" : "s"}.`);
+      setTagResult(result.error ? result.error : (tagAction === "add" ? t.tagAdded : t.tagRemoved).replace("{tag}", tagInput.trim()).replace("{n}", String(selected.size)));
       if (!result.error) { setSelected(new Set()); setTagInput(""); }
     });
   }
@@ -61,33 +63,33 @@ export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; c
       {/* Bulk action bar */}
       {selected.size > 0 && (
         <div className="mb-3 flex items-center gap-3 rounded-lg border border-accent/30 bg-[var(--accent-glow)] px-4 py-2.5">
-          <span className="text-[13px] font-medium">{selected.size} selected</span>
+          <span className="text-[13px] font-medium">{t.selected.replace("{n}", String(selected.size))}</span>
           <div className="flex flex-1 items-center gap-2">
             <select
               value={tagAction}
               onChange={(e) => setTagAction(e.target.value as "add" | "remove")}
               className="sk-input w-28 py-1 text-[12.5px]"
             >
-              <option value="add">Add tag</option>
-              <option value="remove">Remove tag</option>
+              <option value="add">{t.addTag}</option>
+              <option value="remove">{t.removeTag}</option>
             </select>
             <input
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && applyBulkTag()}
               className="sk-input flex-1 py-1 text-[12.5px]"
-              placeholder="Tag name…"
+              placeholder={t.tagPh}
             />
             <button
               disabled={tagPending || !tagInput.trim()}
               onClick={applyBulkTag}
               className="sk-btn sk-btn-primary py-1 text-[12.5px] disabled:opacity-60"
             >
-              {tagPending ? "Applying…" : "Apply"}
+              {tagPending ? t.applying : t.apply}
             </button>
           </div>
           <button onClick={() => setSelected(new Set())} className="text-[12px] text-faint hover:text-foreground">
-            Clear
+            {t.clear}
           </button>
         </div>
       )}
@@ -103,7 +105,7 @@ export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; c
                 <th className="px-4 py-2.5">
                   <input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-accent" />
                 </th>
-                {["Phone", "Name", "Language", "Tags", "Source", "Spend", "Added"].map((h) => (
+                {[t.colPhone, t.colName, t.colLanguage, t.colTags, t.colSource, t.colSpend, t.colAdded].map((h) => (
                   <th key={h} className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">{h}</th>
                 ))}
               </tr>
@@ -127,7 +129,7 @@ export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; c
                     <Link href={`/inbox/${c.id}`} prefetch={false} className="hover:text-accent">
                       {c.phone}
                     </Link>
-                    {c.opted_out && <span className="sk-pill ml-2 border-danger text-danger">opted out</span>}
+                    {c.opted_out && <span className="sk-pill ml-2 border-danger text-danger">{t.optedOutPill}</span>}
                   </td>
                   <td className="px-4 py-2.5 text-muted">
                     <Link href={`/inbox/${c.id}`} prefetch={false} className="hover:text-accent">
@@ -139,13 +141,13 @@ export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; c
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
-                      {c.tags.map((t) => <span key={t} className="sk-pill">{t}</span>)}
+                      {c.tags.map((tg) => <span key={tg} className="sk-pill">{tg}</span>)}
                       {c.tags.length === 0 && <span className="text-faint">—</span>}
                     </div>
                   </td>
                   <td className="px-4 py-2.5 text-[12.5px] text-faint">
                     {c.source}
-                    {c.ad_headline && <div className="mt-0.5 text-[11px] text-accent">via ad: {c.ad_headline}</div>}
+                    {c.ad_headline && <div className="mt-0.5 text-[11px] text-accent">{t.viaAd.replace("{headline}", c.ad_headline)}</div>}
                   </td>
                   <td className="px-4 py-2.5">
                     {c.spend > 0 ? (
@@ -164,7 +166,7 @@ export function ContactTable({ contacts, currency }: { contacts: ContactRow[]; c
               {contacts.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-4 py-10 text-center text-muted">
-                    No contacts match this filter.
+                    {t.noMatch}
                   </td>
                 </tr>
               )}

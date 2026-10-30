@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { revalidatePath } from "next/cache";
+import { msg } from "@/lib/i18n/msg";
 
 const LANGUAGES = new Set(["hi", "mr", "ta", "te", "kn", "gu", "en"]);
 
@@ -17,17 +18,17 @@ function parseCsv(text: string): string[][] {
 
 export async function importContacts(_prevState: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   const language = String(formData.get("language") ?? "").trim();
-  if (!LANGUAGES.has(language)) return { error: "Pick a language for this batch." };
+  if (!LANGUAGES.has(language)) return { error: await msg("ctLang") };
 
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: "Choose a CSV file." };
+  if (!(file instanceof File) || file.size === 0) return { error: await msg("ctFile") };
 
   const text = await file.text();
   const rows = parseCsv(text);
-  if (rows.length === 0) return { error: "That file is empty." };
+  if (rows.length === 0) return { error: await msg("ctEmpty") };
 
   // First row is a header (`phone,email`) if its first cell doesn't look like
   // a real phone number once non-digit characters are stripped — checking
@@ -61,7 +62,7 @@ export async function importContacts(_prevState: unknown, formData: FormData) {
     source: "csv_import",
   }));
 
-  if (contacts.length === 0) return { error: "No valid phone numbers found in that file." };
+  if (contacts.length === 0) return { error: await msg("ctNoPhones") };
 
   const supabase = await createClient();
 
@@ -95,9 +96,9 @@ export async function bulkTagContacts(
   tag: string,
   action: "add" | "remove",
 ): Promise<{ error?: string }> {
-  if (contactIds.length === 0 || !tag.trim()) return { error: "Nothing to update." };
+  if (contactIds.length === 0 || !tag.trim()) return { error: await msg("ctNothing") };
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const supabase = await createClient();
 
   const { data: rows } = await supabase
@@ -106,7 +107,7 @@ export async function bulkTagContacts(
     .eq("workspace_id", workspace.id)
     .in("id", contactIds);
 
-  if (!rows || rows.length === 0) return { error: "No contacts found." };
+  if (!rows || rows.length === 0) return { error: await msg("ctNoContacts") };
 
   const updates = rows.map((c) => {
     const existing = (c.tags as string[]) ?? [];

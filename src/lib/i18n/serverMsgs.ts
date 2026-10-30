@@ -14,11 +14,17 @@ export type MsgKey =
   | "itemName" | "itemPrice" | "itemPhoto" | "itemPhotoSave" | "itemMax" | "itemSave"
   | "badDate" | "badCreditLimit" | "writeFirst" | "pickDay"
   | "enterField" | "upiBad" | "upiName" | "gatewayFirst" | "linkBad" | "pickMode"
-  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan" | "remConsent" | "remLang" | "remTooMuch" | "tplNotFound" | "tplNotApproved" | "notFound" | "onlyOpen" | "connectFirst" | "chooseTemplate" | "tplNotApprovedYet" | "paidAlready" | "optedOutStopped" | "couldNotStart";
+  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan" | "remConsent" | "remLang" | "remTooMuch" | "tplNotFound" | "tplNotApproved" | "notFound" | "onlyOpen" | "connectFirst" | "chooseTemplate" | "tplNotApprovedYet" | "paidAlready" | "optedOutStopped" | "couldNotStart" | "ctLang" | "ctFile" | "ctEmpty" | "ctNoPhones" | "ctNothing" | "ctNoContacts";
 
 type Msgs = Record<MsgKey, string>;
 
 const en: Msgs = {
+  ctLang: "Pick a language for this batch.",
+  ctFile: "Choose a CSV file.",
+  ctEmpty: "That file is empty.",
+  ctNoPhones: "No valid phone numbers found in that file.",
+  ctNothing: "Nothing to update.",
+  ctNoContacts: "No contacts found.",
   remConsent: "Confirm that these customers have agreed to get payment reminders on WhatsApp.",
   remLang: "Pick the language these customers prefer.",
   remTooMuch: "That is too much to import at once. Split it into smaller batches.",
@@ -60,6 +66,12 @@ const en: Msgs = {
 };
 
 const hi: Msgs = {
+  ctLang: "इस सूची के लिए भाषा चुनें।",
+  ctFile: "CSV फ़ाइल चुनें।",
+  ctEmpty: "वह फ़ाइल ख़ाली है।",
+  ctNoPhones: "उस फ़ाइल में कोई सही फ़ोन नंबर नहीं मिला।",
+  ctNothing: "बदलने के लिए कुछ नहीं है।",
+  ctNoContacts: "कोई संपर्क नहीं मिला।",
   remConsent: "पक्का करें कि इन ग्राहकों ने WhatsApp पर पेमेंट रिमाइंडर पाने की हाँ कही है।",
   remLang: "वह भाषा चुनें जो ये ग्राहक पसंद करते हैं।",
   remTooMuch: "एक बार में इतना जोड़ा नहीं जा सकता। इसे छोटे हिस्सों में बाँटें।",
@@ -101,6 +113,12 @@ const hi: Msgs = {
 };
 
 const mr: Msgs = {
+  ctLang: "या यादीसाठी भाषा निवडा.",
+  ctFile: "CSV फाइल निवडा.",
+  ctEmpty: "ती फाइल रिकामी आहे.",
+  ctNoPhones: "त्या फाइलमध्ये एकही योग्य फोन नंबर सापडला नाही.",
+  ctNothing: "बदलण्यासाठी काही नाही.",
+  ctNoContacts: "कोणताही संपर्क सापडला नाही.",
   remConsent: "या ग्राहकांनी WhatsApp वर पेमेंट रिमाइंडर घेण्यास होकार दिला आहे याची खात्री करा.",
   remLang: "या ग्राहकांना आवडणारी भाषा निवडा.",
   remTooMuch: "एकावेळी इतके जोडता येत नाही. ते लहान भागांत विभागा.",
@@ -142,6 +160,12 @@ const mr: Msgs = {
 };
 
 const gu: Msgs = {
+  ctLang: "આ યાદી માટે ભાષા પસંદ કરો.",
+  ctFile: "CSV ફાઇલ પસંદ કરો.",
+  ctEmpty: "તે ફાઇલ ખાલી છે.",
+  ctNoPhones: "તે ફાઇલમાં કોઈ સાચો ફોન નંબર મળ્યો નહીં.",
+  ctNothing: "બદલવા માટે કંઈ નથી.",
+  ctNoContacts: "કોઈ સંપર્ક મળ્યો નહીં.",
   remConsent: "ખાતરી કરો કે આ ગ્રાહકોએ WhatsApp પર પેમેન્ટ રિમાઇન્ડર મેળવવા હા કહી છે.",
   remLang: "આ ગ્રાહકો જે ભાષા પસંદ કરે તે પસંદ કરો.",
   remTooMuch: "એક સાથે આટલું ઉમેરી શકાતું નથી. તેને નાના ભાગમાં વહેંચો.",
@@ -183,6 +207,12 @@ const gu: Msgs = {
 };
 
 const ta: Msgs = {
+  ctLang: "இந்தத் தொகுப்புக்கான மொழியைத் தேர்ந்தெடுங்கள்.",
+  ctFile: "CSV கோப்பைத் தேர்ந்தெடுங்கள்.",
+  ctEmpty: "அந்தக் கோப்பு காலியாக உள்ளது.",
+  ctNoPhones: "அந்தக் கோப்பில் சரியான தொலைபேசி எண்கள் எதுவும் இல்லை.",
+  ctNothing: "புதுப்பிக்க எதுவும் இல்லை.",
+  ctNoContacts: "தொடர்புகள் எதுவும் கிடைக்கவில்லை.",
   remConsent: "இந்த வாடிக்கையாளர்கள் WhatsApp-ல் பணம் செலுத்தும் நினைவூட்டல்களைப் பெற சம்மதித்துள்ளனர் என்பதை உறுதிசெய்யுங்கள்.",
   remLang: "இந்த வாடிக்கையாளர்கள் விரும்பும் மொழியைத் தேர்ந்தெடுங்கள்.",
   remTooMuch: "ஒரே நேரத்தில் இவ்வளவு சேர்க்க முடியாது. சிறு தொகுதிகளாகப் பிரியுங்கள்.",
@@ -224,6 +254,12 @@ const ta: Msgs = {
 };
 
 const te: Msgs = {
+  ctLang: "ఈ బ్యాచ్‌కు భాషను ఎంచుకోండి.",
+  ctFile: "CSV ఫైల్ ఎంచుకోండి.",
+  ctEmpty: "ఆ ఫైల్ ఖాళీగా ఉంది.",
+  ctNoPhones: "ఆ ఫైల్‌లో సరైన ఫోన్ నంబర్లు దొరకలేదు.",
+  ctNothing: "అప్‌డేట్ చేయడానికి ఏమీ లేదు.",
+  ctNoContacts: "కాంటాక్టులు దొరకలేదు.",
   remConsent: "ఈ కస్టమర్లు WhatsApp‌లో చెల్లింపు రిమైండర్లు పొందడానికి అంగీకరించారని నిర్ధారించండి.",
   remLang: "ఈ కస్టమర్లు ఇష్టపడే భాషను ఎంచుకోండి.",
   remTooMuch: "ఒకేసారి ఇంత జోడించలేం. చిన్న భాగాలుగా విభజించండి.",
@@ -265,6 +301,12 @@ const te: Msgs = {
 };
 
 const kn: Msgs = {
+  ctLang: "ಈ ಬ್ಯಾಚ್‌ಗೆ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ.",
+  ctFile: "CSV ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ.",
+  ctEmpty: "ಆ ಫೈಲ್ ಖಾಲಿಯಿದೆ.",
+  ctNoPhones: "ಆ ಫೈಲ್‌ನಲ್ಲಿ ಸರಿಯಾದ ಫೋನ್ ಸಂಖ್ಯೆಗಳು ಸಿಗಲಿಲ್ಲ.",
+  ctNothing: "ನವೀಕರಿಸಲು ಏನೂ ಇಲ್ಲ.",
+  ctNoContacts: "ಸಂಪರ್ಕಗಳು ಸಿಗಲಿಲ್ಲ.",
   remConsent: "ಈ ಗ್ರಾಹಕರು WhatsApp‌ನಲ್ಲಿ ಪಾವತಿ ಜ್ಞಾಪನೆಗಳನ್ನು ಪಡೆಯಲು ಒಪ್ಪಿದ್ದಾರೆ ಎಂದು ಖಚಿತಪಡಿಸಿ.",
   remLang: "ಈ ಗ್ರಾಹಕರು ಇಷ್ಟಪಡುವ ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
   remTooMuch: "ಒಮ್ಮೆಗೆ ಇಷ್ಟು ಸೇರಿಸಲಾಗದು. ಚಿಕ್ಕ ಭಾಗಗಳಾಗಿ ವಿಭಜಿಸಿ.",
