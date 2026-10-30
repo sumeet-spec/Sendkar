@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import type { PaySettingsUi } from "@/lib/i18n/settingsCopy";
 
 interface Field {
   name: string;
@@ -8,8 +9,9 @@ interface Field {
 }
 
 export function PaymentGatewayCard({
-  title, description, configured, fields, saveAction, disconnectAction,
+  t, title, description, configured, fields, saveAction, disconnectAction,
 }: {
+  t: PaySettingsUi;
   title: string;
   description: string;
   configured: boolean;
@@ -25,7 +27,7 @@ export function PaymentGatewayCard({
     <div className="sk-card p-4">
       <div className="mb-1 flex items-center justify-between">
         <div className="font-medium">{title}</div>
-        {configured && <span className="sk-pill border-accent text-accent">Connected</span>}
+        {configured && <span className="sk-pill border-accent text-accent">{t.connected}</span>}
       </div>
       <p className="mb-3 text-[12.5px] text-faint">{description}</p>
       <form action={formAction} className="flex flex-col gap-2">
@@ -34,14 +36,14 @@ export function PaymentGatewayCard({
         ))}
         <div className="flex gap-2">
           <button type="submit" disabled={pending || disconnectPending} className="sk-btn sk-btn-primary disabled:opacity-60">
-            {pending ? "…" : "Save"}
+            {pending ? "…" : t.save}
           </button>
           {configured && (
             <button
               type="button"
               disabled={disconnectPending || pending}
               onClick={() => {
-                if (confirm(`Disconnect ${title}? Any active payment links may stop working.`)) {
+                if (confirm(t.confirmDisconnect.replace("{name}", title))) {
                   setDisconnectError(null);
                   startDisconnect(async () => {
                     const result = await disconnectAction();
@@ -51,12 +53,12 @@ export function PaymentGatewayCard({
               }}
               className="sk-btn sk-btn-ghost disabled:opacity-60"
             >
-              {disconnectPending ? "Disconnecting…" : "Disconnect"}
+              {disconnectPending ? t.disconnecting : t.disconnect}
             </button>
           )}
         </div>
         {state?.error && <p className="text-[12.5px] text-danger">{state.error}</p>}
-        {state?.success && <p className="text-[12.5px] text-accent">Saved.</p>}
+        {state?.success && <p className="text-[12.5px] text-accent">{t.saved}</p>}
         {disconnectError && <p className="text-[12.5px] text-danger">{disconnectError}</p>}
       </form>
     </div>

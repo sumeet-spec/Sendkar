@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
 import { refreshAutoTags, installCareTemplates } from "@/lib/care/careServer";
 import { PACK_LANGUAGES, type PackLang } from "@/lib/templatePack";
+import { msg } from "@/lib/i18n/msg";
 
 export interface CareResult { error?: string; success?: boolean; message?: string }
 
@@ -20,7 +21,7 @@ function realDate(v: string): string | null {
 /** Birthday, anniversary and credit limit for one customer. */
 export async function saveCustomerDetails(_prev: unknown, formData: FormData): Promise<CareResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const contactId = String(formData.get("contactId") ?? "");
 
   const dates: Record<string, string | null> = {};
@@ -28,7 +29,7 @@ export async function saveCustomerDetails(_prev: unknown, formData: FormData): P
     const raw = String(formData.get(field) ?? "").trim();
     if (!raw) { dates[field] = null; continue; }
     const ok = realDate(raw);
-    if (!ok) return { error: "That date does not look right." };
+    if (!ok) return { error: await msg("badDate") };
     dates[field] = ok;
   }
 
@@ -36,12 +37,12 @@ export async function saveCustomerDetails(_prev: unknown, formData: FormData): P
   let creditLimit: number | null = null;
   if (limitRaw) {
     creditLimit = Number.parseFloat(limitRaw);
-    if (!Number.isFinite(creditLimit) || creditLimit < 0 || creditLimit > 99_999_999) return { error: "Enter the credit limit as a number, like 20000." };
+    if (!Number.isFinite(creditLimit) || creditLimit < 0 || creditLimit > 99_999_999) return { error: await msg("badCreditLimit") };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.from("contacts").update({ ...dates, credit_limit: creditLimit }).eq("id", contactId).eq("workspace_id", workspace.id);
-  if (error) return { error: "Could not save. Try again." };
+  if (error) return { error: await msg("saveFail") };
   await refreshAutoTags(createAdminClient(), workspace.id, [contactId]).catch(() => 0);
   revalidatePath(`/customers/${contactId}`);
   revalidatePath("/customers");
@@ -51,26 +52,26 @@ export async function saveCustomerDetails(_prev: unknown, formData: FormData): P
 /** A note, or a follow-up task with a day to do it. */
 export async function addNote(_prev: unknown, formData: FormData): Promise<CareResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const contactId = String(formData.get("contactId") ?? "");
   const body = String(formData.get("body") ?? "").replace(/\s+/g, " ").trim().slice(0, 300);
-  if (!body) return { error: "Write something first." };
+  if (!body) return { error: await msg("writeFirst") };
   const kind = formData.get("kind") === "task" ? "task" : "note";
   let dueDate: string | null = null;
   if (kind === "task") {
     dueDate = realDate(String(formData.get("dueDate") ?? ""));
-    if (!dueDate) return { error: "Pick the day to follow up." };
+    if (!dueDate) return { error: await msg("pickDay") };
   }
 
   const userId = await getCurrentUserId();
-  if (!userId) return { error: "Not logged in." };
+  if (!userId) return { error: await msg("notLoggedIn") };
   const supabase = await createClient();
   const { data: contact } = await supabase.from("contacts").select("id").eq("id", contactId).eq("workspace_id", workspace.id).maybeSingle();
-  if (!contact) return { error: "Customer not found." };
+  if (!contact) return { error: await msg("customerNotFound") };
   const { error } = await supabase.from("contact_notes").insert({
     workspace_id: workspace.id, contact_id: contactId, kind, body, due_date: dueDate, author_id: userId,
   });
-  if (error) return { error: "Could not save. Try again." };
+  if (error) return { error: await msg("saveFail") };
   revalidatePath(`/customers/${contactId}`);
   revalidatePath("/customers");
   return { success: true };
@@ -88,13 +89,13 @@ export async function completeTask(id: string): Promise<void> {
 /** The two switches for messages the system sends by itself. */
 export async function saveCareSwitches(_prev: unknown, formData: FormData): Promise<CareResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const supabase = await createClient();
   const { error } = await supabase.from("workspaces").update({
     birthday_wishes_enabled: formData.get("birthday") === "on",
     reorder_nudges_enabled: formData.get("reorder") === "on",
   }).eq("id", workspace.id);
-  if (error) return { error: "Could not save. Try again." };
+  if (error) return { error: await msg("saveFail") };
   revalidatePath("/customers");
   return { success: true };
 }
@@ -102,7 +103,7 @@ export async function saveCareSwitches(_prev: unknown, formData: FormData): Prom
 /** Sends the birthday and restock messages to WhatsApp for approval, in Hindi, Gujarati and English. */
 export async function setUpCareMessages(): Promise<CareResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const langs = PACK_LANGUAGES.map((l) => l.code) as PackLang[];
   const result = await installCareTemplates(createAdminClient(), workspace, langs);
   revalidatePath("/customers");

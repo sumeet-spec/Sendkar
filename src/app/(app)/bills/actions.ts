@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentWorkspace, getCurrentUserId } from "@/lib/workspace";
 import { workspaceCanSend } from "@/lib/plans";
 import { refusal } from "@/lib/gateMessages";
+import { showStored } from "@/lib/i18n/serverMsgs";
+import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { isRateLimited } from "@/lib/rateLimit";
 import { indianMobile } from "@/lib/freeCard";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
@@ -12,6 +14,7 @@ import { todayInIndia } from "@/lib/reminders";
 import { isRecent, matchContact, parseSales, MAX_SALES_ROWS } from "@/lib/bills/salesParse";
 import { createBill, sendBill, type BillWorkspace } from "@/lib/bills/billSend";
 import type { BillItem } from "@/lib/bills/renderBill";
+import { msg } from "@/lib/i18n/msg";
 
 export interface BillFormResult {
   error?: string;
@@ -39,30 +42,30 @@ function parseItems(raw: string): BillItem[] {
 
 export async function makeBill(_prev: unknown, formData: FormData): Promise<BillFormResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
 
   const phone = indianMobile(String(formData.get("phone") ?? ""));
-  if (!phone) return { error: "Enter a 10-digit mobile number." };
+  if (!phone) return { error: await msg("badPhone") };
 
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const typed = num(formData.get("amount"));
   const fromItems = items.reduce((t, i) => t + (i.rate ? i.rate * (i.qty ?? 1) : 0), 0);
   const amount = typed ?? (fromItems > 0 ? fromItems : undefined);
-  if (!amount) return { error: "Enter the bill amount." };
+  if (!amount) return { error: await msg("needAmount") };
 
   const lang = String(formData.get("lang") ?? "");
-  if (!LANGUAGES.some((l) => l.code === lang)) return { error: "Pick a language for the bill." };
+  if (!LANGUAGES.some((l) => l.code === lang)) return { error: await msg("pickBillLang") };
 
   const paid = formData.get("paid") !== "later";
   let dueDate: string | null = null;
   if (!paid) {
     dueDate = String(formData.get("dueDate") ?? "");
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) return { error: "Pick the date the customer will pay by." };
-    if (dueDate < todayInIndia()) return { error: "The pay-by date has already passed." };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) return { error: await msg("pickDueDate") };
+    if (dueDate < todayInIndia()) return { error: await msg("dueDatePassed") };
   }
 
-  if (await isRateLimited(`bill:${workspace.id}`, 400, 3600)) return { error: "Too many bills just now. Try again in a little while." };
+  if (await isRateLimited(`bill:${workspace.id}`, 400, 3600)) return { error: await msg("tooManyBills") };
 
   const result = await createBill(createAdminClient(), workspace as BillWorkspace, {
     phone,
@@ -78,21 +81,22 @@ export async function makeBill(_prev: unknown, formData: FormData): Promise<Bill
   revalidatePath("/analytics");
   revalidatePath("/dashboard");
   revalidatePath("/reminders");
-  if (!result.ok) return { error: result.error };
+  const ui = await getCurrentLanguage();
+  if (!result.ok) return { error: showStored(result.error, ui) };
   const orderId = String(formData.get("orderRequestId") ?? "");
   if (orderId) {
     await createAdminClient().from("order_requests").update({ status: "billed", bill_id: result.billId }).eq("id", orderId).eq("workspace_id", workspace.id);
   }
-  return { success: true, billNo: result.billNo, sent: result.sent, notice: result.notice, overLimit: result.overLimit };
+  return { success: true, billNo: result.billNo, sent: result.sent, notice: showStored(result.notice, ui) || undefined, overLimit: result.overLimit };
 }
 
 export async function resendBill(billId: string): Promise<{ error?: string; sent?: boolean }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
   const result = await sendBill(createAdminClient(), workspace as BillWorkspace, billId);
   revalidatePath("/bills");
-  return result.ok ? { sent: true } : { error: result.error };
+  return result.ok ? { sent: true } : { error: showStored(result.error, await getCurrentLanguage()) };
 }
 
 export interface SalesImportResult {
@@ -107,13 +111,13 @@ export interface SalesImportResult {
 /** Bills the last two days' sales from a pasted Tally or Excel list. */
 export async function importSalesBills(_prev: unknown, formData: FormData): Promise<SalesImportResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
 
   const lang = String(formData.get("lang") ?? "");
-  if (!LANGUAGES.some((l) => l.code === lang)) return { error: "Pick a language for the bills." };
+  if (!LANGUAGES.some((l) => l.code === lang)) return { error: await msg("pickBillLang") };
   const text = String(formData.get("pasted") ?? "");
-  if (text.length > 100_000) return { error: "That is too much to paste at once." };
+  if (text.length > 100_000) return { error: await msg("tooMuchPaste") };
 
   const parsed = parseSales(text);
   if (parsed.rows.length === 0) return { error: parsed.errors[0]?.message ?? "No sales found in what you pasted." };
@@ -122,7 +126,7 @@ export async function importSalesBills(_prev: unknown, formData: FormData): Prom
   const recent = parsed.rows.filter((r) => isRecent(r.date, today));
   const old = parsed.rows.length - recent.length;
   if (recent.length === 0) return { sent: 0, old };
-  if (recent.length > MAX_SALES_ROWS) return { error: `Paste at most ${MAX_SALES_ROWS} sales at a time. You pasted ${recent.length} from the last two days.` };
+  if (recent.length > MAX_SALES_ROWS) return { error: await msg("pasteMax", { max: MAX_SALES_ROWS, n: recent.length }) };
 
   const paid = formData.get("paid") !== "later";
   const dueDate = paid ? null : new Date(Date.now() + 5.5 * 3600000 + 7 * 86400000).toISOString().slice(0, 10);
@@ -135,6 +139,7 @@ export async function importSalesBills(_prev: unknown, formData: FormData): Prom
     : { data: [] as Array<{ external_ref: string }> };
   const billed = new Set((done ?? []).map((d) => d.external_ref));
 
+  const ui = await getCurrentLanguage();
   const userId = await getCurrentUserId();
   const result: SalesImportResult = { sent: 0, old, already: 0, noNumber: [], failed: [] };
   for (const row of recent) {
@@ -147,7 +152,7 @@ export async function importSalesBills(_prev: unknown, formData: FormData): Prom
       paid, dueDate, externalRef: ref, createdBy: userId,
     });
     if (made.ok && made.sent) result.sent!++;
-    else result.failed!.push(`${row.partyName}: ${made.ok ? made.notice ?? "not sent" : made.error}`);
+    else result.failed!.push(`${row.partyName}: ${showStored(made.ok ? made.notice ?? "" : made.error, ui) || "-"}`);
   }
   revalidatePath("/bills");
   revalidatePath("/analytics");
@@ -165,10 +170,10 @@ export async function dismissOrder(id: string): Promise<void> {
 /** The shop got the money outside Sendkar (UPI, cash, a pasted link): the bill and its payment reminder are closed. */
 export async function markBillPaid(id: string): Promise<{ error?: string }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const admin = createAdminClient();
   const { data: bill } = await admin.from("bills").select("id, receivable_id, paid").eq("id", id).eq("workspace_id", workspace.id).maybeSingle();
-  if (!bill) return { error: "Bill not found." };
+  if (!bill) return { error: await msg("billNotFound") };
   if (!bill.paid) {
     await admin.from("bills").update({ paid: true, paid_at: new Date().toISOString(), paid_via: "manual" }).eq("id", id);
     if (bill.receivable_id) await admin.from("receivables").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", bill.receivable_id).eq("status", "open");

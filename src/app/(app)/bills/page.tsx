@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspace";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { BILL_UI } from "@/lib/i18n/billUi";
+import { showStored } from "@/lib/i18n/serverMsgs";
 import { formatRupees } from "@/lib/bills/renderBill";
 import { canSendFromWorkspace } from "@/lib/planGate";
 import { BILL_IMPORT_UI } from "@/lib/i18n/billImportUi";
@@ -157,7 +158,7 @@ export default async function BillsPage({ searchParams }: { searchParams: Promis
                     </td>
                     <td className="px-4 py-3">
                       <span className={`sk-pill ${s.cls}`}>{s.text}</span>
-                      {r.send_error && r.send_status !== "sent" && <div className="mt-1 max-w-[220px] text-[11.5px] text-muted">{r.send_error}</div>}
+                      {r.send_error && r.send_status !== "sent" && <div className="mt-1 max-w-[220px] text-[11.5px] text-muted">{showStored(r.send_error, lang)}</div>}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex flex-col items-end gap-1">

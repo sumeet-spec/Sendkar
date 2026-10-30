@@ -9,6 +9,7 @@ import { enrollOnOrderPlaced } from "@/lib/sequences";
 import { contactLine, nameFor, DEFAULT_PRIMARY, sniffImage, type BrandKit } from "@/lib/brandKit";
 import { renderBillPng, formatRupees, type BillItem } from "./renderBill";
 import { refreshAutoTags } from "@/lib/care/careServer";
+import { storeMsg } from "@/lib/i18n/serverMsgs";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -145,8 +146,8 @@ export async function ensureBillTemplate(admin: Admin, ws: BillWorkspace, lang: 
  * sends it. The bill is saved even when it cannot be sent yet, so nothing the shopkeeper typed is lost.
  */
 export async function createBill(admin: Admin, ws: BillWorkspace, input: NewBill): Promise<BillResult> {
-  if (!isLang(input.lang)) return { ok: false, error: "Pick a language for the bill." };
-  if (!(input.amount > 0) || input.amount > 99_999_999) return { ok: false, error: "Enter the bill amount." };
+  if (!isLang(input.lang)) return { ok: false, error: storeMsg("pickBillLang") };
+  if (!(input.amount > 0) || input.amount > 99_999_999) return { ok: false, error: storeMsg("needAmount") };
 
   const { data: kitRow } = await admin.from("brand_kits").select("*").eq("workspace_id", ws.id).maybeSingle();
   const kit = (kitRow as (BrandKit & { gstin?: string }) | null) ?? null;
@@ -160,7 +161,7 @@ export async function createBill(admin: Admin, ws: BillWorkspace, input: NewBill
       .from("contacts")
       .insert({ workspace_id: ws.id, phone: input.phone, name: input.customerName || null, language: input.lang, source: "bill", ...(input.offersOk ? { consent_at: new Date().toISOString(), consent_source: "bill" } : {}) })
       .select("id").single();
-    if (error || !created) return { ok: false, error: "Could not save the customer. Try again." };
+    if (error || !created) return { ok: false, error: storeMsg("customerSaveFail") };
     contactId = created.id;
   } else {
     const patch: Record<string, unknown> = {};
@@ -168,10 +169,10 @@ export async function createBill(admin: Admin, ws: BillWorkspace, input: NewBill
     if (input.offersOk && !existing.consent_at) { patch.consent_at = new Date().toISOString(); patch.consent_source = "bill"; }
     if (Object.keys(patch).length) await admin.from("contacts").update(patch).eq("id", existing.id);
   }
-  if (existing?.opted_out) return { ok: false, error: "This customer asked not to get messages on WhatsApp. Give them a printed bill instead." };
+  if (existing?.opted_out) return { ok: false, error: storeMsg("optedOutBill") };
 
   const { data: numberRow, error: numErr } = await admin.rpc("next_bill_number", { p_workspace: ws.id });
-  if (numErr || typeof numberRow !== "string") return { ok: false, error: "Could not number the bill. Try again." };
+  if (numErr || typeof numberRow !== "string") return { ok: false, error: storeMsg("numberBillFail") };
   const billNo = numberRow;
 
   const items = input.items.filter((i) => i.name.trim()).slice(0, 14).map((i) => ({ name: i.name.trim().slice(0, 80), ...(i.qty ? { qty: i.qty } : {}), ...(i.rate ? { rate: i.rate } : {}) }));
@@ -190,14 +191,14 @@ export async function createBill(admin: Admin, ws: BillWorkspace, input: NewBill
   });
   const imagePath = `${ws.id}/${billNo}-${Date.now()}.png`;
   const { error: upErr } = await admin.storage.from(BILL_BUCKET).upload(imagePath, png, { contentType: "image/png" });
-  if (upErr) return { ok: false, error: "Could not save the bill picture. Try again." };
+  if (upErr) return { ok: false, error: storeMsg("pictureSaveFail") };
 
   const { data: bill, error: billErr } = await admin.from("bills").insert({
     workspace_id: ws.id, contact_id: contactId, bill_no: billNo, customer_name: input.customerName, phone: input.phone, lang: input.lang,
     items, amount: input.amount, paid: input.paid, due_date: input.paid ? null : input.dueDate ?? null, note: input.note || null, external_ref: input.externalRef || null,
     image_path: imagePath, created_by: input.createdBy ?? null,
   }).select("id").single();
-  if (billErr || !bill) return { ok: false, error: "Could not save the bill. Try again." };
+  if (billErr || !bill) return { ok: false, error: storeMsg("billSaveFail") };
 
   // The sale counts as revenue from the moment it is billed. A bill still unpaid also becomes a payment reminder.
   const attributed = contactId ? await attributeOrder(admin, contactId, new Date()) : null;
@@ -238,7 +239,7 @@ export async function createBill(admin: Admin, ws: BillWorkspace, input: NewBill
 /** Sends (or re-sends) a saved bill. Safe to call again after the bill message is approved. */
 export async function sendBill(admin: Admin, ws: BillWorkspace, billId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const { data: bill } = await admin.from("bills").select("*").eq("id", billId).eq("workspace_id", ws.id).maybeSingle();
-  if (!bill) return { ok: false, error: "Bill not found." };
+  if (!bill) return { ok: false, error: storeMsg("billNotFound") };
   const lang = (isLang(bill.lang ?? "") ? bill.lang : "en") as LanguageCode;
 
   const fail = async (error: string, status: "failed" | "not_sent" = "not_sent") => {
@@ -246,18 +247,18 @@ export async function sendBill(admin: Admin, ws: BillWorkspace, billId: string):
     return { ok: false as const, error };
   };
 
-  if (!ws.whatsapp_phone_number_id || !ws.whatsapp_access_token) return fail("Connect your WhatsApp number first. The bill is saved and can be sent later.");
+  if (!ws.whatsapp_phone_number_id || !ws.whatsapp_access_token) return fail(storeMsg("needNumber"));
 
   const { data: kitRow } = await admin.from("brand_kits").select("*").eq("workspace_id", ws.id).maybeSingle();
   // An unpaid bill goes with a Pay now button when the shop has set up how customers pay.
   const withPay = !bill.paid && canCollect(ws as PayWorkspace);
   const tpl = await ensureBillTemplate(admin, ws, lang, (kitRow as BrandKit | null) ?? null, withPay);
-  if (tpl.state === "pending") return fail("WhatsApp is still approving your bill message. It usually takes a few minutes. Tap Send again then.");
-  if (tpl.state === "rejected") return fail(`WhatsApp did not accept the bill message${tpl.reason ? `: ${tpl.reason}` : "."}`);
-  if (tpl.state !== "approved") return fail("Connect your WhatsApp number first. The bill is saved and can be sent later.");
+  if (tpl.state === "pending") return fail(storeMsg("pendingApproval"));
+  if (tpl.state === "rejected") return fail(storeMsg("templateRejected", tpl.reason ?? "-"));
+  if (tpl.state !== "approved") return fail(storeMsg("needNumber"));
 
   const { data: signed } = await admin.storage.from(BILL_BUCKET).createSignedUrl(bill.image_path, 3600);
-  if (!signed?.signedUrl) return fail("Could not prepare the bill picture.");
+  if (!signed?.signedUrl) return fail(storeMsg("prepPicture"));
 
   const shop = (kitRow as BrandKit | null)?.name?.trim() || ws.name;
   try {
@@ -274,6 +275,6 @@ export async function sendBill(admin: Admin, ws: BillWorkspace, billId: string):
     }
     return { ok: true };
   } catch (err) {
-    return fail(err instanceof Error ? err.message : "The send failed.", "failed");
+    return fail(err instanceof Error ? err.message : storeMsg("sendFailed"), "failed");
   }
 }

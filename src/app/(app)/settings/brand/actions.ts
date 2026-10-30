@@ -5,22 +5,23 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { revalidatePath } from "next/cache";
 import { LANGUAGES } from "@/lib/i18n/dictionaries";
 import { cleanGstin, cleanNames, isHexColor } from "@/lib/brandKit";
+import { msg } from "@/lib/i18n/msg";
 
 export async function saveBrandKit(_prev: unknown, formData: FormData) {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
 
   const name = String(formData.get("name") ?? "").trim().slice(0, 60);
-  if (!name) return { error: "Add your shop or business name first." };
+  if (!name) return { error: await msg("needShopName") };
 
   const primary = String(formData.get("primary_color") ?? "").trim();
   const accent = String(formData.get("accent_color") ?? "").trim();
-  if (!isHexColor(primary) || !isHexColor(accent)) return { error: "Pick the colours again." };
+  if (!isHexColor(primary) || !isHexColor(accent)) return { error: await msg("pickColours") };
 
   const names = cleanNames(Object.fromEntries(LANGUAGES.map((l) => [l.code, formData.get(`name_${l.code}`)])));
 
   const gstin = cleanGstin(String(formData.get("gstin") ?? ""));
-  if (gstin === null) return { error: "That GSTIN does not look right. It has 15 letters and numbers, like 24ABCDE1234F1Z5. Leave it empty if you do not have one." };
+  if (gstin === null) return { error: await msg("gstinBad") };
 
   const supabase = await createClient();
   const { error } = await supabase.from("brand_kits").upsert({

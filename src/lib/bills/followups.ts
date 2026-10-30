@@ -28,7 +28,7 @@ export const FOLLOWUP_EXAMPLES: Record<LanguageCode, [string, string]> = {
   ta: ["ராஜேஷ்", "ஷர்மா டிரேடர்ஸ்"], te: ["రాజేష్", "శర్మ ట్రేడర్స్"], kn: ["ರಾಜೇಶ್", "ಶರ್ಮಾ ಟ್ರೇಡರ್ಸ್"],
 };
 
-export type BodyCheck = { ok: true; body: string } | { ok: false; reason: string };
+export type BodyCheck = { ok: true; body: string } | { ok: false; reason: string; key: import("@/lib/i18n/serverMsgs").MsgKey };
 
 /**
  * Meta's rules for a template body with {{1}} (customer's name) and {{2}} (shop name): both must appear, neither
@@ -36,16 +36,16 @@ export type BodyCheck = { ok: true; body: string } | { ok: false; reason: string
  */
 export function checkFollowupBody(raw: string): BodyCheck {
   const body = raw.replace(/\s+/g, " ").trim();
-  if (!body) return { ok: false, reason: "The message is empty." };
-  if (body.length > 600) return { ok: false, reason: "Keep the message under 600 characters." };
+  if (!body) return { ok: false, reason: "The message is empty.", key: "r_empty" };
+  if (body.length > 600) return { ok: false, reason: "Keep the message under 600 characters.", key: "r_tooLong" };
   const vars = [...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
-  if (!vars.includes(1)) return { ok: false, reason: "The message must greet the customer by name: it needs {{1}}." };
-  if (!vars.includes(2)) return { ok: false, reason: "The message must include the shop name: it needs {{2}}." };
-  if (vars.some((v) => v !== 1 && v !== 2)) return { ok: false, reason: "Only {{1}} (name) and {{2}} (shop name) can be used." };
-  if (body.startsWith("{{") || body.endsWith("}}")) return { ok: false, reason: "The message cannot start or end with a name placeholder." };
-  if (/\}\}\s*\{\{/.test(body)) return { ok: false, reason: "Two placeholders cannot sit side by side." };
+  if (!vars.includes(1)) return { ok: false, reason: "The message must greet the customer by name: it needs {{1}}.", key: "r_needName" };
+  if (!vars.includes(2)) return { ok: false, reason: "The message must include the shop name: it needs {{2}}.", key: "r_needShop" };
+  if (vars.some((v) => v !== 1 && v !== 2)) return { ok: false, reason: "Only {{1}} (name) and {{2}} (shop name) can be used.", key: "r_onlyTwo" };
+  if (body.startsWith("{{") || body.endsWith("}}")) return { ok: false, reason: "The message cannot start or end with a name placeholder.", key: "r_startEnd" };
+  if (/\}\}\s*\{\{/.test(body)) return { ok: false, reason: "Two placeholders cannot sit side by side.", key: "r_sideBySide" };
   const words = body.replace(/\{\{\d+\}\}/g, "").split(/\s+/).filter(Boolean).length;
-  if (words < vars.length * 3) return { ok: false, reason: "Add a few more words around the placeholders." };
+  if (words < vars.length * 3) return { ok: false, reason: "Add a few more words around the placeholders.", key: "r_fewWords" };
   return { ok: true, body };
 }
 

@@ -1,0 +1,239 @@
+import type { LanguageCode } from "./dictionaries";
+
+/**
+ * Messages the server sends back after a button press (errors and notices), in the language the shopkeeper uses.
+ * `{n}`, `{max}` and `{reason}` are filled in by `fillMsg`. Pure, so the server and the pages can both use it.
+ */
+export type MsgKey =
+  | "noWorkspace" | "notLoggedIn" | "saveFail" | "badPhone" | "needAmount" | "pickBillLang" | "pickDueDate" | "dueDatePassed" | "tooManyBills"
+  | "billNotFound" | "tooMuchPaste" | "pasteMax" | "customerSaveFail" | "optedOutBill" | "numberBillFail" | "pictureSaveFail" | "billSaveFail"
+  | "needNumber" | "pendingApproval" | "templateRejected" | "prepPicture" | "sendFailed"
+  | "pickLangTime" | "goalShort" | "tooManyDrafts" | "aiRule" | "aiOff" | "aiFail" | "whatsappRefused" | "msgSavedElsewhere" | "journeyFail" | "journeyAddFail"
+  | "customerNotFound" | "customerOptedOut" | "noConsent" | "messageNotFound" | "templatePending"
+  | "r_empty" | "r_tooLong" | "r_needName" | "r_needShop" | "r_onlyTwo" | "r_startEnd" | "r_sideBySide" | "r_fewWords"
+  | "itemName" | "itemPrice" | "itemPhoto" | "itemPhotoSave" | "itemMax" | "itemSave"
+  | "badDate" | "badCreditLimit" | "writeFirst" | "pickDay"
+  | "enterField" | "upiBad" | "upiName" | "gatewayFirst" | "linkBad" | "pickMode"
+  | "needShopName" | "pickColours" | "gstinBad" | "aiPlan";
+
+type Msgs = Record<MsgKey, string>;
+
+const en: Msgs = {
+  aiPlan: "The AI agent needs the Growth plan or above: every reply it sends is a real AI request.",
+  noWorkspace: "No workspace found.", notLoggedIn: "Please log in again.", saveFail: "Could not save. Try again.",
+  badPhone: "Enter a 10-digit mobile number.", needAmount: "Enter the bill amount.", pickBillLang: "Pick a language for the bill.",
+  pickDueDate: "Pick the date the customer will pay by.", dueDatePassed: "That pay-by date has already passed.", tooManyBills: "Too many bills just now. Try again in a little while.",
+  billNotFound: "Bill not found.", tooMuchPaste: "That is too much to paste at once.", pasteMax: "Paste at most {max} sales at a time. You pasted {n} from the last two days.",
+  customerSaveFail: "Could not save the customer. Try again.", optedOutBill: "This customer asked not to get messages on WhatsApp. Give them a printed bill instead.",
+  numberBillFail: "Could not number the bill. Try again.", pictureSaveFail: "Could not save the bill picture. Try again.", billSaveFail: "Could not save the bill. Try again.",
+  needNumber: "Connect your WhatsApp number first. The bill is saved and can be sent later.", pendingApproval: "WhatsApp is still approving your bill message. It usually takes a few minutes. Tap Send again then.",
+  templateRejected: "WhatsApp did not accept the bill message: {reason}", prepPicture: "Could not prepare the bill picture.", sendFailed: "The send failed.",
+  pickLangTime: "Pick a language and a time.", goalShort: "Write in a few words what you want to tell your customers.", tooManyDrafts: "Too many drafts just now. Try again in a little while.",
+  aiRule: "The AI draft broke a WhatsApp rule ({reason}) Try again, or edit it.", aiOff: "AI writing is not switched on yet.", aiFail: "Could not write the message just now. Try again.",
+  whatsappRefused: "WhatsApp did not accept this message: {reason}", msgSavedElsewhere: "WhatsApp has the message, but it could not be saved here. Try again.",
+  journeyFail: "Could not set up the follow-up journey. Try again.", journeyAddFail: "Could not add the message to your journey. Try again.",
+  customerNotFound: "Customer not found.", customerOptedOut: "This customer asked not to get messages.", noConsent: "This customer has not agreed to get offers on WhatsApp, so a promotional message cannot be sent.",
+  messageNotFound: "Message not found.", templatePending: "WhatsApp is still approving this message. Try again in a little while.",
+  r_empty: "The message is empty.", r_tooLong: "Keep the message under 600 characters.", r_needName: "The message must greet the customer by name: it needs {{1}}.",
+  r_needShop: "The message must include the shop name: it needs {{2}}.", r_onlyTwo: "Only {{1}} (name) and {{2}} (shop name) can be used.",
+  r_startEnd: "The message cannot start or end with a name placeholder.", r_sideBySide: "Two placeholders cannot sit side by side.", r_fewWords: "Add a few more words around the placeholders.",
+  itemName: "Enter a name for the item.", itemPrice: "Enter the price as a number, like 640.", itemPhoto: "The photo must be a PNG, JPG or WebP under 1 MB.",
+  itemPhotoSave: "Could not save the photo. Try again.", itemMax: "That is the most items a shop can list.", itemSave: "Could not save the item. Try again.",
+  badDate: "That date does not look right.", badCreditLimit: "Enter the credit limit as a number, like 20000.", writeFirst: "Write something first.", pickDay: "Pick the day to follow up.",
+  enterField: "Enter at least one field.", upiBad: "That does not look like a UPI ID. It looks like name@bank, for example sharma@okhdfcbank.",
+  upiName: "Enter the name customers should see when they pay, usually your shop name.", gatewayFirst: "Connect Razorpay or PayU below first, then choose this.",
+  linkBad: "Paste a full payment link that starts with https://", pickMode: "Pick how customers pay you.",
+  needShopName: "Add your shop or business name first.", pickColours: "Pick the colours again.", gstinBad: "That GSTIN does not look right. It has 15 letters and numbers, like 24ABCDE1234F1Z5. Leave it empty if you do not have one.",
+};
+
+const hi: Msgs = {
+  aiPlan: "AI एजेंट के लिए ग्रोथ प्लान या उससे ऊपर चाहिए: इसका हर जवाब एक असली AI अनुरोध है।",
+  noWorkspace: "कारोबार नहीं मिला।", notLoggedIn: "कृपया फिर से लॉग इन करें।", saveFail: "सेव नहीं हो सका। फिर कोशिश करें।",
+  badPhone: "10 अंकों का मोबाइल नंबर डालें।", needAmount: "बिल की रकम डालें।", pickBillLang: "बिल की भाषा चुनें।",
+  pickDueDate: "वह तारीख़ चुनें जब तक ग्राहक भुगतान करेगा।", dueDatePassed: "वह तारीख़ निकल चुकी है।", tooManyBills: "अभी बहुत ज़्यादा बिल बन गए। थोड़ी देर में फिर कोशिश करें।",
+  billNotFound: "बिल नहीं मिला।", tooMuchPaste: "एक बार में इतना पेस्ट नहीं हो सकता।", pasteMax: "एक बार में अधिकतम {max} बिक्री पेस्ट करें। आपने पिछले दो दिन की {n} पेस्ट की हैं।",
+  customerSaveFail: "ग्राहक सेव नहीं हो सका। फिर कोशिश करें।", optedOutBill: "इस ग्राहक ने WhatsApp पर संदेश न पाने को कहा है। इन्हें छपा हुआ बिल दें।",
+  numberBillFail: "बिल का नंबर नहीं बन सका। फिर कोशिश करें।", pictureSaveFail: "बिल की तस्वीर सेव नहीं हो सकी। फिर कोशिश करें।", billSaveFail: "बिल सेव नहीं हो सका। फिर कोशिश करें।",
+  needNumber: "पहले अपना WhatsApp नंबर जोड़ें। बिल सेव है और बाद में भेजा जा सकता है।", pendingApproval: "WhatsApp अभी आपके बिल का संदेश मंज़ूर कर रहा है। आमतौर पर कुछ मिनट लगते हैं। तब फिर से भेजें दबाएँ।",
+  templateRejected: "WhatsApp ने बिल का संदेश स्वीकार नहीं किया: {reason}", prepPicture: "बिल की तस्वीर तैयार नहीं हो सकी।", sendFailed: "भेजना विफल रहा।",
+  pickLangTime: "भाषा और समय चुनें।", goalShort: "ग्राहकों से क्या कहना है, कुछ शब्दों में लिखें।", tooManyDrafts: "अभी बहुत ज़्यादा ड्राफ़्ट बन गए। थोड़ी देर में फिर कोशिश करें।",
+  aiRule: "AI के ड्राफ़्ट ने WhatsApp का एक नियम तोड़ा ({reason}) फिर कोशिश करें, या ख़ुद बदलें।", aiOff: "AI से लिखवाना अभी चालू नहीं है।", aiFail: "अभी संदेश नहीं लिखा जा सका। फिर कोशिश करें।",
+  whatsappRefused: "WhatsApp ने यह संदेश स्वीकार नहीं किया: {reason}", msgSavedElsewhere: "WhatsApp के पास संदेश है, पर यहाँ सेव नहीं हो सका। फिर कोशिश करें।",
+  journeyFail: "फ़ॉलो-अप सेट नहीं हो सका। फिर कोशिश करें।", journeyAddFail: "संदेश आपके फ़ॉलो-अप में नहीं जुड़ सका। फिर कोशिश करें।",
+  customerNotFound: "ग्राहक नहीं मिला।", customerOptedOut: "इस ग्राहक ने संदेश न पाने को कहा है।", noConsent: "इस ग्राहक ने WhatsApp पर ऑफ़र पाने की हाँ नहीं कही है, इसलिए प्रचार का संदेश नहीं भेजा जा सकता।",
+  messageNotFound: "संदेश नहीं मिला।", templatePending: "WhatsApp अभी इस संदेश को मंज़ूर कर रहा है। थोड़ी देर में फिर कोशिश करें।",
+  r_empty: "संदेश ख़ाली है।", r_tooLong: "संदेश 600 अक्षरों से छोटा रखें।", r_needName: "संदेश में ग्राहक का नाम होना चाहिए: इसमें {{1}} चाहिए।",
+  r_needShop: "संदेश में दुकान का नाम होना चाहिए: इसमें {{2}} चाहिए।", r_onlyTwo: "सिर्फ़ {{1}} (नाम) और {{2}} (दुकान का नाम) इस्तेमाल हो सकते हैं।",
+  r_startEnd: "संदेश नाम वाली जगह से शुरू या ख़त्म नहीं हो सकता।", r_sideBySide: "दो जगहें एक-दूसरे के बगल में नहीं हो सकतीं।", r_fewWords: "इन जगहों के आसपास कुछ और शब्द जोड़ें।",
+  itemName: "सामान का नाम लिखें।", itemPrice: "दाम संख्या में लिखें, जैसे 640।", itemPhoto: "फ़ोटो PNG, JPG या WebP और 1 MB से छोटी होनी चाहिए।",
+  itemPhotoSave: "फ़ोटो सेव नहीं हो सकी। फिर कोशिश करें।", itemMax: "एक दुकान इससे ज़्यादा सामान नहीं जोड़ सकती।", itemSave: "सामान सेव नहीं हो सका। फिर कोशिश करें।",
+  badDate: "यह तारीख़ सही नहीं लग रही।", badCreditLimit: "उधार की सीमा संख्या में लिखें, जैसे 20000।", writeFirst: "पहले कुछ लिखें।", pickDay: "फ़ॉलो-अप का दिन चुनें।",
+  enterField: "कम से कम एक जगह भरें।", upiBad: "यह UPI ID जैसी नहीं लग रही। यह name@bank जैसी होती है, जैसे sharma@okhdfcbank।",
+  upiName: "वह नाम लिखें जो भुगतान करते समय ग्राहक को दिखे, आमतौर पर आपकी दुकान का नाम।", gatewayFirst: "पहले नीचे Razorpay या PayU जोड़ें, फिर इसे चुनें।",
+  linkBad: "https:// से शुरू होने वाला पूरा पेमेंट लिंक पेस्ट करें।", pickMode: "चुनें कि ग्राहक आपको कैसे भुगतान करें।",
+  needShopName: "पहले अपनी दुकान या कारोबार का नाम डालें।", pickColours: "रंग फिर से चुनें।", gstinBad: "यह GSTIN सही नहीं लग रहा। इसमें 15 अक्षर और अंक होते हैं, जैसे 24ABCDE1234F1Z5। न हो तो ख़ाली छोड़ें।",
+};
+
+const mr: Msgs = {
+  aiPlan: "AI एजंटसाठी ग्रोथ प्लॅन किंवा त्यापुढील लागतो: त्याचे प्रत्येक उत्तर खरी AI विनंती असते.",
+  noWorkspace: "व्यवसाय सापडला नाही.", notLoggedIn: "कृपया पुन्हा लॉग इन करा.", saveFail: "सेव्ह होऊ शकले नाही. पुन्हा प्रयत्न करा.",
+  badPhone: "10 अंकी मोबाइल नंबर टाका.", needAmount: "बिलाची रक्कम टाका.", pickBillLang: "बिलाची भाषा निवडा.",
+  pickDueDate: "ग्राहक कोणत्या तारखेपर्यंत पैसे देईल ती तारीख निवडा.", dueDatePassed: "ती तारीख निघून गेली आहे.", tooManyBills: "आत्ता खूप बिले बनली. थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  billNotFound: "बिल सापडले नाही.", tooMuchPaste: "एकावेळी इतके पेस्ट करता येत नाही.", pasteMax: "एकावेळी जास्तीत जास्त {max} विक्री पेस्ट करा. तुम्ही मागील दोन दिवसांच्या {n} पेस्ट केल्या.",
+  customerSaveFail: "ग्राहक सेव्ह होऊ शकला नाही. पुन्हा प्रयत्न करा.", optedOutBill: "या ग्राहकाने WhatsApp वर संदेश नको असे सांगितले आहे. त्यांना छापील बिल द्या.",
+  numberBillFail: "बिलाला क्रमांक देता आला नाही. पुन्हा प्रयत्न करा.", pictureSaveFail: "बिलाचे चित्र सेव्ह होऊ शकले नाही. पुन्हा प्रयत्न करा.", billSaveFail: "बिल सेव्ह होऊ शकले नाही. पुन्हा प्रयत्न करा.",
+  needNumber: "आधी तुमचा WhatsApp नंबर जोडा. बिल सेव्ह आहे आणि नंतर पाठवता येईल.", pendingApproval: "WhatsApp अजून तुमच्या बिलाचा संदेश मंजूर करत आहे. साधारणपणे काही मिनिटे लागतात. तेव्हा पुन्हा पाठवा दाबा.",
+  templateRejected: "WhatsApp ने बिलाचा संदेश स्वीकारला नाही: {reason}", prepPicture: "बिलाचे चित्र तयार करता आले नाही.", sendFailed: "पाठवणे अयशस्वी झाले.",
+  pickLangTime: "भाषा आणि वेळ निवडा.", goalShort: "ग्राहकांना काय सांगायचे ते थोडक्यात लिहा.", tooManyDrafts: "आत्ता खूप मसुदे बनले. थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  aiRule: "AI च्या मसुद्याने WhatsApp चा एक नियम मोडला ({reason}) पुन्हा प्रयत्न करा, किंवा स्वतः बदला.", aiOff: "AI कडून लिहून घेणे अजून सुरू नाही.", aiFail: "आत्ता संदेश लिहिता आला नाही. पुन्हा प्रयत्न करा.",
+  whatsappRefused: "WhatsApp ने हा संदेश स्वीकारला नाही: {reason}", msgSavedElsewhere: "WhatsApp कडे संदेश आहे, पण इथे सेव्ह होऊ शकला नाही. पुन्हा प्रयत्न करा.",
+  journeyFail: "फॉलो-अप सेट करता आले नाही. पुन्हा प्रयत्न करा.", journeyAddFail: "संदेश तुमच्या फॉलो-अपमध्ये जोडता आला नाही. पुन्हा प्रयत्न करा.",
+  customerNotFound: "ग्राहक सापडला नाही.", customerOptedOut: "या ग्राहकाने संदेश नको असे सांगितले आहे.", noConsent: "या ग्राहकाने WhatsApp वर ऑफर घेण्यास होकार दिलेला नाही, म्हणून जाहिरातीचा संदेश पाठवता येत नाही.",
+  messageNotFound: "संदेश सापडला नाही.", templatePending: "WhatsApp अजून हा संदेश मंजूर करत आहे. थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  r_empty: "संदेश रिकामा आहे.", r_tooLong: "संदेश 600 अक्षरांपेक्षा लहान ठेवा.", r_needName: "संदेशात ग्राहकाचे नाव हवे: त्यात {{1}} हवे.",
+  r_needShop: "संदेशात दुकानाचे नाव हवे: त्यात {{2}} हवे.", r_onlyTwo: "फक्त {{1}} (नाव) आणि {{2}} (दुकानाचे नाव) वापरता येतात.",
+  r_startEnd: "संदेश नावाच्या जागेने सुरू किंवा संपू शकत नाही.", r_sideBySide: "दोन जागा शेजारी शेजारी असू शकत नाहीत.", r_fewWords: "या जागांच्या आसपास आणखी काही शब्द जोडा.",
+  itemName: "मालाचे नाव लिहा.", itemPrice: "किंमत संख्येत लिहा, जसे 640.", itemPhoto: "फोटो PNG, JPG किंवा WebP आणि 1 MB पेक्षा लहान हवा.",
+  itemPhotoSave: "फोटो सेव्ह होऊ शकला नाही. पुन्हा प्रयत्न करा.", itemMax: "एका दुकानाला यापेक्षा जास्त माल जोडता येत नाही.", itemSave: "माल सेव्ह होऊ शकला नाही. पुन्हा प्रयत्न करा.",
+  badDate: "ही तारीख बरोबर वाटत नाही.", badCreditLimit: "उधारीची मर्यादा संख्येत लिहा, जसे 20000.", writeFirst: "आधी काहीतरी लिहा.", pickDay: "फॉलो-अपचा दिवस निवडा.",
+  enterField: "किमान एक जागा भरा.", upiBad: "हे UPI ID सारखे दिसत नाही. ते name@bank असे असते, जसे sharma@okhdfcbank.",
+  upiName: "पैसे देताना ग्राहकाला दिसणारे नाव लिहा, साधारणपणे तुमच्या दुकानाचे नाव.", gatewayFirst: "आधी खाली Razorpay किंवा PayU जोडा, मग हे निवडा.",
+  linkBad: "https:// ने सुरू होणारी पूर्ण पेमेंट लिंक पेस्ट करा.", pickMode: "ग्राहकांनी तुम्हाला कसे पैसे द्यावेत ते निवडा.",
+  needShopName: "आधी तुमच्या दुकानाचे किंवा व्यवसायाचे नाव टाका.", pickColours: "रंग पुन्हा निवडा.", gstinBad: "हा GSTIN बरोबर वाटत नाही. त्यात 15 अक्षरे आणि अंक असतात, जसे 24ABCDE1234F1Z5. नसेल तर रिकामे ठेवा.",
+};
+
+const gu: Msgs = {
+  aiPlan: "AI એજન્ટ માટે ગ્રોથ પ્લાન કે તેથી ઉપરનો જોઈએ: તેનો દરેક જવાબ સાચી AI વિનંતી છે.",
+  noWorkspace: "ધંધો મળ્યો નહીં.", notLoggedIn: "કૃપા કરી ફરી લૉગ ઇન કરો.", saveFail: "સેવ થઈ શક્યું નહીં. ફરી પ્રયત્ન કરો.",
+  badPhone: "10 અંકનો મોબાઇલ નંબર નાખો.", needAmount: "બિલની રકમ નાખો.", pickBillLang: "બિલની ભાષા પસંદ કરો.",
+  pickDueDate: "ગ્રાહક કઈ તારીખ સુધીમાં ચૂકવશે તે તારીખ પસંદ કરો.", dueDatePassed: "તે તારીખ નીકળી ગઈ છે.", tooManyBills: "હમણાં ઘણાં બિલ બની ગયાં. થોડી વારમાં ફરી પ્રયત્ન કરો.",
+  billNotFound: "બિલ મળ્યું નહીં.", tooMuchPaste: "એક સાથે આટલું પેસ્ટ થઈ શકતું નથી.", pasteMax: "એક સાથે વધુમાં વધુ {max} વેચાણ પેસ્ટ કરો. તમે છેલ્લા બે દિવસના {n} પેસ્ટ કર્યાં.",
+  customerSaveFail: "ગ્રાહક સેવ થઈ શક્યો નહીં. ફરી પ્રયત્ન કરો.", optedOutBill: "આ ગ્રાહકે WhatsApp પર સંદેશ ન મેળવવા કહ્યું છે. તેમને છાપેલું બિલ આપો.",
+  numberBillFail: "બિલને નંબર આપી શકાયો નહીં. ફરી પ્રયત્ન કરો.", pictureSaveFail: "બિલનું ચિત્ર સેવ થઈ શક્યું નહીં. ફરી પ્રયત્ન કરો.", billSaveFail: "બિલ સેવ થઈ શક્યું નહીં. ફરી પ્રયત્ન કરો.",
+  needNumber: "પહેલા તમારો WhatsApp નંબર જોડો. બિલ સેવ છે અને પછી મોકલી શકાય છે.", pendingApproval: "WhatsApp હજી તમારા બિલનો સંદેશ મંજૂર કરી રહ્યું છે. સામાન્ય રીતે થોડી મિનિટ લાગે છે. ત્યારે ફરી મોકલો દબાવો.",
+  templateRejected: "WhatsApp એ બિલનો સંદેશ સ્વીકાર્યો નહીં: {reason}", prepPicture: "બિલનું ચિત્ર તૈયાર થઈ શક્યું નહીં.", sendFailed: "મોકલવું નિષ્ફળ ગયું.",
+  pickLangTime: "ભાષા અને સમય પસંદ કરો.", goalShort: "ગ્રાહકોને શું કહેવું છે તે થોડા શબ્દોમાં લખો.", tooManyDrafts: "હમણાં ઘણા ડ્રાફ્ટ બની ગયા. થોડી વારમાં ફરી પ્રયત્ન કરો.",
+  aiRule: "AI ના ડ્રાફ્ટે WhatsApp નો એક નિયમ તોડ્યો ({reason}) ફરી પ્રયત્ન કરો, અથવા જાતે બદલો.", aiOff: "AI થી લખાવવાનું હજી ચાલુ નથી.", aiFail: "હમણાં સંદેશ લખી શકાયો નહીં. ફરી પ્રયત્ન કરો.",
+  whatsappRefused: "WhatsApp એ આ સંદેશ સ્વીકાર્યો નહીં: {reason}", msgSavedElsewhere: "WhatsApp પાસે સંદેશ છે, પણ અહીં સેવ થઈ શક્યો નહીં. ફરી પ્રયત્ન કરો.",
+  journeyFail: "ફોલો-અપ સેટ થઈ શક્યું નહીં. ફરી પ્રયત્ન કરો.", journeyAddFail: "સંદેશ તમારા ફોલો-અપમાં ઉમેરી શકાયો નહીં. ફરી પ્રયત્ન કરો.",
+  customerNotFound: "ગ્રાહક મળ્યો નહીં.", customerOptedOut: "આ ગ્રાહકે સંદેશ ન મેળવવા કહ્યું છે.", noConsent: "આ ગ્રાહકે WhatsApp પર ઑફર મેળવવા હા કહી નથી, એટલે પ્રચારનો સંદેશ મોકલી શકાતો નથી.",
+  messageNotFound: "સંદેશ મળ્યો નહીં.", templatePending: "WhatsApp હજી આ સંદેશ મંજૂર કરી રહ્યું છે. થોડી વારમાં ફરી પ્રયત્ન કરો.",
+  r_empty: "સંદેશ ખાલી છે.", r_tooLong: "સંદેશ 600 અક્ષરથી ઓછો રાખો.", r_needName: "સંદેશમાં ગ્રાહકનું નામ હોવું જોઈએ: તેમાં {{1}} જોઈએ.",
+  r_needShop: "સંદેશમાં દુકાનનું નામ હોવું જોઈએ: તેમાં {{2}} જોઈએ.", r_onlyTwo: "ફક્ત {{1}} (નામ) અને {{2}} (દુકાનનું નામ) વાપરી શકાય.",
+  r_startEnd: "સંદેશ નામની જગ્યાથી શરૂ કે પૂરો થઈ શકે નહીં.", r_sideBySide: "બે જગ્યા બાજુ બાજુમાં ન હોઈ શકે.", r_fewWords: "આ જગ્યાઓની આસપાસ થોડા વધુ શબ્દો ઉમેરો.",
+  itemName: "માલનું નામ લખો.", itemPrice: "ભાવ સંખ્યામાં લખો, જેમ કે 640.", itemPhoto: "ફોટો PNG, JPG કે WebP અને 1 MB થી નાનો હોવો જોઈએ.",
+  itemPhotoSave: "ફોટો સેવ થઈ શક્યો નહીં. ફરી પ્રયત્ન કરો.", itemMax: "એક દુકાન આનાથી વધુ માલ ઉમેરી શકતી નથી.", itemSave: "માલ સેવ થઈ શક્યો નહીં. ફરી પ્રયત્ન કરો.",
+  badDate: "આ તારીખ સાચી લાગતી નથી.", badCreditLimit: "ઉધારની મર્યાદા સંખ્યામાં લખો, જેમ કે 20000.", writeFirst: "પહેલા કંઈક લખો.", pickDay: "ફોલો-અપનો દિવસ પસંદ કરો.",
+  enterField: "ઓછામાં ઓછી એક જગ્યા ભરો.", upiBad: "આ UPI ID જેવું લાગતું નથી. તે name@bank જેવું હોય છે, જેમ કે sharma@okhdfcbank.",
+  upiName: "ચુકવણી વખતે ગ્રાહકને દેખાય તે નામ લખો, સામાન્ય રીતે તમારી દુકાનનું નામ.", gatewayFirst: "પહેલા નીચે Razorpay કે PayU જોડો, પછી આ પસંદ કરો.",
+  linkBad: "https:// થી શરૂ થતી પૂરી પેમેન્ટ લિંક પેસ્ટ કરો.", pickMode: "ગ્રાહકો તમને કેવી રીતે ચૂકવે તે પસંદ કરો.",
+  needShopName: "પહેલા તમારી દુકાન કે ધંધાનું નામ નાખો.", pickColours: "રંગો ફરી પસંદ કરો.", gstinBad: "આ GSTIN સાચો લાગતો નથી. તેમાં 15 અક્ષર અને અંક હોય છે, જેમ કે 24ABCDE1234F1Z5. ન હોય તો ખાલી રાખો.",
+};
+
+const ta: Msgs = {
+  aiPlan: "AI முகவருக்கு க்ரோத் திட்டம் அல்லது அதற்கு மேல் தேவை: இது அனுப்பும் ஒவ்வொரு பதிலும் உண்மையான AI கோரிக்கை.",
+  noWorkspace: "தொழில் கணக்கு கிடைக்கவில்லை.", notLoggedIn: "மீண்டும் உள்நுழையவும்.", saveFail: "சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
+  badPhone: "10 இலக்க மொபைல் எண்ணை உள்ளிடுங்கள்.", needAmount: "பில் தொகையை உள்ளிடுங்கள்.", pickBillLang: "பில்லின் மொழியைத் தேர்ந்தெடுங்கள்.",
+  pickDueDate: "வாடிக்கையாளர் பணம் செலுத்தும் தேதியைத் தேர்ந்தெடுங்கள்.", dueDatePassed: "அந்த தேதி கடந்துவிட்டது.", tooManyBills: "இப்போது அதிக பில்கள் போடப்பட்டன. சிறிது நேரம் கழித்து முயலுங்கள்.",
+  billNotFound: "பில் கிடைக்கவில்லை.", tooMuchPaste: "ஒரே நேரத்தில் இவ்வளவு ஒட்ட முடியாது.", pasteMax: "ஒரு முறைக்கு அதிகபட்சம் {max} விற்பனைகளை ஒட்டுங்கள். கடந்த இரண்டு நாட்களில் {n} ஒட்டினீர்கள்.",
+  customerSaveFail: "வாடிக்கையாளரைச் சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.", optedOutBill: "இந்த வாடிக்கையாளர் WhatsApp செய்தி வேண்டாம் என்றார். அவர்களுக்கு அச்சிட்ட பில் கொடுங்கள்.",
+  numberBillFail: "பில்லுக்கு எண் இட முடியவில்லை. மீண்டும் முயலுங்கள்.", pictureSaveFail: "பில் படத்தைச் சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.", billSaveFail: "பில்லைச் சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
+  needNumber: "முதலில் உங்கள் WhatsApp எண்ணை இணைக்கவும். பில் சேமிக்கப்பட்டுள்ளது, பிறகு அனுப்பலாம்.", pendingApproval: "WhatsApp உங்கள் பில் செய்தியை இன்னும் அங்கீகரித்துக் கொண்டிருக்கிறது. சில நிமிடங்கள் ஆகும். அப்போது மீண்டும் அனுப்பு அழுத்துங்கள்.",
+  templateRejected: "WhatsApp பில் செய்தியை ஏற்கவில்லை: {reason}", prepPicture: "பில் படத்தைத் தயாரிக்க முடியவில்லை.", sendFailed: "அனுப்புவது தோல்வியடைந்தது.",
+  pickLangTime: "மொழியையும் நேரத்தையும் தேர்ந்தெடுங்கள்.", goalShort: "வாடிக்கையாளர்களுக்கு என்ன சொல்ல வேண்டும் என்பதை சில வார்த்தைகளில் எழுதுங்கள்.", tooManyDrafts: "இப்போது அதிக வரைவுகள் உருவாக்கப்பட்டன. சிறிது நேரம் கழித்து முயலுங்கள்.",
+  aiRule: "AI வரைவு WhatsApp விதியை மீறியது ({reason}) மீண்டும் முயலுங்கள், அல்லது நீங்களே திருத்துங்கள்.", aiOff: "AI மூலம் எழுதுவது இன்னும் இயக்கப்படவில்லை.", aiFail: "இப்போது செய்தியை எழுத முடியவில்லை. மீண்டும் முயலுங்கள்.",
+  whatsappRefused: "WhatsApp இந்த செய்தியை ஏற்கவில்லை: {reason}", msgSavedElsewhere: "WhatsApp-இடம் செய்தி உள்ளது, ஆனால் இங்கே சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
+  journeyFail: "பின்தொடர்தலை அமைக்க முடியவில்லை. மீண்டும் முயலுங்கள்.", journeyAddFail: "செய்தியை உங்கள் பின்தொடர்தலில் சேர்க்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
+  customerNotFound: "வாடிக்கையாளர் கிடைக்கவில்லை.", customerOptedOut: "இந்த வாடிக்கையாளர் செய்தி வேண்டாம் என்றார்.", noConsent: "இந்த வாடிக்கையாளர் WhatsApp-ல் சலுகைகளைப் பெற சம்மதிக்கவில்லை, எனவே விளம்பர செய்தியை அனுப்ப முடியாது.",
+  messageNotFound: "செய்தி கிடைக்கவில்லை.", templatePending: "WhatsApp இந்த செய்தியை இன்னும் அங்கீகரித்துக் கொண்டிருக்கிறது. சிறிது நேரம் கழித்து முயலுங்கள்.",
+  r_empty: "செய்தி காலியாக உள்ளது.", r_tooLong: "செய்தியை 600 எழுத்துகளுக்குள் வையுங்கள்.", r_needName: "செய்தியில் வாடிக்கையாளர் பெயர் இருக்க வேண்டும்: அதற்கு {{1}} தேவை.",
+  r_needShop: "செய்தியில் கடையின் பெயர் இருக்க வேண்டும்: அதற்கு {{2}} தேவை.", r_onlyTwo: "{{1}} (பெயர்) மற்றும் {{2}} (கடை பெயர்) மட்டுமே பயன்படுத்தலாம்.",
+  r_startEnd: "செய்தி பெயர் இடத்துடன் தொடங்கவோ முடியவோ கூடாது.", r_sideBySide: "இரண்டு இடங்கள் அருகருகே இருக்கக் கூடாது.", r_fewWords: "இந்த இடங்களைச் சுற்றி இன்னும் சில வார்த்தைகளைச் சேருங்கள்.",
+  itemName: "பொருளின் பெயரை எழுதுங்கள்.", itemPrice: "விலையை எண்ணாக எழுதுங்கள், எ.கா. 640.", itemPhoto: "புகைப்படம் PNG, JPG அல்லது WebP ஆகவும் 1 MB-க்கு குறைவாகவும் இருக்க வேண்டும்.",
+  itemPhotoSave: "புகைப்படத்தைச் சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.", itemMax: "ஒரு கடை இதற்கு மேல் பொருட்களைச் சேர்க்க முடியாது.", itemSave: "பொருளைச் சேமிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
+  badDate: "இந்த தேதி சரியாகத் தெரியவில்லை.", badCreditLimit: "கடன் வரம்பை எண்ணாக எழுதுங்கள், எ.கா. 20000.", writeFirst: "முதலில் ஏதாவது எழுதுங்கள்.", pickDay: "பின்தொடர்தல் நாளைத் தேர்ந்தெடுங்கள்.",
+  enterField: "குறைந்தது ஒரு இடத்தை நிரப்புங்கள்.", upiBad: "இது UPI ID போலத் தெரியவில்லை. அது name@bank போல இருக்கும், எ.கா. sharma@okhdfcbank.",
+  upiName: "பணம் செலுத்தும்போது வாடிக்கையாளர் பார்க்கும் பெயரை எழுதுங்கள், பொதுவாக உங்கள் கடை பெயர்.", gatewayFirst: "முதலில் கீழே Razorpay அல்லது PayU-ஐ இணையுங்கள், பிறகு இதைத் தேர்ந்தெடுங்கள்.",
+  linkBad: "https:// என்று தொடங்கும் முழு பணம் செலுத்தும் இணைப்பை ஒட்டுங்கள்.", pickMode: "வாடிக்கையாளர்கள் உங்களுக்கு எப்படி பணம் செலுத்த வேண்டும் என்பதைத் தேர்ந்தெடுங்கள்.",
+  needShopName: "முதலில் உங்கள் கடை அல்லது தொழிலின் பெயரைச் சேருங்கள்.", pickColours: "நிறங்களை மீண்டும் தேர்ந்தெடுங்கள்.", gstinBad: "இந்த GSTIN சரியாகத் தெரியவில்லை. அதில் 15 எழுத்துகளும் எண்களும் இருக்கும், எ.கா. 24ABCDE1234F1Z5. இல்லையென்றால் காலியாக விடுங்கள்.",
+};
+
+const te: Msgs = {
+  aiPlan: "AI ఏజెంట్‌కు గ్రోత్ ప్లాన్ లేదా అంతకంటే పైది కావాలి: అది పంపే ప్రతి సమాధానం నిజమైన AI అభ్యర్థన.",
+  noWorkspace: "వ్యాపార ఖాతా కనబడలేదు.", notLoggedIn: "దయచేసి మళ్ళీ లాగిన్ అవ్వండి.", saveFail: "సేవ్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
+  badPhone: "10 అంకెల మొబైల్ నంబర్ ఇవ్వండి.", needAmount: "బిల్లు మొత్తం ఇవ్వండి.", pickBillLang: "బిల్లు భాషను ఎంచుకోండి.",
+  pickDueDate: "కస్టమర్ చెల్లించే తేదీని ఎంచుకోండి.", dueDatePassed: "ఆ తేదీ ఇప్పటికే దాటిపోయింది.", tooManyBills: "ఇప్పుడే చాలా బిల్లులు అయ్యాయి. కొంచెం సేపటి తర్వాత ప్రయత్నించండి.",
+  billNotFound: "బిల్లు దొరకలేదు.", tooMuchPaste: "ఒకేసారి ఇంత పేస్ట్ చేయలేరు.", pasteMax: "ఒకేసారి గరిష్టంగా {max} అమ్మకాలు పేస్ట్ చేయండి. మీరు గత రెండు రోజుల {n} పేస్ట్ చేశారు.",
+  customerSaveFail: "కస్టమర్‌ను సేవ్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.", optedOutBill: "ఈ కస్టమర్ WhatsApp‌లో సందేశాలు వద్దన్నారు. వారికి ప్రింట్ బిల్లు ఇవ్వండి.",
+  numberBillFail: "బిల్లుకు నంబర్ ఇవ్వలేకపోయాం. మళ్ళీ ప్రయత్నించండి.", pictureSaveFail: "బిల్లు చిత్రాన్ని సేవ్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.", billSaveFail: "బిల్లును సేవ్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
+  needNumber: "ముందుగా మీ WhatsApp నంబర్‌ను కనెక్ట్ చేయండి. బిల్లు సేవ్ అయింది, తర్వాత పంపవచ్చు.", pendingApproval: "WhatsApp ఇంకా మీ బిల్లు సందేశాన్ని ఆమోదిస్తోంది. సాధారణంగా కొన్ని నిమిషాలు పడుతుంది. అప్పుడు మళ్ళీ పంపండి నొక్కండి.",
+  templateRejected: "WhatsApp బిల్లు సందేశాన్ని అంగీకరించలేదు: {reason}", prepPicture: "బిల్లు చిత్రాన్ని సిద్ధం చేయలేకపోయాం.", sendFailed: "పంపడం విఫలమైంది.",
+  pickLangTime: "భాష, సమయం ఎంచుకోండి.", goalShort: "కస్టమర్లకు ఏం చెప్పాలో కొన్ని మాటల్లో రాయండి.", tooManyDrafts: "ఇప్పుడే చాలా డ్రాఫ్ట్‌లు అయ్యాయి. కొంచెం సేపటి తర్వాత ప్రయత్నించండి.",
+  aiRule: "AI డ్రాఫ్ట్ WhatsApp నియమాన్ని ఉల్లంఘించింది ({reason}) మళ్ళీ ప్రయత్నించండి, లేదా మీరే మార్చండి.", aiOff: "AI తో రాయించడం ఇంకా ఆన్ కాలేదు.", aiFail: "ఇప్పుడు సందేశం రాయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
+  whatsappRefused: "WhatsApp ఈ సందేశాన్ని అంగీకరించలేదు: {reason}", msgSavedElsewhere: "WhatsApp దగ్గర సందేశం ఉంది, కానీ ఇక్కడ సేవ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.",
+  journeyFail: "ఫాలో-అప్ సెటప్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.", journeyAddFail: "సందేశాన్ని మీ ఫాలో-అప్‌లో జోడించలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
+  customerNotFound: "కస్టమర్ దొరకలేదు.", customerOptedOut: "ఈ కస్టమర్ సందేశాలు వద్దన్నారు.", noConsent: "ఈ కస్టమర్ WhatsApp‌లో ఆఫర్లు పొందడానికి అంగీకరించలేదు, కాబట్టి ప్రచార సందేశం పంపలేం.",
+  messageNotFound: "సందేశం దొరకలేదు.", templatePending: "WhatsApp ఇంకా ఈ సందేశాన్ని ఆమోదిస్తోంది. కొంచెం సేపటి తర్వాత ప్రయత్నించండి.",
+  r_empty: "సందేశం ఖాళీగా ఉంది.", r_tooLong: "సందేశాన్ని 600 అక్షరాలలోపు ఉంచండి.", r_needName: "సందేశంలో కస్టమర్ పేరు ఉండాలి: దానికి {{1}} కావాలి.",
+  r_needShop: "సందేశంలో షాప్ పేరు ఉండాలి: దానికి {{2}} కావాలి.", r_onlyTwo: "{{1}} (పేరు), {{2}} (షాప్ పేరు) మాత్రమే వాడవచ్చు.",
+  r_startEnd: "సందేశం పేరు స్థానంతో మొదలవకూడదు, ముగియకూడదు.", r_sideBySide: "రెండు స్థానాలు పక్కపక్కన ఉండకూడదు.", r_fewWords: "ఈ స్థానాల చుట్టూ మరికొన్ని మాటలు జోడించండి.",
+  itemName: "సరుకు పేరు రాయండి.", itemPrice: "ధరను సంఖ్యగా రాయండి, ఉదా. 640.", itemPhoto: "ఫోటో PNG, JPG లేదా WebP అయి 1 MB లోపు ఉండాలి.",
+  itemPhotoSave: "ఫోటోను సేవ్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.", itemMax: "ఒక షాప్ దీని కంటే ఎక్కువ సరుకులు జోడించలేదు.", itemSave: "సరుకును సేవ్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.",
+  badDate: "ఈ తేదీ సరిగా లేనట్టుంది.", badCreditLimit: "అప్పు పరిమితిని సంఖ్యగా రాయండి, ఉదా. 20000.", writeFirst: "ముందుగా ఏదైనా రాయండి.", pickDay: "ఫాలో-అప్ రోజును ఎంచుకోండి.",
+  enterField: "కనీసం ఒక ఖాళీని నింపండి.", upiBad: "ఇది UPI ID లాగా లేదు. అది name@bank లా ఉంటుంది, ఉదా. sharma@okhdfcbank.",
+  upiName: "చెల్లించేటప్పుడు కస్టమర్‌కు కనిపించే పేరు రాయండి, సాధారణంగా మీ షాప్ పేరు.", gatewayFirst: "ముందుగా కింద Razorpay లేదా PayU కలపండి, ఆ తర్వాత దీన్ని ఎంచుకోండి.",
+  linkBad: "https:// తో మొదలయ్యే పూర్తి చెల్లింపు లింక్ పేస్ట్ చేయండి.", pickMode: "కస్టమర్లు మీకు ఎలా చెల్లించాలో ఎంచుకోండి.",
+  needShopName: "ముందుగా మీ షాప్ లేదా వ్యాపారం పేరు చేర్చండి.", pickColours: "రంగులను మళ్ళీ ఎంచుకోండి.", gstinBad: "ఈ GSTIN సరిగా లేనట్టుంది. అందులో 15 అక్షరాలు, అంకెలు ఉంటాయి, ఉదా. 24ABCDE1234F1Z5. లేకపోతే ఖాళీగా వదలండి.",
+};
+
+const kn: Msgs = {
+  aiPlan: "AI ಏಜೆಂಟ್‌ಗೆ ಗ್ರೋತ್ ಪ್ಲಾನ್ ಅಥವಾ ಅದಕ್ಕಿಂತ ಮೇಲಿನದು ಬೇಕು: ಅದು ಕಳುಹಿಸುವ ಪ್ರತಿ ಉತ್ತರ ನಿಜವಾದ AI ವಿನಂತಿ.",
+  noWorkspace: "ವ್ಯಾಪಾರ ಖಾತೆ ಸಿಗಲಿಲ್ಲ.", notLoggedIn: "ದಯವಿಟ್ಟು ಮತ್ತೆ ಲಾಗಿನ್ ಮಾಡಿ.", saveFail: "ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  badPhone: "10 ಅಂಕೆಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನೀಡಿ.", needAmount: "ಬಿಲ್ ಮೊತ್ತ ನೀಡಿ.", pickBillLang: "ಬಿಲ್‌ನ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ.",
+  pickDueDate: "ಗ್ರಾಹಕರು ಪಾವತಿಸುವ ದಿನಾಂಕ ಆಯ್ಕೆಮಾಡಿ.", dueDatePassed: "ಆ ದಿನಾಂಕ ಈಗಾಗಲೇ ಮುಗಿದಿದೆ.", tooManyBills: "ಈಗ ತುಂಬಾ ಬಿಲ್‌ಗಳಾದವು. ಸ್ವಲ್ಪ ಹೊತ್ತಿನ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.",
+  billNotFound: "ಬಿಲ್ ಸಿಗಲಿಲ್ಲ.", tooMuchPaste: "ಒಮ್ಮೆಗೆ ಇಷ್ಟು ಅಂಟಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ.", pasteMax: "ಒಮ್ಮೆಗೆ ಗರಿಷ್ಠ {max} ಮಾರಾಟಗಳನ್ನು ಅಂಟಿಸಿ. ನೀವು ಕಳೆದ ಎರಡು ದಿನಗಳ {n} ಅಂಟಿಸಿದ್ದೀರಿ.",
+  customerSaveFail: "ಗ್ರಾಹಕರನ್ನು ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", optedOutBill: "ಈ ಗ್ರಾಹಕರು WhatsApp‌ನಲ್ಲಿ ಸಂದೇಶ ಬೇಡ ಎಂದಿದ್ದಾರೆ. ಅವರಿಗೆ ಮುದ್ರಿತ ಬಿಲ್ ನೀಡಿ.",
+  numberBillFail: "ಬಿಲ್‌ಗೆ ಸಂಖ್ಯೆ ನೀಡಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", pictureSaveFail: "ಬಿಲ್ ಚಿತ್ರವನ್ನು ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", billSaveFail: "ಬಿಲ್ ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  needNumber: "ಮೊದಲು ನಿಮ್ಮ WhatsApp ಸಂಖ್ಯೆಯನ್ನು ಜೋಡಿಸಿ. ಬಿಲ್ ಉಳಿಸಲಾಗಿದೆ, ನಂತರ ಕಳುಹಿಸಬಹುದು.", pendingApproval: "WhatsApp ಇನ್ನೂ ನಿಮ್ಮ ಬಿಲ್ ಸಂದೇಶವನ್ನು ಅನುಮೋದಿಸುತ್ತಿದೆ. ಸಾಮಾನ್ಯವಾಗಿ ಕೆಲವು ನಿಮಿಷ ಬೇಕು. ಆಗ ಮತ್ತೆ ಕಳುಹಿಸಿ ಒತ್ತಿ.",
+  templateRejected: "WhatsApp ಬಿಲ್ ಸಂದೇಶವನ್ನು ಸ್ವೀಕರಿಸಲಿಲ್ಲ: {reason}", prepPicture: "ಬಿಲ್ ಚಿತ್ರವನ್ನು ಸಿದ್ಧಪಡಿಸಲಾಗಲಿಲ್ಲ.", sendFailed: "ಕಳುಹಿಸುವುದು ವಿಫಲವಾಯಿತು.",
+  pickLangTime: "ಭಾಷೆ ಮತ್ತು ಸಮಯ ಆಯ್ಕೆಮಾಡಿ.", goalShort: "ಗ್ರಾಹಕರಿಗೆ ಏನು ಹೇಳಬೇಕೆಂದು ಕೆಲವು ಮಾತುಗಳಲ್ಲಿ ಬರೆಯಿರಿ.", tooManyDrafts: "ಈಗ ತುಂಬಾ ಕರಡುಗಳಾದವು. ಸ್ವಲ್ಪ ಹೊತ್ತಿನ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.",
+  aiRule: "AI ಕರಡು WhatsApp ನಿಯಮವೊಂದನ್ನು ಮುರಿಯಿತು ({reason}) ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ, ಅಥವಾ ನೀವೇ ಬದಲಾಯಿಸಿ.", aiOff: "AI ಮೂಲಕ ಬರೆಸುವುದು ಇನ್ನೂ ಆನ್ ಆಗಿಲ್ಲ.", aiFail: "ಈಗ ಸಂದೇಶ ಬರೆಯಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  whatsappRefused: "WhatsApp ಈ ಸಂದೇಶವನ್ನು ಸ್ವೀಕರಿಸಲಿಲ್ಲ: {reason}", msgSavedElsewhere: "WhatsApp ಬಳಿ ಸಂದೇಶವಿದೆ, ಆದರೆ ಇಲ್ಲಿ ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  journeyFail: "ಫಾಲೋ-ಅಪ್ ಹೊಂದಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", journeyAddFail: "ಸಂದೇಶವನ್ನು ನಿಮ್ಮ ಫಾಲೋ-ಅಪ್‌ಗೆ ಸೇರಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  customerNotFound: "ಗ್ರಾಹಕರು ಸಿಗಲಿಲ್ಲ.", customerOptedOut: "ಈ ಗ್ರಾಹಕರು ಸಂದೇಶ ಬೇಡ ಎಂದಿದ್ದಾರೆ.", noConsent: "ಈ ಗ್ರಾಹಕರು WhatsApp‌ನಲ್ಲಿ ಆಫರ್‌ಗಳನ್ನು ಪಡೆಯಲು ಒಪ್ಪಿಲ್ಲ, ಆದ್ದರಿಂದ ಪ್ರಚಾರ ಸಂದೇಶ ಕಳುಹಿಸಲಾಗದು.",
+  messageNotFound: "ಸಂದೇಶ ಸಿಗಲಿಲ್ಲ.", templatePending: "WhatsApp ಇನ್ನೂ ಈ ಸಂದೇಶವನ್ನು ಅನುಮೋದಿಸುತ್ತಿದೆ. ಸ್ವಲ್ಪ ಹೊತ್ತಿನ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.",
+  r_empty: "ಸಂದೇಶ ಖಾಲಿಯಿದೆ.", r_tooLong: "ಸಂದೇಶವನ್ನು 600 ಅಕ್ಷರಗಳೊಳಗೆ ಇಡಿ.", r_needName: "ಸಂದೇಶದಲ್ಲಿ ಗ್ರಾಹಕರ ಹೆಸರು ಇರಬೇಕು: ಅದಕ್ಕೆ {{1}} ಬೇಕು.",
+  r_needShop: "ಸಂದೇಶದಲ್ಲಿ ಅಂಗಡಿಯ ಹೆಸರು ಇರಬೇಕು: ಅದಕ್ಕೆ {{2}} ಬೇಕು.", r_onlyTwo: "{{1}} (ಹೆಸರು) ಮತ್ತು {{2}} (ಅಂಗಡಿಯ ಹೆಸರು) ಮಾತ್ರ ಬಳಸಬಹುದು.",
+  r_startEnd: "ಸಂದೇಶ ಹೆಸರಿನ ಜಾಗದಿಂದ ಶುರುವಾಗಬಾರದು ಅಥವಾ ಕೊನೆಯಾಗಬಾರದು.", r_sideBySide: "ಎರಡು ಜಾಗಗಳು ಅಕ್ಕಪಕ್ಕ ಇರಬಾರದು.", r_fewWords: "ಈ ಜಾಗಗಳ ಸುತ್ತ ಇನ್ನೂ ಕೆಲವು ಪದಗಳನ್ನು ಸೇರಿಸಿ.",
+  itemName: "ವಸ್ತುವಿನ ಹೆಸರು ಬರೆಯಿರಿ.", itemPrice: "ಬೆಲೆಯನ್ನು ಸಂಖ್ಯೆಯಲ್ಲಿ ಬರೆಯಿರಿ, ಉದಾ. 640.", itemPhoto: "ಫೋಟೋ PNG, JPG ಅಥವಾ WebP ಆಗಿದ್ದು 1 MB ಒಳಗಿರಬೇಕು.",
+  itemPhotoSave: "ಫೋಟೋ ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", itemMax: "ಒಂದು ಅಂಗಡಿ ಇದಕ್ಕಿಂತ ಹೆಚ್ಚು ವಸ್ತುಗಳನ್ನು ಸೇರಿಸಲಾಗದು.", itemSave: "ವಸ್ತು ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  badDate: "ಈ ದಿನಾಂಕ ಸರಿಯಿಲ್ಲ ಅನಿಸುತ್ತದೆ.", badCreditLimit: "ಸಾಲದ ಮಿತಿಯನ್ನು ಸಂಖ್ಯೆಯಲ್ಲಿ ಬರೆಯಿರಿ, ಉದಾ. 20000.", writeFirst: "ಮೊದಲು ಏನಾದರೂ ಬರೆಯಿರಿ.", pickDay: "ಫಾಲೋ-ಅಪ್ ದಿನವನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+  enterField: "ಕನಿಷ್ಠ ಒಂದು ಜಾಗ ತುಂಬಿ.", upiBad: "ಇದು UPI ID ಯಂತೆ ಕಾಣುತ್ತಿಲ್ಲ. ಅದು name@bank ಹಾಗೆ ಇರುತ್ತದೆ, ಉದಾ. sharma@okhdfcbank.",
+  upiName: "ಪಾವತಿಸುವಾಗ ಗ್ರಾಹಕರಿಗೆ ಕಾಣುವ ಹೆಸರು ಬರೆಯಿರಿ, ಸಾಮಾನ್ಯವಾಗಿ ನಿಮ್ಮ ಅಂಗಡಿಯ ಹೆಸರು.", gatewayFirst: "ಮೊದಲು ಕೆಳಗೆ Razorpay ಅಥವಾ PayU ಜೋಡಿಸಿ, ನಂತರ ಇದನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+  linkBad: "https:// ನಿಂದ ಶುರುವಾಗುವ ಪೂರ್ಣ ಪಾವತಿ ಲಿಂಕ್ ಅಂಟಿಸಿ.", pickMode: "ಗ್ರಾಹಕರು ನಿಮಗೆ ಹೇಗೆ ಪಾವತಿಸಬೇಕೆಂದು ಆಯ್ಕೆಮಾಡಿ.",
+  needShopName: "ಮೊದಲು ನಿಮ್ಮ ಅಂಗಡಿ ಅಥವಾ ವ್ಯಾಪಾರದ ಹೆಸರು ಸೇರಿಸಿ.", pickColours: "ಬಣ್ಣಗಳನ್ನು ಮತ್ತೆ ಆಯ್ಕೆಮಾಡಿ.", gstinBad: "ಈ GSTIN ಸರಿಯಿಲ್ಲ ಅನಿಸುತ್ತದೆ. ಅದರಲ್ಲಿ 15 ಅಕ್ಷರ ಮತ್ತು ಅಂಕೆಗಳಿರುತ್ತವೆ, ಉದಾ. 24ABCDE1234F1Z5. ಇಲ್ಲದಿದ್ದರೆ ಖಾಲಿ ಬಿಡಿ.",
+};
+
+export const SERVER_MSGS: Record<LanguageCode, Msgs> = { en, hi, mr, gu, ta, te, kn };
+
+/** The message in a language, with `{n}`, `{max}`, `{reason}` filled in. */
+export function msgIn(lang: LanguageCode, key: MsgKey, vars: Record<string, string | number> = {}): string {
+  let s = (SERVER_MSGS[lang] ?? SERVER_MSGS.en)[key] ?? SERVER_MSGS.en[key];
+  for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
+  return s;
+}
+
+/**
+ * Some notices are saved with a bill (a send that could not go out) and shown later, so they are stored as a code
+ * ("code:needNumber" or "code:templateRejected|the reason") and turned into words when someone reads them.
+ */
+export function storeMsg(key: MsgKey, reason?: string): string {
+  return reason ? `code:${key}|${reason}` : `code:${key}`;
+}
+
+export function showStored(raw: string | null | undefined, lang: LanguageCode): string {
+  if (!raw) return "";
+  if (!raw.startsWith("code:")) return raw;
+  const [key, reason] = raw.slice(5).split("|");
+  return key in SERVER_MSGS.en ? msgIn(lang, key as MsgKey, { reason: reason ?? "" }) : raw;
+}

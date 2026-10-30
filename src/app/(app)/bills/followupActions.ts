@@ -10,6 +10,7 @@ import { isRateLimited } from "@/lib/rateLimit";
 import { LANGUAGES, type LanguageCode } from "@/lib/i18n/dictionaries";
 import { submitTemplateToMeta, sendTemplateMessage } from "@/lib/whatsapp";
 import { AiNotConfiguredError, draftFollowupText } from "@/lib/ai";
+import { msg } from "@/lib/i18n/msg";
 import {
   FOLLOWUP_EXAMPLES, FOLLOWUP_SEQUENCE_NAME, FOLLOWUP_TEMPLATE_PREFIX, FOLLOWUP_WHEN, OPT_OUT_FOOTER,
   absoluteDelays, checkFollowupBody, followupTemplateName, insertByTime, type FollowupWhen,
@@ -28,13 +29,13 @@ const isWhen = (v: string): v is FollowupWhen => FOLLOWUP_WHEN.some((w) => w.key
 /** AI writes the follow-up from the shop's one line, in the language chosen. Nothing is saved or sent. */
 export async function draftFollowup(_prev: unknown, formData: FormData): Promise<FollowupDraft> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   const lang = String(formData.get("lang") ?? "");
   const when = String(formData.get("when") ?? "");
   const goal = String(formData.get("goal") ?? "").trim().slice(0, 300);
-  if (!isLangCode(lang) || !isWhen(when)) return { error: "Pick a language and a time." };
-  if (goal.length < 3) return { error: "Write in a few words what you want to tell your customers." };
-  if (await isRateLimited(`followup-draft:${workspace.id}`, 40, 3600)) return { error: "Too many drafts just now. Try again in a little while." };
+  if (!isLangCode(lang) || !isWhen(when)) return { error: await msg("pickLangTime") };
+  if (goal.length < 3) return { error: await msg("goalShort") };
+  if (await isRateLimited(`followup-draft:${workspace.id}`, 40, 3600)) return { error: await msg("tooManyDrafts") };
 
   try {
     // One automatic second try when the first draft breaks WhatsApp's rules for message text.
@@ -44,24 +45,24 @@ export async function draftFollowup(_prev: unknown, formData: FormData): Promise
       text = await draftFollowupText({ goal, lang, timing: WHEN_TEXT[when], previous: text });
       check = checkFollowupBody(text);
     }
-    return check.ok ? { draft: check.body } : { error: `The AI draft broke a WhatsApp rule (${check.reason}) Try again, or edit it.` };
+    return check.ok ? { draft: check.body } : { error: await msg("aiRule", { reason: await msg(check.key) }) };
   } catch (err) {
-    return { error: err instanceof AiNotConfiguredError ? "AI writing is not switched on yet." : "Could not write the message just now. Try again." };
+    return { error: await msg(err instanceof AiNotConfiguredError ? "aiOff" : "aiFail") };
   }
 }
 
 /** Submits the message to WhatsApp for approval and puts it in the shop's after-bill journey. */
 export async function saveFollowup(_prev: unknown, formData: FormData): Promise<FollowupSaveResult> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
   if (!workspace.whatsapp_waba_id || !workspace.whatsapp_access_token) return { error: await refusal("noNumber") };
 
   const lang = String(formData.get("lang") ?? "");
   const when = String(formData.get("when") ?? "");
-  if (!isLangCode(lang) || !isWhen(when)) return { error: "Pick a language and a time." };
+  if (!isLangCode(lang) || !isWhen(when)) return { error: await msg("pickLangTime") };
   const check = checkFollowupBody(String(formData.get("body") ?? ""));
-  if (!check.ok) return { error: check.reason };
+  if (!check.ok) return { error: await msg(check.key) };
 
   const supabase = await createClient();
   const stamp = Date.now();
@@ -75,7 +76,7 @@ export async function saveFollowup(_prev: unknown, formData: FormData): Promise<
       components: { headerType: "none", bodyText: check.body, footerText, buttons, bodyExamples: [...FOLLOWUP_EXAMPLES[lang]] },
     });
   } catch (err) {
-    return { error: `WhatsApp did not accept this message: ${err instanceof Error ? err.message : "unknown reason"}` };
+    return { error: await msg("whatsappRefused", { reason: err instanceof Error ? err.message : "?" }) };
   }
 
   const { data: template, error: tplErr } = await supabase.from("templates").insert({
@@ -83,14 +84,14 @@ export async function saveFollowup(_prev: unknown, formData: FormData): Promise<
     header_type: "none", body_text: check.body, body_preview: check.body, footer_text: footerText, buttons, meta_response: metaResponse,
     template_group: `${FOLLOWUP_TEMPLATE_PREFIX}${stamp.toString(36)}`, status: "pending",
   }).select("id").single();
-  if (tplErr || !template) return { error: "WhatsApp has the message, but it could not be saved here. Try again." };
+  if (tplErr || !template) return { error: await msg("msgSavedElsewhere") };
 
   let { data: sequence } = await supabase.from("sequences").select("id").eq("workspace_id", workspace.id).eq("name", FOLLOWUP_SEQUENCE_NAME).maybeSingle();
   if (!sequence) {
     const made = await supabase.from("sequences").insert({ workspace_id: workspace.id, name: FOLLOWUP_SEQUENCE_NAME, trigger_type: "order_placed", match_type: "contains" }).select("id").single();
     sequence = made.data;
   }
-  if (!sequence) return { error: "Could not set up the follow-up journey. Try again." };
+  if (!sequence) return { error: await msg("journeyFail") };
   const sequenceId = sequence.id as string;
 
   const { data: steps } = await supabase.from("sequence_steps").select("*").eq("sequence_id", sequenceId).order("step_order");
@@ -112,7 +113,7 @@ export async function saveFollowup(_prev: unknown, formData: FormData): Promise<
   if (stepErr) {
     // Put the earlier steps back rather than leave the journey empty.
     if (old.length) await supabase.from("sequence_steps").insert(old.map((s) => ({ ...s, id: undefined })));
-    return { error: "Could not add the message to your journey. Try again." };
+    return { error: await msg("journeyAddFail") };
   }
   revalidatePath("/bills");
   return { ok: true };
@@ -123,19 +124,19 @@ const NAME_FALLBACK: Record<LanguageCode, string> = { en: "Customer", hi: "à¤—à¥
 /** Sends one approved follow-up message to one customer now. Only to customers who agreed to offers. */
 export async function sendFollowupNow(contactId: string, templateId: string): Promise<{ error?: string; sent?: boolean }> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return { error: "No workspace found." };
+  if (!workspace) return { error: await msg("noWorkspace") };
   if (!workspaceCanSend(workspace)) return { error: await refusal("noPlan") };
   if (!workspace.whatsapp_phone_number_id || !workspace.whatsapp_access_token) return { error: await refusal("noNumber") };
 
   const admin = createAdminClient();
   const { data: contact } = await admin.from("contacts").select("id, phone, name, opted_out, consent_at").eq("id", contactId).eq("workspace_id", workspace.id).maybeSingle();
-  if (!contact) return { error: "Customer not found." };
-  if (contact.opted_out) return { error: "This customer asked not to get messages." };
-  if (!contact.consent_at) return { error: "This customer has not agreed to get offers on WhatsApp, so a promotional message cannot be sent." };
+  if (!contact) return { error: await msg("customerNotFound") };
+  if (contact.opted_out) return { error: await msg("customerOptedOut") };
+  if (!contact.consent_at) return { error: await msg("noConsent") };
 
   const { data: template } = await admin.from("templates").select("meta_template_name, language, body_text, status, template_group").eq("id", templateId).eq("workspace_id", workspace.id).maybeSingle();
-  if (!template || !String(template.template_group ?? "").startsWith(FOLLOWUP_TEMPLATE_PREFIX)) return { error: "Message not found." };
-  if (template.status !== "approved") return { error: "WhatsApp is still approving this message. Try again in a little while." };
+  if (!template || !String(template.template_group ?? "").startsWith(FOLLOWUP_TEMPLATE_PREFIX)) return { error: await msg("messageNotFound") };
+  if (template.status !== "approved") return { error: await msg("templatePending") };
 
   const lang = (isLangCode(template.language) ? template.language : "en") as LanguageCode;
   const { data: kit } = await admin.from("brand_kits").select("name").eq("workspace_id", workspace.id).maybeSingle();

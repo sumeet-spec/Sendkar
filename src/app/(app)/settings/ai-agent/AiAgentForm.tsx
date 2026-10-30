@@ -2,14 +2,17 @@
 
 import { useActionState, useState } from "react";
 import { saveAiAgent } from "./actions";
+import type { AiAgentUi } from "@/lib/i18n/settingsCopy";
 
 const MAX_KNOWLEDGE = 4000;
 
 export function AiAgentForm({
+  t,
   initialEnabled,
   initialKnowledge,
   planAllowed,
 }: {
+  t: AiAgentUi;
   initialEnabled: boolean;
   initialKnowledge: string;
   planAllowed: boolean;
@@ -23,16 +26,16 @@ export function AiAgentForm({
     <form action={formAction} className="flex flex-col gap-5">
       {!planAllowed && (
         <div className="rounded-lg border border-warn/30 bg-warn/5 p-3 text-[12.5px] text-foreground">
-          The AI agent requires the <a href="/settings/billing" className="text-accent hover:underline">Growth plan or above</a> — every reply it sends is a real AI request.
+          {t.planNote1}<a href="/settings/billing" className="text-accent hover:underline">{t.planLink}</a>{t.planNote2}
         </div>
       )}
 
       {/* Toggle row */}
       <div className="sk-card flex items-center justify-between p-4">
         <div className="pr-4">
-          <div className="font-medium">Auto-reply agent</div>
+          <div className="font-medium">{t.toggleTitle}</div>
           <p className="mt-0.5 text-[12.5px] text-faint">
-            Replies automatically when no flow or keyword automation matched first. Rounds the clock — no human needed.
+            {t.toggleBody}
           </p>
         </div>
         <button
@@ -56,13 +59,13 @@ export function AiAgentForm({
       {/* Knowledge base */}
       <div className="sk-card p-4">
         <div className="mb-2 flex items-center justify-between">
-          <label className="font-medium" htmlFor="knowledge">Business knowledge</label>
+          <label className="font-medium" htmlFor="knowledge">{t.knowTitle}</label>
           <span className={`text-[11.5px] ${charsLeft < 200 ? "text-warn" : "text-faint"}`}>
-            {charsLeft.toLocaleString()} chars left
+            {t.charsLeft.replace("{n}", charsLeft.toLocaleString())}
           </span>
         </div>
         <p className="mb-2 text-[12px] text-faint">
-          The agent only answers from what you write here. If a question isn&apos;t covered, it tells the customer a team member will follow up — it never guesses.
+          {t.knowHelp}
         </p>
         <textarea
           id="knowledge"
@@ -71,20 +74,20 @@ export function AiAgentForm({
           value={knowledge}
           onChange={(e) => setKnowledge(e.target.value.slice(0, MAX_KNOWLEDGE))}
           disabled={!planAllowed}
-          placeholder={`Describe your business, prices, policies and FAQs.\n\nExample:\nWe are Priya Textiles, a saree and fabric shop in Surat. We ship all over India in 3–5 days. Returns accepted within 7 days if unworn. No international shipping yet. Cash on delivery available for orders under 2,000.`}
+          placeholder={t.knowPh}
           className="sk-input font-mono text-[12.5px] leading-relaxed disabled:opacity-50"
         />
         <p className="mt-1 text-[11px] text-faint">
-          Tip: Include your hours, return policy, shipping times, and 5–10 common questions your team already answers every day.
+          {t.tip}
         </p>
       </div>
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
-      {state?.success && <p className="text-sm text-accent">Settings saved.</p>}
+      {state?.success && <p className="text-sm text-accent">{t.saved}</p>}
 
       <div className="flex">
         <button type="submit" disabled={pending || !planAllowed} className="sk-btn sk-btn-primary disabled:opacity-60">
-          {pending ? "Saving…" : "Save settings"}
+          {pending ? t.saving : t.save}
         </button>
       </div>
     </form>
