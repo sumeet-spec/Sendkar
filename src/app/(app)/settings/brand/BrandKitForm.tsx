@@ -133,6 +133,8 @@ export function BrandKitForm({ t, workspaceName, workspaceId, kit }: { t: AppCop
         <div>
           <label className="sk-label">{t.website}</label>
           <input name="website" value={site} onChange={(e) => setSite(e.target.value)} className="sk-input" maxLength={60} />
+          <label className="sk-label mt-3">GSTIN</label>
+          <input name="gstin" defaultValue={kit?.gstin ?? ""} placeholder="24ABCDE1234F1Z5" className="sk-input" maxLength={15} autoCapitalize="characters" autoComplete="off" />
         </div>
       </div>
       <div>

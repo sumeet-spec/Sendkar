@@ -7,11 +7,16 @@ import { CreateLink } from "./CreateLink";
 import { CopyLink } from "./CopyLink";
 import { getCurrentLanguage } from "@/lib/i18n/getLanguage";
 import { APP_COPY, fillN } from "@/lib/i18n/appCopy";
+import { CHAT_POSTER_COPY } from "@/lib/i18n/chatPosterCopy";
+import { chatDigits } from "@/lib/chatLink";
 
 export default async function JoinSettingsPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
-  const t = APP_COPY[await getCurrentLanguage()].permission;
+  const uiLang = await getCurrentLanguage();
+  const t = APP_COPY[uiLang].permission;
+  const chat = CHAT_POSTER_COPY[uiLang];
+  const chatReady = Boolean(workspace.whatsapp_display_number && chatDigits(workspace.whatsapp_display_number));
   const supabase = await createClient();
   const { data: row } = await supabase.from("workspaces").select("join_code").eq("id", workspace.id).maybeSingle();
 
@@ -38,6 +43,22 @@ export default async function JoinSettingsPage() {
           <div className="text-[11px] font-medium uppercase tracking-wide text-faint">{t.agreedLabel}</div>
           <div className="mt-1 text-xl font-semibold text-accent">{(agreed ?? 0).toLocaleString("en-IN")} <span className="text-sm font-normal text-faint">{fillN(t.ofContacts, (total ?? 0).toLocaleString("en-IN"))}</span></div>
         </div>
+      </div>
+
+      <div className="sk-card mb-6 p-5">
+        <div className="mb-1 text-sm font-medium">{chat.title}</div>
+        {chatReady ? (
+          <>
+            <p className="mb-3 text-[12.5px] text-faint">{chat.help}</p>
+            <div className="flex flex-wrap gap-2">
+              {LANGUAGES.map((l) => (
+                <a key={l.code} className="sk-btn" href={`/api/join/chat-poster?workspaceId=${workspace.id}&lang=${l.code}`} download>{l.label}</a>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-[12.5px] text-faint">{chat.needNumber}</p>
+        )}
       </div>
 
       {!url ? (

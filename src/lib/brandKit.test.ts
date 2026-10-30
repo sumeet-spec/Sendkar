@@ -50,3 +50,16 @@ describe("image-header templates", () => {
     expect(parts[0]).toEqual({ type: "HEADER", format: "IMAGE", example: { header_handle: ["4::abc"] } });
   });
 });
+
+describe("cleanGstin", () => {
+  it("accepts a real-looking GSTIN in any case or spacing, and blank", async () => {
+    const { cleanGstin } = await import("./brandKit");
+    expect(cleanGstin("24abcde1234f1z5")).toBe("24ABCDE1234F1Z5");
+    expect(cleanGstin(" 24ABCDE1234F1Z5 ")).toBe("24ABCDE1234F1Z5");
+    expect(cleanGstin("")).toBe("");
+  });
+  it("refuses anything that cannot be one", async () => {
+    const { cleanGstin } = await import("./brandKit");
+    for (const bad of ["24ABCDE1234F1Z", "ABCDE1234F", "24ABCDE1234F1X5", "24ABCDE1234F1Z5Z"]) expect(cleanGstin(bad), bad).toBeNull();
+  });
+});

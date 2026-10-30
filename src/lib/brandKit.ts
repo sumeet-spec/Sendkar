@@ -12,6 +12,7 @@ export type BrandKit = {
   phone: string;
   address: string;
   website: string;
+  gstin?: string;
 };
 
 export const DEFAULT_PRIMARY = "#0f766e";
@@ -46,4 +47,13 @@ export function sniffImage(bytes: Uint8Array): { mime: "image/png" | "image/jpeg
 /** "Call 98765 43210 · Station Road" style single line for the bottom of a card. */
 export function contactLine(kit: Pick<BrandKit, "phone" | "address" | "website">): string {
   return [kit.phone, kit.address, kit.website].map((s) => s.trim()).filter(Boolean).join("  ·  ");
+}
+
+/** 15 characters: state code, PAN, entity number, "Z", check character. Blank is allowed (a shop need not have one). */
+const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+
+export function cleanGstin(raw: string): string | null {
+  const v = raw.replace(/\s+/g, "").toUpperCase();
+  if (!v) return "";
+  return GSTIN.test(v) ? v : null;
 }
