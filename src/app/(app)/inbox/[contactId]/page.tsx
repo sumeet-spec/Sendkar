@@ -33,7 +33,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ contact
     // all of it just to show the tail end.
     supabase.from("messages").select("*").eq("contact_id", contactId).order("created_at", { ascending: false }).limit(100),
     supabase.from("canned_responses").select("id, shortcut, body").eq("workspace_id", workspace.id).order("shortcut", { ascending: true }),
-    supabase.from("contact_notes").select("id, body, created_at, author_id").eq("contact_id", contactId).order("created_at", { ascending: false }),
+    supabase.from("contact_notes").select("id, body, created_at, author_id").eq("contact_id", contactId).eq("kind", "note").order("created_at", { ascending: false }),
     supabase.from("products").select("id, name, price_label").eq("workspace_id", workspace.id).eq("is_active", true).order("name", { ascending: true }),
     supabase.from("orders").select("id, total_amount, currency, source, order_label, attributed_campaign_id, created_at").eq("contact_id", contactId).order("created_at", { ascending: false }),
     supabase.from("payment_links").select("id, provider, amount, url, created_at, paid_at, status, failure_reason").eq("contact_id", contactId).order("created_at", { ascending: false }),

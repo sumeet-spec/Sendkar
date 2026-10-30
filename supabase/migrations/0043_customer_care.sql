@@ -14,26 +14,13 @@ alter table contacts add column if not exists last_reorder_nudge_at timestamptz;
 
 create index if not exists contacts_auto_tags_idx on contacts using gin (auto_tags);
 
--- A running list of notes and follow-up tasks for each customer.
-create table if not exists contact_notes (
-  id           uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references workspaces(id) on delete cascade,
-  contact_id   uuid not null references contacts(id) on delete cascade,
-  kind         text not null default 'note' check (kind in ('note', 'task')),
-  body         text not null,
-  due_date     date,                              -- for a task: the day to follow up
-  done         boolean not null default false,
-  created_by   uuid references auth.users(id),
-  created_at   timestamptz not null default now()
-);
-create index if not exists contact_notes_contact_idx on contact_notes (contact_id, created_at desc);
+-- Notes already exist (written from the inbox). They now also hold follow-up tasks with a day to do them.
+alter table contact_notes add column if not exists kind text not null default 'note';
+alter table contact_notes drop constraint if exists contact_notes_kind_check;
+alter table contact_notes add constraint contact_notes_kind_check check (kind in ('note', 'task'));
+alter table contact_notes add column if not exists due_date date;           -- for a task: the day to follow up
+alter table contact_notes add column if not exists done boolean not null default false;
 create index if not exists contact_notes_due_idx on contact_notes (workspace_id, due_date) where kind = 'task' and done = false;
-
-alter table contact_notes enable row level security;
-drop policy if exists "member can manage contact notes" on contact_notes;
-create policy "member can manage contact notes" on contact_notes
-  for all using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()))
-  with check (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
 grant select, insert, update, delete on contact_notes to authenticated;
 grant all on contact_notes to service_role;
 

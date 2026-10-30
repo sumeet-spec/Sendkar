@@ -62,11 +62,13 @@ export async function addNote(_prev: unknown, formData: FormData): Promise<CareR
     if (!dueDate) return { error: "Pick the day to follow up." };
   }
 
+  const userId = await getCurrentUserId();
+  if (!userId) return { error: "Not logged in." };
   const supabase = await createClient();
   const { data: contact } = await supabase.from("contacts").select("id").eq("id", contactId).eq("workspace_id", workspace.id).maybeSingle();
   if (!contact) return { error: "Customer not found." };
   const { error } = await supabase.from("contact_notes").insert({
-    workspace_id: workspace.id, contact_id: contactId, kind, body, due_date: dueDate, created_by: await getCurrentUserId(),
+    workspace_id: workspace.id, contact_id: contactId, kind, body, due_date: dueDate, author_id: userId,
   });
   if (error) return { error: "Could not save. Try again." };
   revalidatePath(`/customers/${contactId}`);
