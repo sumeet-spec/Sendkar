@@ -9,6 +9,17 @@
  * Meta's own page keeps the INR numbers in a downloadable file that was not
  * checked directly. Re-check against Meta's rate card (India, INR) before
  * leaning on them, and update here — this is the only place they live.
+ *
+ * Re-checked 7 Nov 2026: several independent sources (Route Mobile, ecorpit,
+ * Free Press Journal) agree on 0.8631 marketing / 0.115 utility, and say the
+ * 0.7846 → 0.8631 marketing rise happened on 1 Jan 2026. Meta's own pricing
+ * pages render the INR figures only through a selector, so they still were not
+ * read first-hand.
+ *
+ * OPEN: these are ex-tax. One source says 18% GST applies to Meta's charges in
+ * India (a GST-registered shop can usually claim it back as input credit, an
+ * unregistered one cannot). The public calculator does not say "+ GST" yet.
+ * Confirm with an accountant before changing the copy, in all seven languages.
  */
 export const META_INDIA_RATES_INR = {
   marketing: 0.8631,
