@@ -5,6 +5,21 @@ and one stranger able to connect their own number. Do the steps in order; each o
 
 Tick each box only when you have seen it work, not when you have clicked the button.
 
+## Self-check: run this after each stage
+
+```bash
+NODE_NO_WARNINGS=1 node scripts/sim-day-check.mjs
+```
+
+Read-only (it never sends a message). It checks, in order: local env, the key database tables, the system
+workspace's saved number and plan, Meta's view of the number (quality, verification), webhook subscription, the
+two system templates (with any rejection reason), feature flags that would lock people out, and whether the live
+webhook answers Meta's handshake. Exit code 1 means something must be fixed. Add `--offline` to skip the network.
+
+First run on 7 Nov 2026 found two things to fix before anything else: the system workspace's saved token expired on
+25 Aug 2026 (replace it with a no-expiry system-user token, step 4 and 5), and the live webhook rejected the verify
+token from .env.local (the value on Vercel differs from the one here and in Meta's webhook settings).
+
 ## 0. Before you start (10 minutes)
 
 - [ ] The SIM is active and can receive an SMS or a call (Meta verifies the number this way).
